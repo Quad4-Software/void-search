@@ -1,35 +1,33 @@
-# Docker Compose definition for Void Search.
+# Docker Compose definition for Void Search on Coolify.
 #
-# Coolify: create an Application in the target project and environment, pick
-# this repository as the source, select the Docker Compose build pack, set the
-# Docker Compose Location to container/docker-compose.yml, then set the public
-# domain on the "ravenguard" service's Domains field, including the container
-# port:
+# In Coolify create an Application from this repository, select the Docker
+# Compose build pack and set the Docker Compose Location to
+# docker-compose.coolify.yml. Set the public domain on the "ravenguard"
+# service's Domains field, including the container port it exposes:
 #
 #   https://search.example.com:8080
 #
 # Request flow: client -> Coolify proxy -> ravenguard (WAF) -> void -> engines.
+# Only ravenguard is exposed; void and valkey stay on the internal network.
 #
 # Variables written as ${NAME:-default} become editable environment variables
-# in Coolify. ${NAME:?} marks the variable as required. RG_CHALLENGE_SECRET
-# must be set in Coolify's environment editor before the first deploy; the
+# in Coolify. ${NAME:?} marks the variable as required: set RG_CHALLENGE_SECRET
+# (min 16 chars) in Coolify's environment editor before the first deploy. The
 # SearXNG secret key needs no variable because the entrypoint generates one on
 # first boot and stores it in the void-config volume.
 #
-# Plain docker compose works too: docker compose -f container/docker-compose.yml up -d
+# For a plain self-hosted stack without Coolify, use docker-compose.yml.
 
 name: void-search
 
 services:
   ravenguard:
     image: ghcr.io/quad4-software/ravenguard:${RAVENGUARD_VERSION:-edge}
-    container_name: void-search-edge
     restart: unless-stopped
-    # the Coolify proxy routes to this internal port; do not publish it on the host
+    # public entry point - Coolify routes the domain to this port
     expose:
       - "8080"
     environment:
-      # required in Coolify - HMAC secret for the challenge cookie, min 16 chars
       RG_CHALLENGE_SECRET: ${RG_CHALLENGE_SECRET:?}
       RG_UPSTREAM_URL: ${RG_UPSTREAM_URL:-http://void:8080}
       RG_SITE_PUBLIC_URL: ${RG_SITE_PUBLIC_URL:-}
@@ -40,9 +38,11 @@ services:
       RG_PROTO_HEADER: ${RG_PROTO_HEADER:-X-Forwarded-Proto}
       RG_SANDBOX_MODE: ${RG_SANDBOX_MODE:-best_effort}
       RG_LOG_LEVEL: ${RG_LOG_LEVEL:-warn}
+    tmpfs:
+      - /data:size=64m
     volumes:
-      - ./ravenguard/ravenguard.toml:/config/ravenguard.toml:ro
-      - ./ravenguard/blocklists:/blocklists:ro
+      - ./container/ravenguard/ravenguard.toml:/config/ravenguard.toml:ro
+      - ./container/ravenguard/blocklists:/blocklists:ro
     depends_on:
       void:
         condition: service_healthy
@@ -50,10 +50,8 @@ services:
 
   void:
     image: ghcr.io/quad4-software/void-search:${SEARXNG_VERSION:-latest}
-    container_name: void-search
     restart: unless-stopped
-    expose:
-      - "8080"
+    # internal only - reached through ravenguard, no expose and no host port
     environment:
       SEARXNG_VALKEY_URL: ${SEARXNG_VALKEY_URL:-valkey://valkey:6379/0}
       SEARXNG_LIMITER: ${SEARXNG_LIMITER:-true}
@@ -80,7 +78,6 @@ services:
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine
-    container_name: void-search-valkey
     command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped
     volumes:

@@ -17,6 +17,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
+      - /data:size=64m
     cap_drop:
       - ALL
     security_opt:
@@ -29,10 +30,7 @@ services:
     command: ["-config", "/config/ravenguard.toml"]
 
   void:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: void:local
+    image: ghcr.io/quad4-software/void-search:${SEARXNG_VERSION:-latest}
     container_name: void
     restart: unless-stopped
     depends_on:
@@ -68,7 +66,7 @@ services:
       - void-data:/var/cache/searxng
 
   valkey:
-    image: docker.io/valkey/valkey:8-alpine
+    image: docker.io/valkey/valkey:9-alpine
     container_name: void-valkey
     restart: unless-stopped
     command: valkey-server --save "" --appendonly no --protected-mode yes --maxmemory 128mb --maxmemory-policy allkeys-lru

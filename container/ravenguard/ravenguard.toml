@@ -139,7 +139,7 @@ enabled = false
 
 [privacy]
 hash_client_ip = true
-log_ip = "none"
+log_ip = "off"
 retention = "1m"
 
 [ui]

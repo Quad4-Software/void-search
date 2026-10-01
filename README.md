@@ -57,7 +57,7 @@ it, leave both false. Debug mode skips Landlock so the reloader works.
 ```sh
 mkdir -p config
 export RG_CHALLENGE_SECRET="$(openssl rand -hex 24)"
-docker compose up --build
+docker compose up -d
 ```
 
 ```text
@@ -70,16 +70,17 @@ spare.
 
 ## Coolify
 
-`container/docker-compose.yml` is a Coolify-ready definition that runs the
-published image plus a Valkey sidecar for the limiter and result cache.
+`docker-compose.coolify.yml` is the Coolify-ready definition: RavenGuard in
+front, Void Search behind it, and a Valkey sidecar for the limiter and
+result cache.
 
 In Coolify create an Application from this repository, select the Docker
 Compose build pack and set the Compose location to
-`container/docker-compose.yml`. Put the public domain on the `void`
-service's Domains field with the internal port, for example
-`https://search.example.com:8080`. Variables like `SEARXNG_BASE_URL` show up
-in Coolify's environment editor; the secret key is generated on first boot
-and kept in the `void-config` volume.
+`docker-compose.coolify.yml`. Put the public domain on the `ravenguard`
+service's Domains field with the container port it exposes, for example
+`https://search.example.com:8080`. Set `RG_CHALLENGE_SECRET` and any
+`SEARXNG_*` or `RG_*` overrides in Coolify's environment editor; the secret
+key is generated on first boot and kept in the `void-config` volume.
 
 The image lives at `ghcr.io/quad4-software/void-search`. If the package is
 private, add a registry credential in Coolify or mark the package public.
