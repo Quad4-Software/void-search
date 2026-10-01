@@ -215,7 +215,16 @@ container.push() {
     required_commands podman
 
     local release_tags=("$DOCKER_TAG" "latest")
-    local release_registries=("ghcr.io" "docker.io")
+    local release_registries=("ghcr.io")
+
+    # registry paths must be lowercase
+    local image_name
+    image_name=$(echo "${GITHUB_REPOSITORY:-quad4-software/void-search}" | tr '[:upper:]' '[:lower:]')
+
+    # push to Docker Hub only when credentials are configured
+    if [ -n "${DOCKER_USER:-}" ] && [ -n "${DOCKER_TOKEN:-}" ]; then
+        release_registries+=("docker.io")
+    fi
 
     if [ "$GITHUB_ACTIONS" != "true" ]; then
         die 1 "This command is intended to be run in Actions"
@@ -235,9 +244,9 @@ container.push() {
             for tag in "${release_tags[@]}"; do
                 build_msg CONTAINER "Pushing manifest $tag to $registry"
 
-                podman manifest push --all \
+                podman manifest push --all --compression-format zstd \
                     "localhost/searxng/searxng:$tag" \
-                    "docker://$registry/${GITHUB_REPOSITORY_OWNER:-"searxng"}/searxng:$tag"
+                    "docker://$registry/$image_name:$tag"
             done
         done
     )

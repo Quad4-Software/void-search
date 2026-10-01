@@ -23,7 +23,7 @@ env:
 
 jobs:
   release:
-    if: github.repository_owner == 'searxng' || github.event_name == 'workflow_dispatch'
+    if: github.repository_owner == 'Quad4-Software' || github.event_name == 'workflow_dispatch'
     name: Release
     runs-on: ubuntu-26.04-arm
     timeout-minutes: 30

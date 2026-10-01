@@ -27,7 +27,9 @@ env:
 
 jobs:
   update:
-    if: github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'searxng'
+    # opt-in: set the WEBLATE_ENABLED repo variable plus the WEBLATE_GITHUB_TOKEN
+    # and WEBLATE_CONFIG secrets for the Weblate integration
+    if: vars.WEBLATE_ENABLED == 'true' && github.event.workflow_run.conclusion == 'success'
     name: Update
     runs-on: ubuntu-26.04-arm
     timeout-minutes: 30
@@ -74,7 +76,7 @@ jobs:
 
   pr:
     if: |
-      github.repository_owner == 'searxng'
+      vars.WEBLATE_ENABLED == 'true'
       && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     name: Pull Request
     runs-on: ubuntu-26.04-arm

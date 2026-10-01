@@ -19,7 +19,7 @@ env:
 
 jobs:
   data:
-    if: github.repository_owner == 'searxng'
+    if: github.repository_owner == 'Quad4-Software'
     name: ${{ matrix.fetch }}
     runs-on: ubuntu-26.04-arm
     timeout-minutes: 60
