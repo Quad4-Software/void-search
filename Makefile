@@ -62,7 +62,6 @@ format: format.python format.shell
 
 # wrap ./manage script
 
-MANAGE += weblate.translations.commit weblate.push.translations
 MANAGE += data.all data.traits data.useragents data.locales data.currencies
 MANAGE += docs.html docs.live docs.gh-pages docs.prebuild docs.clean
 MANAGE += podman.build

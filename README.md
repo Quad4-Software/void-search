@@ -1,30 +1,39 @@
 # Void Search
 
-Void Search is a Quad4-style SearXNG fork. Private metasearch, no tracking,
-ranked for the far edge, with RavenGuard in front.
+A fork of [SearXNG](https://github.com/searxng/searxng), the metasearch
+engine. I run this as my own instance with the defaults I actually want and a
+few parts SearXNG does not have. All credit for the engine itself goes to the
+SearXNG project.
 
-Upstream is [SearXNG](https://github.com/searxng/searxng). Brand tokens come
-from [quad4.io/branding](https://quad4.io/branding). Edge WAF is
-[RavenGuard](https://github.com/Quad4-Software/ravenguard). Process sandbox is
+## What is different
+
+Most of the changes are defaults, not new features:
+
+- `public_instance` and the limiter are on. Valkey is required.
+- POST searches only. No access logs, no query logs.
+- Engines never see your IP or browser: outgoing requests get a random
+  browser user-agent and a generic header set.
+- Results are cached for 180 seconds so repeat searches do not re-query
+  engines.
+- English by default. Results in other scripts are dropped on `en` queries.
+- A host blocklist plus demotion for SEO-farm domains.
+- CAPTCHA and proof-of-work engines are off. Wiby and YaCy are wired in but
+  disabled until you turn them on.
+- `/stats`, download formats, timings, and version strings are not exposed.
+- On Linux, the process drops into a
+  [Landlock](https://landlock.io) sandbox after startup. Skipped in debug
+  mode.
+
+Performance defaults: four Granian workers, an HTTP/2 pool of 256
+connections, max eight redirects, two second request timeout.
+
+The WAF in front is [RavenGuard](https://github.com/Quad4-Software/ravenguard).
+The Landlock bindings are
 [landlockpy](https://github.com/Quad4-Software/landlockpy).
-
-## Defaults
-
-- Public instance mode, limiter, and hashed result cache (180s)
-- No access logs, no query logs, no search history
-- Outgoing requests are anonymized: engines see the server only
-- POST searches, Wikipedia autocomplete, image proxy
-- English results by default. Other-script pages are dropped on `en` queries
-- Host blocklist plus SEO-farm demotion
-- CAPTCHA and proof-of-work engines off
-- Wiby and YaCy are wired and stay off until you enable them
-- Download formats, timings, version strings, and `/stats` hidden
-- Landlock after startup on Linux (skipped in debug)
-- Four Granian workers, HTTP/2 pool of 256, eight redirects max
 
 ## Run locally
 
-Python 3.12+, then:
+Python 3.12 or newer:
 
 ```sh
 python3 -m venv .venv
@@ -38,10 +47,10 @@ export SEARXNG_PUBLIC_INSTANCE=false
 PYTHONPATH=. .venv/bin/python -m searx.webapp
 ```
 
-`SEARXNG_PUBLIC_INSTANCE` and the limiter need Valkey. Without it, leave them
-false for a single-user run. Debug mode skips Landlock so the reloader works.
+The limiter and `public_instance` need Valkey. For a single-user run without
+it, leave both false. Debug mode skips Landlock so the reloader works.
 
-## Run with Docker
+## Docker with RavenGuard
 
 ```sh
 mkdir -p config
@@ -49,18 +58,17 @@ export RG_CHALLENGE_SECRET="$(openssl rand -hex 24)"
 docker compose up --build
 ```
 
-Traffic path:
-
 ```text
 client -> RavenGuard :48731 -> Void Search :8080 -> engines
 ```
 
-Void is not published on the host. Change `RG_CHALLENGE_SECRET` before any
-public bind. Raise `GRANIAN_WORKERS` if the box has spare RAM.
+Void itself is not published on the host. Change `RG_CHALLENGE_SECRET` before
+binding anything publicly. Raise `GRANIAN_WORKERS` if the box has RAM to
+spare.
 
 ## Wiby and YaCy
 
-Both engines ship disabled. In `/etc/searxng/settings.yml`:
+Both ship disabled. In `/etc/searxng/settings.yml`:
 
 ```yaml
 engines:
@@ -72,12 +80,12 @@ engines:
       - https://yacy.searchlab.eu
 ```
 
-Prefer a YaCy instance you run. Public peers rate-limit quickly.
+If you have your own YaCy, point at that. Public peers rate-limit quickly.
 
 ## Blocklist
 
 Edit `searx/void_blocklist.txt` or set `void.block_hosts` in settings.
-Matching hosts are removed from the result list.
+Matching hosts are removed from results.
 
 ## Settings
 
@@ -96,10 +104,8 @@ Matching hosts are removed from the result list.
 | `outgoing.pool_connections` | 256 |
 | `outgoing.max_redirects` | 8 |
 
-Override with `/etc/searxng/settings.yml` and `use_default_settings: true`.
+Override in `/etc/searxng/settings.yml` with `use_default_settings: true`.
 
 ## License
 
-GNU Affero General Public License v3.0 or later, same as SearXNG. See
-`LICENSE` and `NOTICE`. RavenGuard is QSL and is not vendored, only configured.
-landlockpy is 0BSD.
+AGPL-3.0-or-later, same as SearXNG. See `LICENSE` and `NOTICE`.

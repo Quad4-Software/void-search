@@ -17,9 +17,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/utils/lib_sxng_container.sh"
 # shellcheck source=utils/lib_sxng_data.sh
 source "$(dirname "${BASH_SOURCE[0]}")/utils/lib_sxng_data.sh"
 
-# shellcheck source=utils/lib_sxng_weblate.sh
-source "$(dirname "${BASH_SOURCE[0]}")/utils/lib_sxng_weblate.sh"
-
 # shellcheck source=utils/lib_sxng_static.sh
 source "$(dirname "${BASH_SOURCE[0]}")/utils/lib_sxng_static.sh"
 
@@ -99,7 +96,6 @@ format.:
 EOF
     go.help
     node.help
-    weblate.help
     container.help
     data.help
     test.help

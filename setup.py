@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 from searx import get_setting
 from searx.version import GIT_URL, VERSION_TAG
 
-with Path('README.rst').open(encoding='utf-8') as f:
+with Path('README.md').open(encoding='utf-8') as f:
     long_description = f.read()
 
 with Path('requirements.txt').open() as f:
@@ -21,6 +21,7 @@ setup(
     name='searxng',
     description="SearXNG is a metasearch engine. Users are neither tracked nor profiled.",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     license="AGPL-3.0-or-later",
     author='SearXNG',
     author_email='contact@searxng.org',
