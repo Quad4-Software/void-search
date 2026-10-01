@@ -28,9 +28,9 @@ def test_preferences(browser):
     browser.visit(url)
     browser.links.find_by_href('/preferences').click()
     assert browser.is_text_present('Preferences')
-    assert browser.is_text_present('COOKIES')
+    assert browser.is_text_present('Cookies')
 
-    assert browser.is_element_present_by_xpath('//label[@for="checkbox_dummy"]')
+    assert browser.is_element_present_by_xpath('//label[@for="engine_general_dummy__general"]')
 
 
 def test_preferences_engine_select(browser):
