@@ -5,7 +5,7 @@ set -eu
 CONFIG_PATH="${__SEARXNG_CONFIG_PATH:-/etc/searxng}"
 DATA_PATH="${__SEARXNG_DATA_PATH:-/var/cache/searxng}"
 SETTINGS_PATH="${SEARXNG_SETTINGS_PATH:-$CONFIG_PATH/settings.yml}"
-TEMPLATE="/usr/local/void/settings.template.yml"
+TEMPLATE="$(dirname "$0")/settings.template.yml"
 
 if [ ! -d "$CONFIG_PATH" ]; then
     echo "config path is missing: $CONFIG_PATH" >&2
@@ -37,4 +37,4 @@ if [ -n "${SEARXNG_PORT:-}" ]; then
 fi
 
 echo "Void ${__SEARXNG_VERSION:-dev}"
-exec /opt/void/bin/granian searx.webapp:app
+exec granian searx.webapp:app
