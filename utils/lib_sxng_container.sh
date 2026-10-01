@@ -196,7 +196,11 @@ container.test() {
 
         name="searxng-$(head -c 32 /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 16)"
 
-        podman create --name="$name" --rm --timeout=60 --network="host" "$image" >/dev/null
+        # the image defaults to limiter + public_instance which require Valkey
+        # that the smoke test does not provide - disable both
+        podman create --name="$name" --rm --timeout=60 --network="host" \
+            -e SEARXNG_LIMITER=false -e SEARXNG_PUBLIC_INSTANCE=false \
+            "$image" >/dev/null
 
         podman start "$name" >/dev/null
         podman logs -f "$name" &
