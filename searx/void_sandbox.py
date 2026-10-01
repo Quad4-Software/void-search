@@ -27,16 +27,16 @@ def _existing(paths: list[str]) -> list[Path]:
 def apply() -> bool:
     """Restrict this process with Landlock. Returns True when applied."""
     try:
-        from searx import get_setting, sxng_debug
+        from searx import get_setting, sxng_debug  # pylint: disable=import-outside-toplevel
 
         if sxng_debug or not bool(get_setting("void.landlock")):
             return False
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return False
 
     try:
-        from landlockpy import AccessFS, AccessNet, Ruleset, supported
-    except Exception as exc:
+        from landlockpy import AccessFS, AccessNet, Ruleset, supported  # pylint: disable=import-outside-toplevel
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         log.info("landlockpy not available: %s", exc)
         return False
 
@@ -120,9 +120,9 @@ def apply() -> bool:
                     ruleset.allow_path(str(path), write_fs, quiet=True)
             try:
                 listen = int(get_setting("server.port") or 8080)
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 listen = 8080
-            for port in {80, 443, 6379, 8080, 8443, 8888, 48731, listen}:
+            for port in (80, 443, 6379, 8080, 8443, 8888, 48731, listen):
                 with contextlib.suppress(Exception):
                     ruleset.allow_port(int(port), AccessNet.CONNECT_TCP, quiet=True)
             with contextlib.suppress(Exception):
@@ -130,6 +130,6 @@ def apply() -> bool:
             ruleset.restrict()
         log.info("Landlock applied")
         return True
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         log.warning("Landlock skipped: %s", exc)
         return False

@@ -105,7 +105,7 @@ def response(resp):
             try:
                 publishedDate = datetime.strptime(date, date_format).replace(tzinfo=UTC)
                 break
-            except Exception:  # noqa: S110
+            except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
                 pass
 
         if publishedDate is not None:

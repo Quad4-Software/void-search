@@ -64,7 +64,7 @@ def response(resp):
         # convert files to int if possible
         try:
             files = int(files)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             files = None
 
         magnetlink = result.xpath('.//div[@class="torrent_magnet"]//a')[0].attrib['href']

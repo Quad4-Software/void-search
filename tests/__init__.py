@@ -6,8 +6,12 @@ import pathlib
 
 import aiounittest
 
-os.environ.pop('SEARXNG_SETTINGS_PATH', None)
 os.environ['SEARXNG_DISABLE_ETC_SETTINGS'] = '1'
+
+# test modules import searx.webapp at module scope, which runs init() with
+# whatever settings SEARXNG_SETTINGS_PATH resolves to - default to the test
+# settings so the limiter and public_instance mode stay off in test runs
+os.environ['SEARXNG_SETTINGS_PATH'] = str(pathlib.Path(__file__).parent / 'unit' / 'settings' / 'test_settings.yml')
 
 
 class SearxTestLayer:

@@ -78,7 +78,7 @@ def response(resp):
 
     try:
         infobox_title = search_results.xpath(input_xpath)[0].text
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         infobox_title = ""
 
     pods = search_results.xpath(pods_xpath)

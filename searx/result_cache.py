@@ -31,14 +31,14 @@ _PREFIX = "void:res:"
 def _ttl() -> int:
     try:
         return max(int(get_setting("void.result_cache_ttl")), 0)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return 180
 
 
 def _max_items() -> int:
     try:
         return max(int(get_setting("void.result_cache_max")), 16)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return 4096
 
 
@@ -87,7 +87,7 @@ def _unpack(payload: dict[str, t.Any]) -> ResultContainer:
     container.corrections.update(payload.get("corrections") or [])
     for answer in payload.get("answers") or []:
         if isinstance(answer, dict) and answer.get("answer"):
-            from searx.result_types.answer import Answer
+            from searx.result_types.answer import Answer  # pylint: disable=import-outside-toplevel
 
             container.answers.add(Answer(answer=str(answer["answer"])))
     return container
@@ -108,7 +108,7 @@ def get(search_query: SearchQuery) -> ResultContainer | None:
                 payload = json.loads(raw)
                 log.debug("valkey hit %s", key[:12])
                 return _reopen(_unpack(payload), search_query)
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-exception-caught
                 log.debug("valkey decode failed: %s", exc)
         return None
     with _LOCK:
@@ -127,8 +127,8 @@ def _reopen(container: ResultContainer, search_query: SearchQuery) -> ResultCont
     """Rescore a cached payload using the current query without storing it."""
     container.query = search_query.query
     container.lang = getattr(search_query, "lang", "") or ""
-    container._closed = False
-    container._main_results_sorted = None  # type: ignore[assignment]
+    container._closed = False  # pylint: disable=protected-access
+    container._main_results_sorted = None  # type: ignore[assignment]  # pylint: disable=protected-access
     container.close()
     return container
 

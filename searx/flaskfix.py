@@ -8,7 +8,7 @@ from werkzeug.serving import WSGIRequestHandler
 from searx import settings
 
 
-class StripServerHeader:
+class StripServerHeader:  # pylint: disable=too-few-public-methods
     """Drop Server and X-Powered-By so scanners cannot fingerprint the stack."""
 
     def __init__(self, wsgi_app):

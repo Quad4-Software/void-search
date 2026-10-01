@@ -12,7 +12,7 @@ test.:
   unit      : run unit tests
   coverage  : run unit tests with coverage
   robot     : run robot test
-  rst       : test .rst files incl. README.rst
+  rst       : test .rst files
   clean     : clean intermediate test stuff
 EOF
 }

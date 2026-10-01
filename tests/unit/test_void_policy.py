@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# pylint: disable=missing-class-docstring,invalid-name
 """Tests for Void engine policy and result cache keys."""
 
 from searx.result_cache import cache_key
@@ -32,7 +33,7 @@ class VoidPolicyTestCase(SearxTestCase):
         self.assertTrue(settings["engines"][0]["disabled"])
 
     def test_strips_client_headers(self):
-        from searx.void_policy import anonymize_outgoing_headers
+        from searx.void_policy import anonymize_outgoing_headers  # pylint: disable=import-outside-toplevel
 
         headers = {
             "Accept-Language": "de-DE,de;q=0.9",
@@ -51,13 +52,13 @@ class VoidPolicyTestCase(SearxTestCase):
         self.assertEqual(headers["Accept-Language"], "de-DE,de;q=0.9")
 
     def test_blocklist_matches_subdomain(self):
-        from searx.void_blocklist import is_blocked_url
+        from searx.void_blocklist import is_blocked_url  # pylint: disable=import-outside-toplevel
 
         self.assertTrue(is_blocked_url("https://www.pinterest.com/pin/1"))
         self.assertFalse(is_blocked_url("https://en.wikipedia.org/wiki/X"))
 
     def test_english_search_drops_cyrillic(self):
-        from searx.ranking import is_foreign_language
+        from searx.ranking import is_foreign_language  # pylint: disable=import-outside-toplevel
 
         foreign = {
             "title": "Сеть Ретикулум документация",
@@ -74,9 +75,9 @@ class VoidPolicyTestCase(SearxTestCase):
         self.assertFalse(is_foreign_language(foreign, "all"))
 
     def test_logs_never_print_query_or_ip(self):
-        import logging
+        import logging  # pylint: disable=import-outside-toplevel
 
-        from searx.void_logging import NoQueryFilter
+        from searx.void_logging import NoQueryFilter  # pylint: disable=import-outside-toplevel
 
         record = logging.LogRecord(
             "searx.webapp",

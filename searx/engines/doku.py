@@ -54,7 +54,7 @@ def response(resp):
     for r in eval_xpath(doc, '//div[@class="search_quickresult"]/ul/li'):
         try:
             res_url = eval_xpath(r, './/a[@class="wikilink1"]/@href')[-1]
-        except Exception:  # noqa: S112
+        except Exception:  # noqa: S112  # pylint: disable=broad-exception-caught
             continue
 
         if not res_url:
@@ -76,7 +76,7 @@ def response(resp):
 
                 # append result
                 results.append({'title': title, 'content': content, 'url': urljoin(base_url, res_url)})
-        except Exception:  # noqa: S112
+        except Exception:  # noqa: S112  # pylint: disable=broad-exception-caught
             continue
 
         if not res_url:

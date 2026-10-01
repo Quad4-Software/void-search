@@ -200,7 +200,7 @@ def load_settings(load_user_settings: bool = True) -> tuple[SettingsType, str]:
     cfg_folder = get_user_cfg_folder()
 
     if not load_user_settings or not cfg_folder:
-        from searx.void_policy import apply_engine_policy
+        from searx.void_policy import apply_engine_policy  # pylint: disable=import-outside-toplevel
 
         apply_engine_policy(cfg)
         return cfg, msg
@@ -211,7 +211,7 @@ def load_settings(load_user_settings: bool = True) -> tuple[SettingsType, str]:
 
     cfg_file = cfg_folder / settings_yml
     if not cfg_file.exists():
-        from searx.void_policy import apply_engine_policy
+        from searx.void_policy import apply_engine_policy  # pylint: disable=import-outside-toplevel
 
         apply_engine_policy(cfg)
         return cfg, msg
@@ -226,7 +226,7 @@ def load_settings(load_user_settings: bool = True) -> tuple[SettingsType, str]:
     else:
         cfg = user_cfg
 
-    from searx.void_policy import apply_engine_policy
+    from searx.void_policy import apply_engine_policy  # pylint: disable=import-outside-toplevel
 
     apply_engine_policy(cfg)
     return cfg, msg

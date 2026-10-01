@@ -371,20 +371,20 @@ def extract_response_info(result):
 
         title = query(result, title_query)[0]
         tmp_result['title'] = title_filter(to_string(title))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return None
 
     try:
         content = query(result, content_query)[0]
         tmp_result['content'] = content_filter(to_string(content))
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         tmp_result['content'] = ""
 
     try:
         if thumbnail_query:
             thumbnail_query_result = query(result, thumbnail_query)[0]
             tmp_result['thumbnail'] = thumbnail_prefix + to_string(thumbnail_query_result)
-    except Exception:  # noqa: S110
+    except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
         pass
 
     return tmp_result

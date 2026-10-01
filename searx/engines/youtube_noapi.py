@@ -102,7 +102,7 @@ def parse_next_page_response(response_text):
                 "key": "next_page_token",
             }
         )
-    except Exception:  # noqa: S110
+    except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
         pass
 
     return results

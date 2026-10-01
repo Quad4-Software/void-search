@@ -28,14 +28,14 @@ def blocked_hosts() -> frozenset[str]:
                 continue
             hosts.add(_norm_host(line))
     try:
-        from searx import get_setting
+        from searx import get_setting  # pylint: disable=import-outside-toplevel
 
         extra = get_setting("void.block_hosts") or []
         if isinstance(extra, str):
             extra = [extra]
         for item in extra:
             hosts.add(_norm_host(str(item)))
-    except Exception:  # noqa: S110
+    except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
         pass
     hosts.discard("")
     return frozenset(hosts)

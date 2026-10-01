@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# pylint: disable=missing-class-docstring,invalid-name
 """Tests for Void result ranking."""
 
 from searx.ranking import calculate_score, rank_results, relevance_multiplier, tokenize_query
@@ -97,7 +98,7 @@ class RankingTestCase(SearxTestCase):
         self.assertGreater(exact, loose)
 
     def test_word_boundary_does_not_match_substring(self):
-        from searx.ranking import _coverage
+        from searx.ranking import _coverage  # pylint: disable=import-outside-toplevel
 
         self.assertEqual(_coverage("trust no one", ["rust"]), 0.0)
         self.assertEqual(_coverage("the rust book", ["rust"]), 1.0)

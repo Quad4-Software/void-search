@@ -77,7 +77,7 @@ def response(resp):
                     # Date: 2016-02-21 21:44 UTC
                     date = datetime.strptime(item, 'Date: %Y-%m-%d %H:%M UTC').replace(tzinfo=UTC)
                     params['publishedDate'] = date
-                except Exception:  # noqa: S110
+                except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
                     pass
             elif item.startswith('Comment:'):
                 params['content'] = item

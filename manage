@@ -57,7 +57,7 @@ while IFS= read -r line; do
 done <<<"$(git ls-files './tests/*.yml' './searx/*.yml' './utils/templates/etc/searxng/*.yml' '.github/*.yml' '.github/*/*.yml')"
 
 RST_FILES=(
-    'README.rst'
+    'CONTRIBUTING.rst'
 )
 
 SHFMT_SCRIPTS=(

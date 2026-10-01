@@ -51,7 +51,7 @@ class SXNGAnswerer(Answerer):
 
         try:
             args = [babel.numbers.parse_decimal(num, ui_locale, numbering_system="latn") for num in parts[1:]]
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             # seems one of the args is not a float type, can't be converted to float
             return results
 

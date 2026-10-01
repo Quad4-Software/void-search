@@ -367,7 +367,8 @@ def _parse_published_date(content: str) -> tuple[str, datetime | None]:
         date_string = content[0 : date_pos - 5]
 
         # calculate datetime
-        published_date = datetime.now(tz=UTC) - timedelta(days=int(re.match(r"\d+", date_string).group()))  # type: ignore
+        days_ago = int(re.match(r"\d+", date_string).group())  # type: ignore[union-attr]
+        published_date = datetime.now(tz=UTC) - timedelta(days=days_ago)
 
         # fix content string
         content = content[date_pos:]

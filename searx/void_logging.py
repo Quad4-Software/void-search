@@ -19,13 +19,13 @@ def _scrub(text: str) -> str:
     return _IP6.sub("[redacted]", text)
 
 
-class NoQueryFilter(logging.Filter):
+class NoQueryFilter(logging.Filter):  # pylint: disable=too-few-public-methods
     """Rewrite log records so queries and client addresses never print."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         try:
             message = record.getMessage()
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return True
         record.msg = _scrub(str(message))
         record.args = ()

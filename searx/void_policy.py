@@ -119,7 +119,7 @@ def anonymize_outgoing_headers(headers: dict[str, str] | None) -> None:
             headers.pop(key, None)
             continue
         if key.lower() == "user-agent" and str(headers[key]).startswith("SearXNG/"):
-            from searx.utils import gen_useragent
+            from searx.utils import gen_useragent  # pylint: disable=import-outside-toplevel
 
             headers[key] = gen_useragent()
     if not any(key.lower() == "accept-language" for key in headers):

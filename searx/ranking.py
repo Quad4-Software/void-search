@@ -17,7 +17,7 @@ from urllib.parse import ParseResult, urlparse
 if t.TYPE_CHECKING:
     from searx.result_types import LegacyResult, MainResult
 
-from searx.void_blocklist import is_blocked_url
+from searx.void_blocklist import is_blocked_url  # pylint: disable=wrong-import-position
 
 _TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9+._-]{1,}", re.I)
 _FOREIGN_SCRIPT = re.compile(
@@ -339,7 +339,7 @@ def _nav_bonus(host: str, query: str, parsed: ParseResult | None) -> float:
     score = 0.0
     if not needle:
         return 0.0
-    if needle == host or needle == host.rsplit(".", 1)[0]:
+    if needle in (host, host.rsplit(".", 1)[0]):
         score += 1.35
     for token in tokens:
         for dest in _NAV_HOSTS.get(token, ()):
@@ -423,11 +423,11 @@ def is_foreign_language(result: t.Any, lang: str) -> bool:
     if not str(lang).lower().startswith("en"):
         return False
     try:
-        from searx import get_setting
+        from searx import get_setting  # pylint: disable=import-outside-toplevel
 
         if not get_setting("void.drop_foreign_script"):
             return False
-    except Exception:  # noqa: S110
+    except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
         pass
     blob = f"{_field(result, 'title')} {_field(result, 'content')}"
     return foreign_script_ratio(blob) >= 0.18
@@ -485,7 +485,7 @@ def engine_weight_score(
     engines: dict[str, t.Any] | None = None,
 ) -> float:
     """Reproduce the SearXNG consensus score from engine weights and ranks."""
-    import searx.engines
+    import searx.engines  # pylint: disable=import-outside-toplevel
 
     weight = 1.0
     engine_map = engines if engines is not None else getattr(searx.engines, "engines", {})

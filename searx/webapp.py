@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """WebApp"""
 
-# pylint: disable=use-dict-literal
+# pylint: disable=use-dict-literal,wrong-import-position
 
 import base64
 import contextlib

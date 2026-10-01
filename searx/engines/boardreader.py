@@ -71,7 +71,9 @@ def _get_session_id() -> str:
 def request(query: str, params: "OnlineParams"):
     session_id = _get_session_id()
 
-    language: str = traits.get_language(params["searxng_locale"], default="All")  # pyright: ignore[reportAssignmentType]
+    language: str = traits.get_language(  # pyright: ignore[reportAssignmentType]
+        params["searxng_locale"], default="All"
+    )
     args = {
         "query": query,
         "page": params["pageno"],

@@ -89,8 +89,12 @@ class OnlineCurrencyProcessor(OnlineProcessor):
             return None
 
         ui_locale = flask_babel.get_locale() or babel.Locale.parse("en")
-        from_name: str = CURRENCIES.iso4217_to_name(from_iso4217, ui_locale.language)  # pyright: ignore[reportAssignmentType]
-        to_name: str = CURRENCIES.iso4217_to_name(to_iso4217, ui_locale.language)  # pyright: ignore[reportAssignmentType]
+        from_name: str = CURRENCIES.iso4217_to_name(  # pyright: ignore[reportAssignmentType]
+            from_iso4217, ui_locale.language
+        )
+        to_name: str = CURRENCIES.iso4217_to_name(  # pyright: ignore[reportAssignmentType]
+            to_iso4217, ui_locale.language
+        )
 
         params: OnlineCurrenciesParams = {
             **online_params,

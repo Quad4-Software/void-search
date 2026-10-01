@@ -17,6 +17,12 @@ server:
   secret_key: "changedultrasecretkey"
   base_url: false
   http_protocol_version: "1.0"
+  # the default settings require Valkey which robot tests do not provide
+  limiter: false
+  public_instance: false
+
+void:
+  landlock: false
 
 ui:
   static_path: ""

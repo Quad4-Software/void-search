@@ -58,6 +58,11 @@ jobs:
         run: make V=1 install
 
       - name: Build documentation
+        env:
+          # the default settings enable the limiter and public_instance mode,
+          # which exits without a Valkey connection - disable both for docs
+          SEARXNG_LIMITER: "false"
+          SEARXNG_PUBLIC_INSTANCE: "false"
         run: make V=1 docs.html
 
       - if: github.ref_name == 'master'

@@ -155,11 +155,11 @@ class OnlineProcessor(EngineProcessor):
 
         anonymize = True
         try:
-            from searx import get_setting
-            from searx.void_policy import anonymize_outgoing_headers
+            from searx import get_setting  # pylint: disable=import-outside-toplevel
+            from searx.void_policy import anonymize_outgoing_headers  # pylint: disable=import-outside-toplevel
 
             anonymize = bool(get_setting("void.anonymize_outgoing"))
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             anonymize = True
             anonymize_outgoing_headers = None  # type: ignore[assignment]
 
@@ -246,12 +246,12 @@ class OnlineProcessor(EngineProcessor):
         self.engine.request(query, params)
 
         try:
-            from searx import get_setting
-            from searx.void_policy import anonymize_outgoing_headers
+            from searx import get_setting  # pylint: disable=import-outside-toplevel
+            from searx.void_policy import anonymize_outgoing_headers  # pylint: disable=import-outside-toplevel
 
             if get_setting("void.anonymize_outgoing"):
                 anonymize_outgoing_headers(params["headers"])
-        except Exception:  # noqa: S110
+        except Exception:  # noqa: S110  # pylint: disable=broad-exception-caught
             pass
 
         # ignoring empty urls

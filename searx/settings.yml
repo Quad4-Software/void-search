@@ -116,7 +116,9 @@ server:
     X-Permitted-Cross-Domain-Policies: none
     Cross-Origin-Opener-Policy: same-origin
     Cross-Origin-Resource-Policy: same-origin
-    Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+    Permissions-Policy: >-
+      accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(),
+      microphone=(), payment=(), usb=()
 
 void:
   result_cache_ttl: 180
