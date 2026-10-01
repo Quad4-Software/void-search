@@ -8,8 +8,13 @@ name: AI Policy
 on:
   issues:
     types: [opened]
+  # zizmor: ignore[dangerous-triggers] PR code is never checked out; script only reads issue/PR metadata
   pull_request_target:
     types: [opened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -19,6 +24,7 @@ permissions:
 jobs:
   check:
     name: Check
+    timeout-minutes: 5
     # for issues with an author who has not contributed before
     if: >-
       github.event.sender.type != 'Bot' &&

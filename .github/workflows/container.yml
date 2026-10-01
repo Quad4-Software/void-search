@@ -4,6 +4,7 @@ name: Container
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+  # zizmor: ignore[dangerous-triggers] gated on Integration success; only checks out master commits
   workflow_run:
     workflows:
       - Integration
@@ -30,6 +31,7 @@ jobs:
       || (github.repository_owner == 'searxng' && github.event.workflow_run.conclusion == 'success')
     name: Build (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +95,7 @@ jobs:
   test:
     name: Test (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     needs: build
     strategy:
       fail-fast: false
@@ -131,11 +134,13 @@ jobs:
     if: github.repository_owner == 'searxng' && github.ref_name == 'master'
     name: Release
     runs-on: ubuntu-26.04-arm
+    timeout-minutes: 20
     needs:
       - build
       - test
 
     permissions:
+      contents: read
       packages: write
 
     steps:

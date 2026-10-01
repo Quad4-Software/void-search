@@ -11,8 +11,9 @@ on:
       - master
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # keep master runs alive: Container builds are gated on Integration success
+  cancel-in-progress: ${{ github.ref_name != 'master' }}
 
 permissions:
   contents: read
@@ -24,7 +25,9 @@ jobs:
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-26.04
+    timeout-minutes: 30
     strategy:
+      fail-fast: false
       matrix:
         python-version:
           - "3.11"
@@ -60,6 +63,7 @@ jobs:
   theme:
     name: Theme
     runs-on: ubuntu-26.04-arm
+    timeout-minutes: 20
     steps:
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0

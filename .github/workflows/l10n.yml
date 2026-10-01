@@ -4,6 +4,7 @@ name: Translation
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+  # zizmor: ignore[dangerous-triggers] gated on Integration success; only checks out master commits
   workflow_run:
     workflows:
       - Integration
@@ -29,6 +30,7 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'searxng'
     name: Update
     runs-on: ubuntu-26.04-arm
+    timeout-minutes: 30
     permissions:
       # For "make V=1 weblate.push.translations"
       contents: write
@@ -41,6 +43,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        # zizmor: ignore[artipacked] token must persist for the git push in weblate.push.translations; no artifacts uploaded
         with:
           token: "${{ secrets.WEBLATE_GITHUB_TOKEN }}"
           fetch-depth: "0"
@@ -75,6 +78,7 @@ jobs:
       && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     name: Pull Request
     runs-on: ubuntu-26.04-arm
+    timeout-minutes: 30
     permissions:
       # For "make V=1 weblate.translations.commit"
       contents: write
@@ -89,6 +93,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        # zizmor: ignore[artipacked] token must persist for the git push in weblate.translations.commit; no artifacts uploaded
         with:
           token: "${{ secrets.WEBLATE_GITHUB_TOKEN }}"
           fetch-depth: "0"

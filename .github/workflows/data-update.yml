@@ -22,6 +22,7 @@ jobs:
     if: github.repository_owner == 'searxng'
     name: ${{ matrix.fetch }}
     runs-on: ubuntu-26.04-arm
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
