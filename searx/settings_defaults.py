@@ -279,6 +279,7 @@ SCHEMA: dict[str, t.Any] = {
         'landlock': SettingsValue(bool, True),
         'drop_foreign_script': SettingsValue(bool, True),
         'no_logs': SettingsValue(bool, True),
+        'engine_policy': SettingsValue(bool, True, 'SEARXNG_ENGINE_POLICY'),
         'block_hosts': SettingsValue(list, []),
     },
 }

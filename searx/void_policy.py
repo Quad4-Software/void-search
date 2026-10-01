@@ -8,6 +8,7 @@ on, but they are off by default.
 
 from __future__ import annotations
 
+import os
 import typing as t
 
 if t.TYPE_CHECKING:
@@ -94,6 +95,12 @@ _DROP_HEADERS = frozenset(
 
 def apply_engine_policy(settings: SettingsType) -> None:
     """Disable engines that burn instance reputation with providers."""
+    # env vars are not applied to settings yet at this stage
+    if os.environ.get("SEARXNG_ENGINE_POLICY", "").lower() in ("0", "false", "off"):
+        return
+    void = settings.get("void")
+    if isinstance(void, dict) and void.get("engine_policy") is False:
+        return
     engines = settings.get("engines")
     if not isinstance(engines, list):
         return

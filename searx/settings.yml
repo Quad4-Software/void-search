@@ -130,6 +130,10 @@ void:
   landlock: true
   drop_foreign_script: true
   no_logs: true
+  # force-disable engines that rate-limit or ban instance IPs
+  # (google, duckduckgo, brave, startpage, qwant, mojeek, ...)
+  # set to false or SEARXNG_ENGINE_POLICY=false to allow them
+  engine_policy: true
   block_hosts: []
 
 valkey:
@@ -721,7 +725,6 @@ engines:
     content_query: snippet
     title_html_to_text: true
     content_html_to_text: true
-    disabled: true
     about:
       website: https://crowdview.ai/
 
@@ -729,7 +732,6 @@ engines:
     engine: yep
     shortcut: yep
     categories: general
-    disabled: true
 
   - name: currency
     engine: currency_convert
@@ -785,7 +787,6 @@ engines:
     url_query: SourceURL
     title_query: Title
     content_query: Description
-    disabled: true
     about:
       website: https://encyclosearch.org
       official_api_documentation: https://encyclosearch.org/docs/#/rest-api
@@ -1781,7 +1782,6 @@ engines:
     engine: mwmbl
     # api_url: https://api.mwmbl.org
     shortcut: mwm
-    disabled: true
 
   - name: neocities
     engine: neocities
@@ -1891,7 +1891,6 @@ engines:
     engine: openlibrary
     shortcut: ol
     timeout: 10
-    disabled: true
 
   - name: openmeteo
     engine: open_meteo
@@ -2218,7 +2217,6 @@ engines:
     url_xpath: .//a[contains(@class,'result-link')]/@href
     title_xpath: .//span[contains(@class,'result-title-txt')]/text()
     content_xpath: ./p[@id='result-hightlight']
-    disabled: true
     about:
       website: https://searchmysite.net
 
@@ -2335,7 +2333,6 @@ engines:
     privacywall_category: general
     paging: false  # only images and videos support pagination
     shortcut: pw
-    disabled: true
 
   - name: privacywall images
     engine: privacywall
@@ -2562,7 +2559,6 @@ engines:
     shortcut: tu
     tusk_categ: web
     categories: general
-    disabled: true
 
   - name: tusksearch images
     engine: tusksearch
@@ -2689,7 +2685,6 @@ engines:
     categories: [general, blogs]
     shortcut: wib
     timeout: 3.0
-    disabled: true
     about:
       website: https://wiby.me/
       wikidata_id: Q104850185
@@ -2701,7 +2696,6 @@ engines:
     categories: [general, wikimedia]
     base_url: "https://{language}.wikibooks.org/"
     search_type: text
-    disabled: true
     about:
       website: https://www.wikibooks.org/
       wikidata_id: Q367
@@ -2724,7 +2718,6 @@ engines:
     categories: [general, wikimedia]
     base_url: "https://{language}.wikiquote.org/"
     search_type: text
-    disabled: true
     about:
       website: https://www.wikiquote.org/
       wikidata_id: Q369
@@ -2736,7 +2729,6 @@ engines:
     categories: [general, wikimedia]
     base_url: "https://{language}.wikisource.org/"
     search_type: text
-    disabled: true
     about:
       website: https://www.wikisource.org/
       wikidata_id: Q263
@@ -2747,7 +2739,6 @@ engines:
     categories: [general, science, wikimedia]
     base_url: "https://species.wikimedia.org/"
     search_type: text
-    disabled: true
     about:
       website: https://species.wikimedia.org/
       wikidata_id: Q13679
@@ -2769,7 +2760,6 @@ engines:
     categories: [general, wikimedia]
     base_url: "https://{language}.wikiversity.org/"
     search_type: text
-    disabled: true
     about:
       website: https://www.wikiversity.org/
       wikidata_id: Q370
@@ -2781,7 +2771,6 @@ engines:
     categories: [general, wikimedia]
     base_url: "https://{language}.wikivoyage.org/"
     search_type: text
-    disabled: true
     about:
       website: https://www.wikivoyage.org/
       wikidata_id: Q373
@@ -2924,7 +2913,6 @@ engines:
     categories: [general, web]
     engine: naver
     shortcut: nvr
-    disabled: true
 
   - name: naver images
     naver_category: images
@@ -2998,7 +2986,6 @@ engines:
       - https://search.lomig.me
       - https://yacy.ecosys.eu
     shortcut: ya
-    disabled: true
     search_mode: 'global'
     timeout: 5.0
 
@@ -3233,7 +3220,6 @@ engines:
     title_xpath: //li//div[@class="mw-search-result-heading"]/a
     content_xpath: //li/div[@class="searchresult"]
     categories: general
-    disabled: true
     language: fr
     about:
       website: https://wikimini.org/

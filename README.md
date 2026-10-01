@@ -17,8 +17,10 @@ Most of the changes are defaults, not new features:
   engines.
 - English by default. Results in other scripts are dropped on `en` queries.
 - A host blocklist plus demotion for SEO-farm domains.
-- CAPTCHA and proof-of-work engines are off. Wiby and YaCy are wired in but
-  disabled until you turn them on.
+- Engines that ban or CAPTCHA instance IPs (Google, DuckDuckGo, Brave,
+  Startpage, Qwant, Mojeek and friends) are force-disabled by the engine
+  policy. Set `void.engine_policy: false` or `SEARXNG_ENGINE_POLICY=false`
+  if you want them anyway.
 - `/stats`, download formats, timings, and version strings are not exposed.
 - On Linux, the process drops into a
   [Landlock](https://landlock.io) sandbox after startup. Skipped in debug
@@ -115,6 +117,7 @@ Matching hosts are removed from results.
 | `void.drop_foreign_script` | true |
 | `void.landlock` | true |
 | `void.no_logs` | true |
+| `void.engine_policy` | true |
 | `void.result_cache_ttl` | 180 |
 | `outgoing.request_timeout` | 2.0s |
 | `outgoing.pool_connections` | 256 |
