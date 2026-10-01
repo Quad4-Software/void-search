@@ -63,6 +63,8 @@ jobs:
           # which exits without a Valkey connection - disable both for docs
           SEARXNG_LIMITER: "false"
           SEARXNG_PUBLIC_INSTANCE: "false"
+          # debug also skips the Landlock sandbox, sphinx must write to dist/
+          SEARXNG_DEBUG: "1"
         run: make V=1 docs.html
 
       - if: github.ref_name == 'master'
