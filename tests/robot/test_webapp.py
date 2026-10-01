@@ -42,7 +42,7 @@ def test_preferences_engine_select(browser):
 
     assert not browser.find_by_xpath('//input[@id="engine_general_dummy__general"]').first.checked
     browser.find_by_xpath('//label[@for="engine_general_dummy__general"]').first.check()
-    browser.execute_script('arguments[0].click();', browser.find_by_xpath('//input[@type="submit"]').first._element)
+    browser.execute_script('arguments[0].click();', browser.find_by_xpath('//input[@type="submit"]').first._element)  # pylint: disable=protected-access
 
     # waiting for the redirect - without this the test is flaky..
     sleep(1)
@@ -60,7 +60,7 @@ def test_preferences_locale(browser):
 
     browser.find_by_xpath('//label[@for="tab-ui"]').first.click()
     browser.select('locale', 'fr')
-    browser.execute_script('arguments[0].click();', browser.find_by_xpath('//input[@type="submit"]').first._element)
+    browser.execute_script('arguments[0].click();', browser.find_by_xpath('//input[@type="submit"]').first._element)  # pylint: disable=protected-access
 
     # waiting for the redirect - without this the test is flaky..
     sleep(1)
