@@ -2,10 +2,12 @@
 # shellcheck shell=dash
 set -eu
 
+APP_DIR="$(dirname "$0")"
+
 CONFIG_PATH="${__SEARXNG_CONFIG_PATH:-/etc/searxng}"
 DATA_PATH="${__SEARXNG_DATA_PATH:-/var/cache/searxng}"
 SETTINGS_PATH="${SEARXNG_SETTINGS_PATH:-$CONFIG_PATH/settings.yml}"
-TEMPLATE="$(dirname "$0")/settings.template.yml"
+TEMPLATE="$APP_DIR/settings.template.yml"
 
 if [ ! -d "$CONFIG_PATH" ]; then
     echo "config path is missing: $CONFIG_PATH" >&2
@@ -36,5 +38,10 @@ if [ -n "${SEARXNG_PORT:-}" ]; then
     esac
 fi
 
+GRANIAN_BIN="$APP_DIR/.venv/bin/granian"
+[ -x "$GRANIAN_BIN" ] || GRANIAN_BIN=granian
+
+export PYTHONPATH="${PYTHONPATH:-$APP_DIR}"
+
 echo "Void ${__SEARXNG_VERSION:-dev}"
-exec granian searx.webapp:app
+exec "$GRANIAN_BIN" searx.webapp:app
