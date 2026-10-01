@@ -2,13 +2,11 @@
 """Yep (general, images, news)"""
 
 import re
-
 import typing as t
-
 from urllib.parse import urlencode
 
 from searx.result_types import EngineResults
-from searx.utils import html_to_text, eval_xpath_getindex, extract_text
+from searx.utils import eval_xpath_getindex, extract_text, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.enginelib.traits import EngineTraits
@@ -84,7 +82,6 @@ def fetch_traits(engine_traits: "EngineTraits"):
 
     from searx.locales import language_tag
     from searx.network import get  # see https://github.com/searxng/searxng/issues/762
-
     from searx.utils import gen_useragent
 
     headers = {
@@ -112,8 +109,7 @@ def fetch_traits(engine_traits: "EngineTraits"):
         if not resp.ok:
             raise RuntimeError("Response from Yep languages is not OK.")
 
-        for match in _LANGUAGE_RE.findall(resp.text):
-            language_codes.append(match)
+        language_codes.extend(_LANGUAGE_RE.findall(resp.text))
 
         if language_codes:
             break
@@ -129,6 +125,6 @@ def fetch_traits(engine_traits: "EngineTraits"):
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != sxng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, language_code))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {language_code}")
             continue
         engine_traits.languages[sxng_tag] = language_code

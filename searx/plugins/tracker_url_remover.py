@@ -12,10 +12,11 @@ from . import Plugin, PluginInfo
 
 if t.TYPE_CHECKING:
     import flask
-    from searx.search import SearchWithPlugins
+
     from searx.extended_types import SXNG_Request
-    from searx.result_types import Result, LegacyResult  # pyright: ignore[reportPrivateLocalImportUsage]
     from searx.plugins import PluginCfg
+    from searx.result_types import LegacyResult, Result  # pyright: ignore[reportPrivateLocalImportUsage]
+    from searx.search import SearchWithPlugins
 
 
 log = logging.getLogger("searx.plugins.tracker_url_remover")

@@ -1,24 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name,line-too-long
 
+from flask_babel import gettext
 from parameterized.parameterized import parameterized
 
-from flask_babel import gettext
-
+import searx.botdetection
+import searx.limiter
 import searx.plugins
 import searx.preferences
-import searx.limiter
-import searx.botdetection
-
 from searx.extended_types import sxng_request
 from searx.result_types import Answer
-
 from tests import SearxTestCase
+
 from .test_plugins import do_post_search
 
 
 class PluginIPSelfInfo(SearxTestCase):
-
     def setUp(self):
         super().setUp()
         engines = {}
@@ -81,7 +78,8 @@ class PluginIPSelfInfo(SearxTestCase):
             result = self.client.post("/search", data={"q": "ip"}, headers=headers, environ_overrides=environ_overrides)
             self.assertIn(answer, str(result.data))
         self.assertIn(
-            "ERROR:searx.botdetection:REMOTE_ADDR: '1.2.3.4.5' does not appear to be an IPv4 or IPv6 address / discard REMOTE_ADDR from WSGI environment",
+            "ERROR:searx.botdetection:REMOTE_ADDR: '1.2.3.4.5' does not appear to be an IPv4 or IPv6"
+            " address / discard REMOTE_ADDR from WSGI environment",
             ctx.output,
         )
 
@@ -95,7 +93,8 @@ class PluginIPSelfInfo(SearxTestCase):
             result = self.client.post("/search", data={"q": "ip"}, headers=headers, environ_overrides=environ_overrides)
             self.assertIn(answer, str(result.data))
         self.assertIn(
-            "ERROR:searx.botdetection:X-Real-IP: '1.2.3.4.5' does not appear to be an IPv4 or IPv6 address / discard HTTP_X_REAL_IP from WSGI environment",
+            "ERROR:searx.botdetection:X-Real-IP: '1.2.3.4.5' does not appear to be an IPv4 or IPv6"
+            " address / discard HTTP_X_REAL_IP from WSGI environment",
             ctx.output,
         )
 
@@ -111,7 +110,8 @@ class PluginIPSelfInfo(SearxTestCase):
             result = self.client.post("/search", data={"q": "ip"}, headers=headers)
             self.assertIn(answer, str(result.data))
         self.assertIn(
-            "ERROR:searx.botdetection:X-Forwarded-For: '1.2.3.4.5' does not appear to be an IPv4 or IPv6 address / discard HTTP_X_FORWARDED_FOR from WSGI environment",
+            "ERROR:searx.botdetection:X-Forwarded-For: '1.2.3.4.5' does not appear to be an IPv4 or IPv6"
+            " address / discard HTTP_X_FORWARDED_FOR from WSGI environment",
             ctx.output,
         )
 

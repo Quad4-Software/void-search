@@ -102,14 +102,16 @@ def _get_communities(json):
 def _get_users(json):
     results = []
 
-    for result in json["users"]:
-        results.append(
+    results.extend(
+        [
             {
                 'url': result['person']['actor_id'],
                 'title': result['person']['name'],
                 'content': markdown_to_text(result['person'].get('bio', '')),
             }
-        )
+            for result in json['users']
+        ]
+    )
 
     return results
 

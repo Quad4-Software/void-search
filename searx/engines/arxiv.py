@@ -10,14 +10,14 @@ The engine uses the `arXiv API`_.
 """
 
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 
 from lxml import etree
 from lxml.etree import XPath
-from searx.utils import eval_xpath, eval_xpath_list, eval_xpath_getindex
+
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_getindex, eval_xpath_list
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -81,7 +81,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
     dom = etree.fromstring(resp.content)
     for entry in eval_xpath_list(dom, xpath_entry):
-
         title: str = eval_xpath_getindex(entry, xpath_title, 0).text
 
         url: str = eval_xpath_getindex(entry, xpath_id, 0).text

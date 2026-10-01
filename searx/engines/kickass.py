@@ -30,7 +30,7 @@ base_url = 'https://kickasstorrents.to'
 
 
 def request(query, params):
-    params['base_url'] = random.choice(base_url) if isinstance(base_url, list) else base_url
+    params['base_url'] = random.choice(base_url) if isinstance(base_url, list) else base_url  # noqa: S311
     params['url'] = params['base_url'] + f'/usearch/{quote(query)}/{params["pageno"]}/'
 
     return params

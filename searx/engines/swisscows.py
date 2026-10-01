@@ -2,22 +2,20 @@
 # pylint: disable=invalid-name
 """Swisscows (general, images, videos)"""
 
-import typing as t
-
 import base64
 import codecs
 import hashlib
 import json
 import random
 import string
-
+import typing as t
 from datetime import datetime
 from urllib.parse import urlencode
 
 from babel.core import get_global
 
 from searx.result_types import EngineResults, Video
-from searx.utils import humanize_number, html_to_text
+from searx.utils import html_to_text, humanize_number
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -93,7 +91,7 @@ def generate_nonce(length: int = 32) -> str:
     """
     Generate a random char sequence with the given length.
     """
-    return "".join(random.choices(NONCE_ALPHABET, k=length))
+    return "".join(random.choices(NONCE_ALPHABET, k=length))  # noqa: S311
 
 
 def caesar_shift_with_switch_case(s: str, offset: int = 13) -> str:
@@ -125,8 +123,7 @@ def sha256_hash_b64_url(s: str) -> str:
     # need to do that by hand
     hash_base64 = codecs.encode(hashed_bytes, "base64").decode("utf-8").rstrip('\n')
 
-    hash_base64_url_encoded = hash_base64.replace("=", "").replace("+", '-').replace("/", '_')
-    return hash_base64_url_encoded
+    return hash_base64.replace("=", "").replace("+", '-').replace("/", '_')
 
 
 def generate_nonce_and_signature(base_path: str, args: dict[str, t.Any]) -> tuple[str, str]:
@@ -154,12 +151,12 @@ maximum_page_size = {"web": 20, "images": 50, "videos": 10}
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if swisscows_category not in ("web", "images", "videos"):
-        raise ValueError("illegal swisscows category: %s" % swisscows_category)
+        raise ValueError(f"illegal swisscows category: {swisscows_category}")
 
     if results_per_page > maximum_page_size[swisscows_category]:
         raise ValueError(
-            "results_per_page for swisscows %s can be at most %d"
-            % (swisscows_category, maximum_page_size[swisscows_category])
+            f"results_per_page for swisscows {swisscows_category}"
+            f" can be at most {maximum_page_size[swisscows_category]}"
         )
 
 

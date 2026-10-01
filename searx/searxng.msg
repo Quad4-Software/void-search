@@ -4,18 +4,17 @@
 
 import typing
 
-from searx import webutils
-from searx import engines
+from searx import engines, webutils
 from searx.weather import WeatherConditionType
 
 __all__ = [
-    'CONSTANT_NAMES',
-    'CATEGORY_NAMES',
-    'STYLE_NAMES',
     'BRAND_CUSTOM_LINKS',
-    'WEATHER_TERMS',
-    'WEATHER_CONDITIONS',
+    'CATEGORY_NAMES',
+    'CONSTANT_NAMES',
     'SOCIAL_MEDIA_TERMS',
+    'STYLE_NAMES',
+    'WEATHER_CONDITIONS',
+    'WEATHER_TERMS',
 ]
 
 CONSTANT_NAMES = {

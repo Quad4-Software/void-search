@@ -43,15 +43,14 @@ def response(resp):
     results = []
 
     for package in resp.json()["crates"]:
-
         published_date = package.get("updated_at")
         published_date = parser.parse(published_date)
 
         links = {}
         for k, v in linked_terms.items():
-            l = package.get(k)
-            if l:
-                links[v] = l
+            link = package.get(k)
+            if link:
+                links[v] = link
 
         results.append(
             {

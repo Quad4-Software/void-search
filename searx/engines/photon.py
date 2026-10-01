@@ -5,6 +5,7 @@ Photon (Map)
 
 from json import loads
 from urllib.parse import urlencode
+
 from searx.utils import searxng_useragent
 
 # about
@@ -53,7 +54,6 @@ def response(resp):
 
     # parse results
     for r in json.get('features', {}):
-
         properties = r.get('properties')
 
         if not properties:
@@ -113,9 +113,7 @@ def response(resp):
                 {
                     'house_number': properties.get('housenumber'),
                     'road': properties.get('street'),
-                    'locality': properties.get(
-                        'city', properties.get('town', properties.get('village'))  # noqa
-                    ),  # noqa
+                    'locality': properties.get('city', properties.get('town', properties.get('village'))),
                     'postcode': properties.get('postcode'),
                     'country': properties.get('country'),
                 }

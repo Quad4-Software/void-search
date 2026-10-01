@@ -3,8 +3,7 @@
 
 import typer
 
-from . import cache
-from . import init
+from . import cache, init
 
 init()
 app = typer.Typer()

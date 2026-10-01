@@ -2,25 +2,25 @@
 # pylint: disable=missing-module-docstring
 
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
-from searx.exceptions import SearxParameterException
-from searx.webutils import VALID_LANGUAGE_CODE
-from searx.query import RawTextQuery
+
 from searx.engines import categories, engines
-from searx.search.models import SearchQuery, EngineRef
+from searx.exceptions import SearxParameterException
 from searx.preferences import Preferences
+from searx.query import RawTextQuery
+from searx.search.models import EngineRef, SearchQuery
+from searx.webutils import VALID_LANGUAGE_CODE
 
 
 # remove duplicate queries.
 # HINT: does not fix "!music !soundcloud", because the categories are 'none' and 'music'
-def deduplicate_engineref_list(engineref_list: List[EngineRef]) -> List[EngineRef]:
+def deduplicate_engineref_list(engineref_list: list[EngineRef]) -> list[EngineRef]:
     engineref_dict = {q.category + '|' + q.name: q for q in engineref_list}
     return list(engineref_dict.values())
 
 
 def validate_engineref_list(
-    engineref_list: List[EngineRef], preferences: Preferences
-) -> Tuple[List[EngineRef], List[EngineRef], List[EngineRef]]:
+    engineref_list: list[EngineRef], preferences: Preferences
+) -> tuple[list[EngineRef], list[EngineRef], list[EngineRef]]:
     """Validate query_engines according to the preferences
 
     Returns:
@@ -45,14 +45,14 @@ def validate_engineref_list(
     return valid, unknown, no_token
 
 
-def parse_pageno(form: Dict[str, str]) -> int:
+def parse_pageno(form: dict[str, str]) -> int:
     pageno_param = form.get('pageno', '1')
     if not pageno_param.isdigit() or int(pageno_param) < 1:
         raise SearxParameterException('pageno', pageno_param)
     return int(pageno_param)
 
 
-def parse_lang(preferences: Preferences, form: Dict[str, str], raw_text_query: RawTextQuery) -> str:
+def parse_lang(preferences: Preferences, form: dict[str, str], raw_text_query: RawTextQuery) -> str:
     if "language" in preferences.cfg.lock:
         return preferences.get_value('language')
     # get language
@@ -72,7 +72,7 @@ def parse_lang(preferences: Preferences, form: Dict[str, str], raw_text_query: R
     return query_lang
 
 
-def parse_safesearch(preferences: Preferences, form: Dict[str, str]) -> int:
+def parse_safesearch(preferences: Preferences, form: dict[str, str]) -> int:
     if "safesearch" in preferences.cfg.lock:
         return preferences.get_value('safesearch')
 
@@ -92,7 +92,7 @@ def parse_safesearch(preferences: Preferences, form: Dict[str, str]) -> int:
     return query_safesearch
 
 
-def parse_time_range(form: Dict[str, str]) -> Optional[str]:
+def parse_time_range(form: dict[str, str]) -> str | None:
     query_time_range = form.get('time_range')
     # check time_range
     query_time_range = None if query_time_range in ('', 'None') else query_time_range
@@ -101,7 +101,7 @@ def parse_time_range(form: Dict[str, str]) -> Optional[str]:
     return query_time_range
 
 
-def parse_timeout(form: Dict[str, str], raw_text_query: RawTextQuery) -> Optional[float]:
+def parse_timeout(form: dict[str, str], raw_text_query: RawTextQuery) -> float | None:
     timeout_limit = raw_text_query.timeout_limit
     if timeout_limit is None:
         timeout_limit = form.get('timeout_limit')
@@ -114,7 +114,7 @@ def parse_timeout(form: Dict[str, str], raw_text_query: RawTextQuery) -> Optiona
         raise SearxParameterException('timeout_limit', timeout_limit) from e
 
 
-def parse_category_form(query_categories: List[str], name: str, value: str) -> None:
+def parse_category_form(query_categories: list[str], name: str, value: str) -> None:
     if name == 'categories':
         query_categories.extend(categ for categ in map(str.strip, value.split(',')) if categ in categories)
     elif name.startswith('category_'):
@@ -132,10 +132,10 @@ def parse_category_form(query_categories: List[str], name: str, value: str) -> N
             query_categories.remove(category)
 
 
-def get_selected_categories(preferences: Preferences, form: Optional[Dict[str, str]]) -> List[str]:
+def get_selected_categories(preferences: Preferences, form: dict[str, str] | None) -> list[str]:
     selected_categories = []
 
-    if not "categories" in preferences.cfg.lock and form is not None:
+    if "categories" not in preferences.cfg.lock and form is not None:
         for name, value in form.items():
             parse_category_form(selected_categories, name, value)
 
@@ -144,8 +144,7 @@ def get_selected_categories(preferences: Preferences, form: Optional[Dict[str, s
     # (is stored in cookie)
     if not selected_categories:
         cookie_categories = preferences.get_value('categories')
-        for ccateg in cookie_categories:
-            selected_categories.append(ccateg)
+        selected_categories.extend(cookie_categories)
 
     # if still no category is specified, using general
     # as default-category
@@ -156,9 +155,9 @@ def get_selected_categories(preferences: Preferences, form: Optional[Dict[str, s
 
 
 def get_engineref_from_category_list(  # pylint: disable=invalid-name
-    category_list: List[str],
-    disabled_engines: List[str],
-) -> List[EngineRef]:
+    category_list: list[str],
+    disabled_engines: list[str],
+) -> list[EngineRef]:
     result = []
     for categ in category_list:
         result.extend(
@@ -169,13 +168,13 @@ def get_engineref_from_category_list(  # pylint: disable=invalid-name
     return result
 
 
-def parse_generic(preferences: Preferences, form: Dict[str, str], disabled_engines: List[str]) -> List[EngineRef]:
+def parse_generic(preferences: Preferences, form: dict[str, str], disabled_engines: list[str]) -> list[EngineRef]:
     query_engineref_list = []
     query_categories = []
 
     # set categories/engines
     explicit_engine_list = False
-    if not "categories" in preferences.cfg.lock:
+    if "categories" not in preferences.cfg.lock:
         # parse the form only if the categories are not locked
         for pd_name, pd in form.items():  # pylint: disable=invalid-name
             if pd_name == 'engines':
@@ -219,8 +218,8 @@ def parse_engine_data(form):
 
 
 def get_search_query_from_webapp(
-    preferences: Preferences, form: Dict[str, str]
-) -> Tuple[SearchQuery, RawTextQuery, List[EngineRef], List[EngineRef], str]:
+    preferences: Preferences, form: dict[str, str]
+) -> tuple[SearchQuery, RawTextQuery, list[EngineRef], list[EngineRef], str]:
     """Assemble data from preferences and request.form (from the HTML form) needed
     in a search query.
 
@@ -266,7 +265,7 @@ def get_search_query_from_webapp(
     if query_lang == 'auto':
         query_lang = preferences.client.locale_tag or 'all'
 
-    if not "categories" in preferences.cfg.lock and raw_text_query.specific:
+    if "categories" not in preferences.cfg.lock and raw_text_query.specific:
         # if engines are calculated from query,
         # set categories by using that information
         query_engineref_list = raw_text_query.enginerefs

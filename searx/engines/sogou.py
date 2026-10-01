@@ -2,8 +2,9 @@
 """Sogou search engine for searxng"""
 
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
+
 from lxml import html
 
 from searx.exceptions import SearxEngineCaptchaException
@@ -63,7 +64,8 @@ def response(resp):
 
     # pylint: disable=line-too-long
     for item in dom.xpath(
-        '//div[contains(@class, "rb")] | //div[contains(@class, "vrwrap") and not(.//div[contains(@class, "special-wrap")])]'
+        '//div[contains(@class, "rb")] | //div[contains(@class, "vrwrap")'
+        ' and not(.//div[contains(@class, "special-wrap")])]'
     ):
         item_html = html.tostring(item, encoding="unicode")
 
@@ -96,7 +98,7 @@ def _parse_date(text):
         if date_match:
             try:
                 y, m, d = date_match.group(1).split("-")
-                return datetime(year=int(y), month=int(m), day=int(d))
+                return datetime(year=int(y), month=int(m), day=int(d), tzinfo=UTC)
             except (ValueError, TypeError):
                 pass
     return None

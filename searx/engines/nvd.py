@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """National Vulnerability Database (it)"""
 
-from urllib.parse import urlencode
 from datetime import datetime
+from urllib.parse import urlencode
+
 from searx.result_types import EngineResults
 
 about = {
@@ -41,7 +42,6 @@ def response(resp) -> EngineResults:
     search_res = resp.json()
 
     for item in search_res['response'][0]['grid']['vulnerabilities']:
-
         cve_id = item["cve"]["id"]
         description = item["cve"]["descriptions"][0]["value"]
         date = datetime.fromisoformat(item["cve"]["published"])

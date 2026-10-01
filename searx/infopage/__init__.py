@@ -20,24 +20,22 @@ Usage in a Flask app route:
 
 __all__ = ['InfoPage', 'InfoPageSet']
 
-import typing as t
-
-import os
-import os.path
 import logging
-
+import typing as t
 import urllib.parse
 from functools import cached_property
+from pathlib import Path
+
 import jinja2
 from flask.helpers import url_for
 from markdown_it import MarkdownIt
 
-from .. import get_setting
-from ..version import GIT_URL
-from ..locales import LOCALE_NAMES
+from searx import get_setting
+from searx.locales import LOCALE_NAMES
+from searx.version import GIT_URL
 
 logger = logging.getLogger('searx.infopage')
-_INFO_FOLDER = os.path.abspath(os.path.dirname(__file__))
+_INFO_FOLDER = str(Path(__file__).resolve().parent)
 INFO_PAGES: 'InfoPageSet'
 
 
@@ -59,23 +57,23 @@ class InfoPage:
     @cached_property
     def raw_content(self):
         """Raw content of the page (without any jinja rendering)"""
-        with open(self.fname, 'r', encoding='utf-8') as f:
+        with Path(self.fname).open(encoding='utf-8') as f:
             return f.read()
 
     @cached_property
     def content(self):
         """Content of the page (rendered in a Jinja context)"""
         ctx = self.get_ctx()
-        template = jinja2.Environment().from_string(self.raw_content)
+        template = jinja2.Environment().from_string(self.raw_content)  # noqa: S701
         return template.render(**ctx)
 
     @cached_property
     def title(self):
         """Title of the content (without any markup)"""
         _t = ""
-        for l in self.raw_content.split('\n'):
-            if l.startswith('# '):
-                _t = l.strip('# ')
+        for line in self.raw_content.split('\n'):
+            if line.startswith('# '):
+                _t = line.strip('# ')
         return _t
 
     @cached_property
@@ -95,11 +93,11 @@ class InfoPage:
 
         def _md_link(name: str, url: str):
             url = url_for(url, _external=True)
-            return "[%s](%s)" % (name, url)
+            return f"[{name}]({url})"
 
         def _md_search(query: str):
-            url = '%s?q=%s' % (url_for('search', _external=True), urllib.parse.quote(query))
-            return '[%s](%s)' % (query, url)
+            url = f"{url_for('search', _external=True)}?q={urllib.parse.quote(query)}"
+            return f'[{query}]({url})'
 
         ctx: dict[str, t.Any] = {}
         ctx['GIT_URL'] = GIT_URL
@@ -134,7 +132,7 @@ class InfoPageSet:  # pylint: disable=too-few-public-methods
         """default language"""
 
         self.locales: list[str] = [
-            locale.replace('_', '-') for locale in os.listdir(_INFO_FOLDER) if locale.replace('_', '-') in LOCALE_NAMES
+            p.name.replace('_', '-') for p in Path(_INFO_FOLDER).iterdir() if p.name.replace('_', '-') in LOCALE_NAMES
         ]
         """list of supported languages (aka locales)"""
 
@@ -170,8 +168,8 @@ class InfoPageSet:  # pylint: disable=too-few-public-methods
 
         # not yet instantiated
 
-        fname = os.path.join(self.folder, locale.replace('-', '_'), pagename) + '.md'
-        if not os.path.exists(fname):
+        fname = Path(self.folder) / locale.replace('-', '_') / (pagename + '.md')
+        if not fname.exists():
             logger.info('file %s does not exists', fname)
             self.CACHE[cache_key] = None
             return None

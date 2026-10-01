@@ -12,9 +12,9 @@ results from YouTube.
 import typing as t
 from urllib.parse import urlencode
 
-from searx.utils import eval_xpath_list, eval_xpath, extract_text, ElementType
-from searx.result_types import EngineResults
 from searx.enginelib import EngineAbout
+from searx.result_types import EngineResults
+from searx.utils import ElementType, eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -44,7 +44,7 @@ language = "de"
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if tonline_categ not in ("web", "images", "videos", "news"):
-        raise ValueError("invalid category: %s" % tonline_categ)
+        raise ValueError(f"invalid category: {tonline_categ}")
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -140,5 +140,5 @@ def response(resp: "SXNG_Response") -> EngineResults:
         case "videos":
             _video_results(doc, res)
         case _:
-            raise ValueError("invalid category: %s" % tonline_categ)
+            raise ValueError(f"invalid category: {tonline_categ}")
     return res

@@ -8,25 +8,24 @@ usage::
 
 """
 
-import typing as t
-
-import sys
 import copy
-import os
-from os.path import realpath, dirname
-import warnings
-
-import types
 import inspect
+import os
+import sys
+import types
+import typing as t
+import warnings
+from pathlib import Path
+
 import msgspec
 
 from searx import logger, settings
-from searx.utils import load_module
 from searx.data import ENGINE_TRAITS
 from searx.enginelib import Engine, EngineAbout
+from searx.utils import load_module
 
 logger = logger.getChild('engines')
-ENGINE_DIR = dirname(realpath(__file__))
+ENGINE_DIR = str(Path(__file__).resolve().parent)
 
 # Defaults for the namespace of an engine module, see load_engine()
 ENGINE_DEFAULT_ARGS: dict[str, t.Any] = {
@@ -115,26 +114,26 @@ def load_engine(engine_data: dict[str, t.Any]) -> "Engine | types.ModuleType | N
         logger.error('An engine does not have a "name" field')
         return None
     if '_' in engine_name:
-        logger.error('Engine name contains underscore: "{}"'.format(engine_name))
+        logger.error(f'Engine name contains underscore: "{engine_name}"')
         return None
 
     if engine_name.lower() != engine_name:
-        logger.warning('Engine name is not lowercase: "{}", converting to lowercase'.format(engine_name))
+        logger.warning(f'Engine name is not lowercase: "{engine_name}", converting to lowercase')
         engine_name = engine_name.lower()
         engine_data['name'] = engine_name
 
     # load_module
     module_name = engine_data.get('engine')
     if module_name is None:
-        logger.error('The "engine" field is missing for the engine named "{}"'.format(engine_name))
+        logger.error(f'The "engine" field is missing for the engine named "{engine_name}"')
         return None
     try:
         engine = load_module(module_name + '.py', ENGINE_DIR)
     except (SyntaxError, KeyboardInterrupt, SystemExit, SystemError, ImportError, RuntimeError):
-        logger.exception('Fatal exception in engine "{}"'.format(module_name))
+        logger.exception(f'Fatal exception in engine "{module_name}"')
         sys.exit(1)
     except BaseException:
-        logger.exception('Cannot load engine "{}"'.format(module_name))
+        logger.exception(f'Cannot load engine "{module_name}"')
         return None
 
     check_engine_module(engine)
@@ -247,7 +246,7 @@ def is_missing_required_attributes(engine: "Engine | types.ModuleType"):
     missing = False
     for engine_attr in dir(engine):
         if not engine_attr.startswith('_') and getattr(engine, engine_attr) is None:
-            logger.error('Missing engine config attribute: "{0}.{1}"'.format(engine.name, engine_attr))
+            logger.error(f'Missing engine config attribute: "{engine.name}.{engine_attr}"')
             missing = True
     return missing
 
@@ -263,10 +262,7 @@ def is_engine_active(engine: "Engine | types.ModuleType"):
         return False
 
     # exclude onion engines if not using tor
-    if 'onions' in engine.categories and not using_tor_proxy(engine):
-        return False
-
-    return True
+    return not ('onions' in engine.categories and not using_tor_proxy(engine))
 
 
 def call_engine_setup(engine: "Engine | types.ModuleType", engine_data: dict[str, t.Any]) -> bool:
@@ -296,12 +292,12 @@ def call_engine_setup(engine: "Engine | types.ModuleType", engine_data: dict[str
 
 def register_engine(engine: "Engine | types.ModuleType"):
     if engine.name in engines:
-        logger.error('Engine config error: ambiguous name: {0}'.format(engine.name))
+        logger.error(f'Engine config error: ambiguous name: {engine.name}')
         sys.exit(1)
     engines[engine.name] = engine
 
     if engine.shortcut in engine_shortcuts:
-        logger.error('Engine config error: ambiguous shortcut: {0}'.format(engine.shortcut))
+        logger.error(f'Engine config error: ambiguous shortcut: {engine.shortcut}')
         sys.exit(1)
     engine_shortcuts[engine.shortcut] = engine.name
 

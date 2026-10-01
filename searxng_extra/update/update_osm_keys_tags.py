@@ -42,14 +42,14 @@ Output file: :origin:`searx/data/osm_keys_tags` (:origin:`CI Update data ...
 
 """
 
-import json
 import collections
+import json
 
-from searx.network import set_timeout_for_thread
-from searx.engines import wikidata, set_loggers
-from searx.sxng_locales import sxng_locales
-from searx.engines.openstreetmap import get_key_rank, VALUE_TO_LINK
 from searx.data import data_dir
+from searx.engines import set_loggers, wikidata
+from searx.engines.openstreetmap import VALUE_TO_LINK, get_key_rank
+from searx.network import set_timeout_for_thread
+from searx.sxng_locales import sxng_locales
 from searx.wikidata import send_wikidata_query
 
 DATA_FILE = data_dir / 'osm_keys_tags.json'
@@ -77,7 +77,7 @@ GROUP BY ?key ?item ?itemLabel
 ORDER BY ?key ?item ?itemLabel
 """
 
-LANGUAGES = [l[0].lower() for l in sxng_locales]
+LANGUAGES = [loc[0].lower() for loc in sxng_locales]
 
 PRESET_KEYS = {
     ('wikidata',): {'en': 'Wikidata'},

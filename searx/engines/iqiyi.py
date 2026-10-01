@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """iQiyi: A search engine for retrieving videos from iQiyi."""
 
+import contextlib
 import typing
-
-from urllib.parse import urlencode
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 from searx.exceptions import SearxEngineAPIException
 
@@ -42,10 +42,8 @@ def _result(video: dict[str, typing.Any], album_info: dict[str, typing.Any]):
     published_date = None
     release_time = album_info.get("releaseTime", {}).get("value")
     if release_time:
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             published_date = datetime.fromisoformat(release_time)
-        except (ValueError, TypeError):
-            pass
 
     return {
         'url': video.get("pageUrl", "").replace("http://", "https://"),
@@ -71,8 +69,7 @@ def response(resp):
     for entry in data["data"]["templates"]:
         album_info = entry.get("albumInfo", {})
         if "videos" in album_info:
-            for video in album_info["videos"]:
-                results.append(_result(video, album_info))
+            results.extend([_result(video, album_info) for video in album_info['videos']])
         else:
             # album only contains a single video
             results.append(_result(album_info, album_info))

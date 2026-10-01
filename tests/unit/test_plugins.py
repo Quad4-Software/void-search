@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
+from unittest.mock import Mock
+
 import babel
-from mock import Mock
 
 import searx
 import searx.plugins
 import searx.preferences
 import searx.results
-
-from searx.result_types import Result
 from searx.extended_types import sxng_request
-
+from searx.result_types import Result
 from tests import SearxTestCase
 
 plg_store = searx.plugins.PluginStorage()
@@ -35,8 +34,7 @@ def get_search_mock(query, **kwargs):
 def do_pre_search(query, storage, **kwargs) -> bool:
 
     search = get_search_mock(query, **kwargs)
-    ret = storage.pre_search(sxng_request, search)
-    return ret
+    return storage.pre_search(sxng_request, search)
 
 
 def do_post_search(query, storage, **kwargs) -> Mock:
@@ -47,7 +45,6 @@ def do_post_search(query, storage, **kwargs) -> Mock:
 
 
 class PluginMock(searx.plugins.Plugin):
-
     def __init__(self, _id: str, name: str, active: bool):
         plg_cfg = searx.plugins.PluginCfg(active=active)
         self.id = _id
@@ -74,7 +71,6 @@ class PluginMock(searx.plugins.Plugin):
 
 
 class PluginStorage(SearxTestCase):
-
     def setUp(self):
         super().setUp()
         engines = {}

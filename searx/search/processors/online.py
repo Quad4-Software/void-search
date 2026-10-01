@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Processor used for ``online`` engines."""
 
-__all__ = ["OnlineProcessor", "OnlineParams"]
+__all__ = ["OnlineParams", "OnlineProcessor"]
 
-import typing as t
-
-from timeit import default_timer
-import asyncio
 import ssl
+import typing as t
+from timeit import default_timer
+
 from curl_cffi.requests.exceptions import RequestException, Timeout
 
 import searx.network
@@ -17,12 +16,13 @@ from searx.exceptions import (
     SearxEngineTooManyRequestsException,
 )
 from searx.metrics.error_recorder import count_error
+
 from .abstract import EngineProcessor, RequestParams
 
 if t.TYPE_CHECKING:
-    from searx.search.models import SearchQuery
-    from searx.results import ResultContainer
     from searx.result_types import EngineResults
+    from searx.results import ResultContainer
+    from searx.search.models import SearchQuery
 
 
 class HTTPParams(t.TypedDict):
@@ -70,7 +70,7 @@ class HTTPParams(t.TypedDict):
     soft_max_redirects: int
     """Maximum redirects, soft limit. Record an error but don't stop the engine."""
 
-    verify: None | t.Literal[False] | str
+    verify: t.Literal[False] | str | None
     """If not ``None``, it overrides the verify value defined in the network.  Use
     ``False`` to accept any server certificate and use a path to file to specify a
     server certificate"""
@@ -233,7 +233,7 @@ class OnlineProcessor(EngineProcessor):
             hostname = response.url.host
             count_error(
                 self.engine.name,
-                "{} redirects, maximum: {}".format(len(response.history), soft_max_redirects),
+                f"{len(response.history)} redirects, maximum: {soft_max_redirects}",
                 (status_code, reason, hostname),
                 secondary=True,
             )
@@ -251,7 +251,7 @@ class OnlineProcessor(EngineProcessor):
 
             if get_setting("void.anonymize_outgoing"):
                 anonymize_outgoing_headers(params["headers"])
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         # ignoring empty urls
@@ -282,22 +282,20 @@ class OnlineProcessor(EngineProcessor):
         except ssl.SSLError as e:
             # requests timeout (connect or read)
             self.handle_exception(result_container, e, suspend=True)
-            self.logger.debug("SSLError {}, verify={}".format(e, searx.network.get_network(self.engine.name).verify))
-        except (Timeout, asyncio.TimeoutError) as e:
+            self.logger.debug(f"SSLError {e}, verify={searx.network.get_network(self.engine.name).verify}")
+        except (TimeoutError, Timeout) as e:
             # requests timeout (connect or read)
             self.handle_exception(result_container, e, suspend=True)
             self.logger.debug(
-                "HTTP requests timeout (search duration : {0} s, timeout: {1} s) : {2}".format(
-                    default_timer() - start_time, timeout_limit, e.__class__.__name__
-                )
+                f"HTTP requests timeout (search duration : {default_timer() - start_time} s,"
+                f" timeout: {timeout_limit} s) : {e.__class__.__name__}"
             )
         except RequestException as e:
             # other requests exception
             self.handle_exception(result_container, e, suspend=True)
             self.logger.debug(
-                "requests exception (search duration : {0} s, timeout: {1} s) : {2}".format(
-                    default_timer() - start_time, timeout_limit, e
-                )
+                f"requests exception (search duration : {default_timer() - start_time} s,"
+                f" timeout: {timeout_limit} s) : {e}"
             )
         except (
             SearxEngineCaptchaException,
@@ -308,4 +306,4 @@ class OnlineProcessor(EngineProcessor):
             self.logger.debug(e.message)
         except Exception as e:  # pylint: disable=broad-except
             self.handle_exception(result_container, e)
-            self.logger.debug("exception : {0}".format(e))
+            self.logger.debug(f"exception : {e}")

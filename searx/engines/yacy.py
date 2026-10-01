@@ -53,13 +53,13 @@ Implementations
 
 # pylint: disable=fixme
 
-import typing as t
 import random
+import typing as t
 from json import loads
 from urllib.parse import urlencode
-from dateutil import parser
 
 from curl_cffi import CurlOpt
+from dateutil import parser
 
 from searx.utils import html_to_text
 
@@ -110,7 +110,7 @@ def setup(_: dict[str, t.Any]) -> bool | None:
         # 'app', 'audio', 'video',
     ]
     if search_type not in valid_types:
-        raise ValueError('search_type "%s" is  not one of %s' % (search_type, valid_types))
+        raise ValueError(f'search_type "{search_type}" is  not one of {valid_types}')
 
 
 def _base_url() -> str:
@@ -118,7 +118,7 @@ def _base_url() -> str:
 
     url: list[str] | str = base_url or engines["yacy"].base_url  # type: ignore
     if isinstance(url, list):
-        url = random.choice(url)
+        url = random.choice(url)  # noqa: S311
     if url.endswith("/"):
         url = url[:-1]
     return url

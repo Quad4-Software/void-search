@@ -23,28 +23,24 @@ Implementations
 """
 
 import typing as t
-
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
+
 from curl_cffi.requests.exceptions import TooManyRedirects
 
-from searx.utils import (
-    eval_xpath,
-    eval_xpath_getindex,
-    eval_xpath_list,
-    extract_text,
-    ElementType,
-)
-
-from searx.exceptions import SearxEngineCaptchaException, SearxEngineAccessDeniedException
-
-from searx.engines.google import fetch_traits  # pylint: disable=unused-import
 from searx.engines.google import (
     get_google_info,
     time_range_dict,
 )
-
+from searx.exceptions import SearxEngineAccessDeniedException, SearxEngineCaptchaException
 from searx.result_types import EngineResults
+from searx.utils import (
+    ElementType,
+    eval_xpath,
+    eval_xpath_getindex,
+    eval_xpath_list,
+    extract_text,
+)
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -110,7 +106,6 @@ def response(resp: "SXNG_Response") -> EngineResults:  # pylint: disable=too-man
 
     # parse results
     for result in eval_xpath_list(dom, "//div[@data-rp]"):
-
         title = extract_text(eval_xpath(result, ".//h3[1]//a"))
         if not title:
             # this is a [ZITATION] block
@@ -190,7 +185,7 @@ def time_range_args(params: "OnlineParams") -> dict[str, int]:
     """
     ret_val: dict[str, int] = {}
     if params["time_range"] in time_range_dict:
-        ret_val["as_ylo"] = datetime.now().year - 1
+        ret_val["as_ylo"] = datetime.now(tz=UTC).year - 1
     return ret_val
 
 
@@ -232,7 +227,7 @@ def parse_gs_a(text: str | None) -> tuple[list[str], str, str, datetime | None]:
     # year
     year = journal_year[-1]
     try:
-        publishedDate = datetime.strptime(year.strip(), "%Y")
+        publishedDate = datetime.strptime(year.strip(), "%Y").replace(tzinfo=UTC)
     except ValueError:
         publishedDate = None
     return authors, journal, publisher, publishedDate

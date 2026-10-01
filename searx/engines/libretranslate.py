@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """LibreTranslate (Free and Open Source Machine Translation API)"""
 
-import random
 import json
+import random
+
 from searx.result_types import EngineResults
 
 about = {
@@ -22,7 +23,7 @@ api_key = ""
 
 
 def request(_query, params):
-    request_url = random.choice(base_url) if isinstance(base_url, list) else base_url
+    request_url = random.choice(base_url) if isinstance(base_url, list) else base_url  # noqa: S311
 
     if request_url.startswith("https://libretranslate.com") and not api_key:
         return None

@@ -8,9 +8,9 @@ globe.
 """
 
 import typing as t
-
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
+
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
@@ -52,7 +52,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
         return str(record.get(k, ""))
 
     for record in json_data["message"]["items"]:
-
         if record["type"] == "component":
             # These seem to be files published along with papers. Not something
             # you'd search for.
@@ -86,7 +85,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
             item.url = record["resource"]["primary"]["URL"]
 
         if "published" in record and "date-parts" in record["published"]:
-            item.publishedDate = datetime(*(record["published"]["date-parts"][0] + [1, 1][:3]))
+            item.publishedDate = datetime(*(record["published"]["date-parts"][0] + [1, 1][:3]), tzinfo=UTC)
 
         item.authors = [a.get("given", "") + " " + a.get("family", "") for a in record.get("author", [])]
         item.isbn = record.get("isbn") or [i["value"] for i in record.get("isbn-type", [])]

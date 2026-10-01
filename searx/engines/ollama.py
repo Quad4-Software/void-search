@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Ollama model search engine for searxng"""
 
+import contextlib
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
-from searx.utils import eval_xpath_list, eval_xpath_getindex, eval_xpath, extract_text
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_getindex, eval_xpath_list, extract_text
 
 about = {
     "website": "https://ollama.com",
@@ -40,12 +41,10 @@ def response(resp) -> EngineResults:
 
     for item in eval_xpath_list(dom, results_xpath):
         published_date = None
-        try:
+        with contextlib.suppress(ValueError):
             published_date = datetime.strptime(
                 extract_text(eval_xpath(item, publish_date_xpath)), "%b %d, %Y %I:%M %p %Z"
-            )
-        except ValueError:
-            pass
+            ).replace(tzinfo=UTC)
 
         res.add(
             res.types.MainResult(

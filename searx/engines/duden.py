@@ -2,8 +2,9 @@
 """Duden"""
 
 from urllib.parse import quote, urljoin
-from searx.utils import extract_text, eval_xpath, eval_xpath_list, eval_xpath_getindex
+
 from searx.network import raise_for_httperror
+from searx.utils import eval_xpath, eval_xpath_getindex, eval_xpath_list, extract_text
 
 # about
 about = {

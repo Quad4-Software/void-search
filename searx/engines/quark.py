@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Quark (Shenma) search engine for searxng"""
 
-import typing as t
-from urllib.parse import urlencode
-from datetime import datetime
-import re
 import json
+import re
+import typing as t
+from datetime import UTC, datetime
+from urllib.parse import urlencode
 
-from searx.utils import html_to_text
 from searx.exceptions import SearxEngineAPIException, SearxEngineCaptchaException
+from searx.utils import html_to_text
 
 # Metadata
 about = {
@@ -94,7 +94,7 @@ def response(resp):
         data = json.loads(text)
         for item in data.get('data', {}).get('hit', {}).get('imgInfo', {}).get('item', []):
             try:
-                published_date = datetime.fromtimestamp(int(item.get("publish_time")))
+                published_date = datetime.fromtimestamp(int(item.get("publish_time")), tz=UTC)
             except (ValueError, TypeError):
                 published_date = None
 
@@ -178,7 +178,7 @@ def parse_ai_page(data):
         )
 
         try:
-            published_date = datetime.fromtimestamp(int(item.get('source', {}).get('time')))
+            published_date = datetime.fromtimestamp(int(item.get('source', {}).get('time')), tz=UTC)
         except (ValueError, TypeError):
             published_date = None
 
@@ -204,19 +204,17 @@ def parse_baike_sc(data):
 
 def parse_finance_shuidi(data):
     content = " | ".join(
-        (
-            info
-            for info in [
-                data.get('establish_time'),
-                data.get('company_status'),
-                data.get('controled_type'),
-                data.get('company_type'),
-                data.get('capital'),
-                data.get('address'),
-                data.get('business_scope'),
-            ]
-            if info
-        )
+        info
+        for info in [
+            data.get('establish_time'),
+            data.get('company_status'),
+            data.get('controled_type'),
+            data.get('company_type'),
+            data.get('capital'),
+            data.get('address'),
+            data.get('business_scope'),
+        ]
+        if info
     )
     return {
         "title": html_to_text(data.get('company_name')),
@@ -228,9 +226,7 @@ def parse_finance_shuidi(data):
 def parse_kk_yidian_all(data):
     content_list = []
     for section in data.get('list_container', []):
-        for item in section.get('list_container', []):
-            if 'dot_text' in item:
-                content_list.append(item['dot_text'])
+        content_list.extend([item['dot_text'] for item in section.get('list_container', []) if 'dot_text' in item])
 
     return {
         "title": html_to_text(data.get('title')),
@@ -243,7 +239,7 @@ def parse_life_show_general_image(data):
     results = []
     for item in data.get('image', []):
         try:
-            published_date = datetime.fromtimestamp(int(item.get("publish_time")))
+            published_date = datetime.fromtimestamp(int(item.get("publish_time")), tz=UTC)
         except (ValueError, TypeError):
             published_date = None
 
@@ -273,15 +269,17 @@ def parse_med_struct(data):
 
 def parse_music_new_song(data):
     results = []
-    for item in data.get('hit3', []):
-        results.append(
+    results.extend(
+        [
             {
-                "title": f"{item['song_name']} | {item['song_singer']}",
-                "url": item.get("play_url"),
-                "content": html_to_text(item.get("lyrics")),
-                "thumbnail": item.get("image_url").replace("http://", "https://"),
+                'title': f"{item['song_name']} | {item['song_singer']}",
+                'url': item.get('play_url'),
+                'content': html_to_text(item.get('lyrics')),
+                'thumbnail': item.get('image_url').replace('http://', 'https://'),
             }
-        )
+            for item in data.get('hit3', [])
+        ]
+    )
     return results
 
 
@@ -317,7 +315,7 @@ def parse_ss_doc(data):
 
         # Sometime Quark will return 0, set published_date as None
         if timestamp != 0:
-            published_date = datetime.fromtimestamp(timestamp)
+            published_date = datetime.fromtimestamp(timestamp, tz=UTC)
     except (ValueError, TypeError):
         pass
 
@@ -353,7 +351,7 @@ def parse_ss_doc(data):
 
 def parse_ss_note(data):
     try:
-        published_date = datetime.fromtimestamp(int(data.get('source', {}).get('time')))
+        published_date = datetime.fromtimestamp(int(data.get('source', {}).get('time')), tz=UTC)
     except (ValueError, TypeError):
         published_date = None
 

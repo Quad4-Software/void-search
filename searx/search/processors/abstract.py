@@ -1,28 +1,27 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Abstract base classes for all engine processors."""
 
-import typing as t
-
-import os
 import logging
+import os
 import threading
-from abc import abstractmethod, ABC
+import typing as t
+from abc import ABC, abstractmethod
 from timeit import default_timer
 
-from searx import get_setting
-from searx import logger
+from searx import get_setting, logger
 from searx.engines import engines
-from searx.network import get_time_for_thread, get_network
-from searx.metrics import histogram_observe, counter_inc, count_exception, count_error
 from searx.exceptions import SearxEngineAccessDeniedException
+from searx.metrics import count_error, count_exception, counter_inc, histogram_observe
+from searx.network import get_network, get_time_for_thread
 from searx.utils import get_engine_from_settings
 
 if t.TYPE_CHECKING:
     import types
+
     from searx.enginelib import Engine
-    from searx.search.models import SearchQuery
+    from searx.result_types import LegacyResult, Result  # pyright: ignore[reportPrivateLocalImportUsage]
     from searx.results import ResultContainer
-    from searx.result_types import Result, LegacyResult  # pyright: ignore[reportPrivateLocalImportUsage]
+    from searx.search.models import SearchQuery
 
 
 logger = logger.getChild("searx.search.processor")
@@ -119,7 +118,7 @@ class EngineProcessor(ABC):
     engine_type: str
 
     def __init__(self, engine: "Engine|types.ModuleType"):
-        self.engine: "Engine" = engine  # pyright: ignore[reportAttributeAccessIssue]
+        self.engine: Engine = engine  # pyright: ignore[reportAttributeAccessIssue]
         self.logger: logging.Logger = engines[engine.name].logger
         key = get_network(self.engine.name)
         key = id(key) if key else self.engine.name

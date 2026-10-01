@@ -38,14 +38,14 @@ Implementations
 
 """
 
-import typing as t
-
+import contextlib
 import datetime
 import pathlib
-from urllib.parse import urlencode, unquote
+import typing as t
+from urllib.parse import unquote, urlencode
 
-from searx.utils import html_to_text, humanize_bytes
 from searx.result_types import EngineResults
+from searx.utils import html_to_text, humanize_bytes
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -124,7 +124,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
     pages = json_data.get("query", {}).get("pages", {}).values()
 
     for item in pages:
-
         if not item.get("imageinfo", []):
             continue
         imageinfo = item["imageinfo"][0]
@@ -143,10 +142,8 @@ def response(resp: "SXNG_Response") -> EngineResults:
         duration = None
         seconds: str = imageinfo.get("duration")
         if seconds:
-            try:
+            with contextlib.suppress(OverflowError):
                 duration = datetime.timedelta(seconds=int(seconds))
-            except OverflowError:
-                pass
 
         if wc_search_type == "file":
             res.add(

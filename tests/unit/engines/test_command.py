@@ -3,12 +3,10 @@
 
 from searx.engines import command as command_engine
 from searx.result_types import KeyValue
-
 from tests import SearxTestCase
 
 
 class TestCommandEngine(SearxTestCase):
-
     def test_basic_seq_command_engine(self):
         ls_engine = command_engine
         ls_engine.command = ['seq', '{{QUERY}}']

@@ -78,7 +78,7 @@ def response(resp):
 
     try:
         infobox_title = search_results.xpath(input_xpath)[0].text
-    except:  # pylint: disable=bare-except
+    except Exception:
         infobox_title = ""
 
     pods = search_results.xpath(pods_xpath)
@@ -99,10 +99,8 @@ def response(resp):
             image = subpod.xpath(image_xpath)
 
             if content and pod_id not in image_pods:
-
-                if pod_is_result or not result_content:
-                    if pod_id != "Input":
-                        result_content = "%s: %s" % (pod_title, content)
+                if (pod_is_result or not result_content) and pod_id != "Input":
+                    result_content = f"{pod_title}: {content}"
 
                 # if no input pod was found, title is first plaintext pod
                 if not infobox_title:
@@ -122,7 +120,7 @@ def response(resp):
     if not result_chunks:
         return []
 
-    title = "Wolfram Alpha (%s)" % infobox_title
+    title = f"Wolfram Alpha ({infobox_title})"
 
     # append infobox
     results.append(

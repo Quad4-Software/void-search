@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Processor used for ``online_dictionary`` engines."""
 
-import typing as t
 import re
+import typing as t
 
 from searx.sxng_locales import sxng_locales
-from .online import OnlineProcessor, OnlineParams
+
+from .online import OnlineParams, OnlineProcessor
 
 if t.TYPE_CHECKING:
     from searx.search.models import SearchQuery
@@ -92,11 +93,11 @@ def _get_lang_descr(lang: str) -> FromToType | None:
     lang = lang.lower()
     is_abbr = len(lang) == 2
     if is_abbr:
-        for l in sxng_locales:
-            if l[0][:2] == lang:
-                return (True, l[0][:2], l[3].lower())
+        for locale in sxng_locales:
+            if locale[0][:2] == lang:
+                return (True, locale[0][:2], locale[3].lower())
         return None
-    for l in sxng_locales:
-        if l[1].lower() == lang or l[3].lower() == lang:
-            return (True, l[0][:2], l[3].lower())
+    for locale in sxng_locales:
+        if locale[1].lower() == lang or locale[3].lower() == lang:
+            return (True, locale[0][:2], locale[3].lower())
     return None

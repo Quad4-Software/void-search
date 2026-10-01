@@ -4,8 +4,8 @@
 __all__ = ["get_bang_url"]
 
 import typing as t
-
 from urllib.parse import quote_plus, urlparse
+
 from searx.data import EXTERNAL_BANGS
 
 LEAF_KEY = chr(16)
@@ -33,12 +33,10 @@ def get_bang_definition_and_ac(external_bangs_db: dict[str, t.Any], bang: str):
     bang_definition = None
     bang_ac_list = []
     if after != '':
-        for k in node:
-            if k.startswith(after):
-                bang_ac_list.append(before + k)
+        bang_ac_list.extend([before + k for k in node if k.startswith(after)])
     elif isinstance(node, dict):
         bang_definition = node.get(LEAF_KEY)
-        bang_ac_list = [before + k for k in node.keys() if k != LEAF_KEY]
+        bang_ac_list = [before + k for k in node if k != LEAF_KEY]
     elif isinstance(node, str):
         bang_definition = node
         bang_ac_list = []
@@ -61,9 +59,7 @@ def resolve_bang_definition(bang_definition: str, query: str) -> tuple[str, int]
     return (url, rank)
 
 
-def get_bang_definition_and_autocomplete(
-    bang: str, external_bangs_db: dict[str, t.Any] | None = None
-):  # pylint: disable=invalid-name
+def get_bang_definition_and_autocomplete(bang: str, external_bangs_db: dict[str, t.Any] | None = None):  # pylint: disable=invalid-name
     if external_bangs_db is None:
         external_bangs_db = EXTERNAL_BANGS
 
@@ -85,7 +81,7 @@ def get_bang_definition_and_autocomplete(
                 current.append(new_bang)
 
     new_autocomplete.sort(key=lambda t: (-t[1], t[0]))
-    new_autocomplete = list(map(lambda t: t[0], new_autocomplete))
+    new_autocomplete = [t[0] for t in new_autocomplete]
 
     return bang_definition, new_autocomplete
 

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Pixiv (images)"""
 
-from urllib.parse import urlencode
 import random
+from urllib.parse import urlencode
 
 # Engine metadata
 about = {
@@ -48,9 +48,8 @@ def response(resp):
     data = resp.json()
 
     for item in data["body"]["illust"]["data"]:
-
         image_url = item["url"]
-        pixiv_proxy = random.choice(pixiv_image_proxies)
+        pixiv_proxy = random.choice(pixiv_image_proxies)  # noqa: S311
         proxy_image_url = image_url.replace("https://i.pximg.net", pixiv_proxy)
         proxy_full_image_url = (
             proxy_image_url.replace("/c/250x250_80_a2/", "/")

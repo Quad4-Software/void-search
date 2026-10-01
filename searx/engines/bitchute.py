@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """bitchute (Videos)"""
 
-from json import dumps
 from datetime import datetime
+from json import dumps
+
 from searx.utils import html_to_text
 
 about = {
@@ -36,21 +37,22 @@ def response(resp):
     search_res = resp.json()
     results = []
 
-    for item in search_res.get('videos', []):
-
-        results.append(
+    results.extend(
+        [
             {
-                "title": item['video_name'],
-                "url": 'https://www.bitchute.com/video/' + item['video_id'],
-                "content": html_to_text(item['description']),
-                "author": item['channel']['channel_name'],
-                "publishedDate": datetime.fromisoformat(item["date_published"].rstrip("Z")),
-                "length": item['duration'],
-                "views": item['view_count'],
-                "thumbnail": item['thumbnail_url'],
-                "iframe_src": 'https://www.bitchute.com/embed/' + item['video_id'],
-                "template": "videos.html",
+                'title': item['video_name'],
+                'url': 'https://www.bitchute.com/video/' + item['video_id'],
+                'content': html_to_text(item['description']),
+                'author': item['channel']['channel_name'],
+                'publishedDate': datetime.fromisoformat(item['date_published'].rstrip('Z')),
+                'length': item['duration'],
+                'views': item['view_count'],
+                'thumbnail': item['thumbnail_url'],
+                'iframe_src': 'https://www.bitchute.com/embed/' + item['video_id'],
+                'template': 'videos.html',
             }
-        )
+            for item in search_res.get('videos', [])
+        ]
+    )
 
     return results

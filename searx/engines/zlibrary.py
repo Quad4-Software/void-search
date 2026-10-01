@@ -34,7 +34,7 @@ Implementations
 """
 
 import typing as t
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import quote
 
 from flask_babel import gettext  # pyright: ignore[reportUnknownVariableType]
@@ -161,7 +161,7 @@ def _parse_result(item: ElementType) -> dict[str, t.Any]:
         './/div[contains(@class, "property_year")]//div[contains(@class, "property_value")]',
     )
     if year:
-        result["publishedDate"] = datetime.strptime(year, "%Y")
+        result["publishedDate"] = datetime.strptime(year, "%Y").replace(tzinfo=UTC)
 
     content: list[str] = []
     language = _text(
@@ -203,24 +203,24 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
     engine_traits.all_locale = ""
     engine_traits.custom["ext"] = []
 
-    l: list[str]
+    values: list[str]
     # years_from
-    l = []
+    values = []
     for year in eval_xpath_list(dom, "//div[@id='advSearch-noJS']//select[@id='sf_yearFrom']/option"):
-        l.append(year.get("value") or "")
-    engine_traits.custom["year_from"] = l
+        values.append(year.get("value") or "")
+    engine_traits.custom["year_from"] = values
 
     # years_to
-    l = []
+    values = []
     for year in eval_xpath_list(dom, "//div[@id='advSearch-noJS']//select[@id='sf_yearTo']/option"):
-        l.append(year.get("value") or "")
-    engine_traits.custom["year_to"] = l
+        values.append(year.get("value") or "")
+    engine_traits.custom["year_to"] = values
 
     # ext (file extensions)
-    l = []
+    values = []
     for ext in eval_xpath_list(dom, "//div[@id='advSearch-noJS']//select[@id='sf_extensions']/option"):
-        l.append(ext.get("value") or "")
-    engine_traits.custom["ext"] = l
+        values.append(ext.get("value") or "")
+    engine_traits.custom["ext"] = values
 
     # Handle languages
     # Z-library uses English names for languages, so we need to map them to their respective locales
@@ -246,6 +246,6 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
         conflict = engine_traits.languages.get(sxng_lang)
         if conflict:
             if conflict != eng_lang:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_lang, conflict, eng_lang))
+                print(f"CONFLICT: babel {sxng_lang} --> {conflict}, {eng_lang}")
             continue
         engine_traits.languages[sxng_lang] = eng_lang

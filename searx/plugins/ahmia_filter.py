@@ -6,16 +6,17 @@ from hashlib import md5
 
 from flask_babel import gettext  # pyright: ignore[reportUnknownVariableType]
 
-from searx.data import ahmia_blacklist_loader
 from searx import get_setting
+from searx.data import ahmia_blacklist_loader
 from searx.plugins import Plugin, PluginInfo
 
 if t.TYPE_CHECKING:
     import flask
-    from searx.search import SearchWithPlugins
+
     from searx.extended_types import SXNG_Request
-    from searx.result_types import Result
     from searx.plugins import PluginCfg
+    from searx.result_types import Result
+    from searx.search import SearchWithPlugins
 
 ahmia_blacklist: list[str] = []
 
@@ -35,12 +36,10 @@ class SXNGPlugin(Plugin):
             preference_section="general",
         )
 
-    def on_result(
-        self, request: "SXNG_Request", search: "SearchWithPlugins", result: "Result"
-    ) -> bool:  # pylint: disable=unused-argument
+    def on_result(self, request: "SXNG_Request", search: "SearchWithPlugins", result: "Result") -> bool:  # pylint: disable=unused-argument
         if not getattr(result, "is_onion", False) or not getattr(result, "parsed_url", False):
             return True
-        result_hash = md5(result["parsed_url"].hostname.encode()).hexdigest()
+        result_hash = md5(result["parsed_url"].hostname.encode(), usedforsecurity=False).hexdigest()
         return result_hash not in ahmia_blacklist
 
     def init(self, app: "flask.Flask") -> bool:  # pylint: disable=unused-argument

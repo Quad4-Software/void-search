@@ -13,6 +13,46 @@ search:
 server:
 
   secret_key: "user_secret_key"
+  limiter: false
+  public_instance: false
+
+general:
+
+  # stats page is gated behind enable_metrics in this fork
+  enable_metrics: true
+
+plugins:
+
+  # NOTE: a plugins section in user settings replaces the whole plugin map, it
+  # does not merge - so the full default set is listed here with self_info
+  # enabled for the plugin tests
+  searx.plugins.calculator.SXNGPlugin:
+    active: true
+  searx.plugins.infinite_scroll.SXNGPlugin:
+    active: true
+  searx.plugins.hash_plugin.SXNGPlugin:
+    active: true
+  searx.plugins.self_info.SXNGPlugin:
+    active: true
+  searx.plugins.unit_converter.SXNGPlugin:
+    active: true
+  searx.plugins.ahmia_filter.SXNGPlugin:
+    active: true
+  searx.plugins.hostnames.SXNGPlugin:
+    active: true
+  searx.plugins.time_zone.SXNGPlugin:
+    active: true
+  searx.plugins.oa_doi_rewrite.SXNGPlugin:
+    active: false
+  searx.plugins.tracker_url_remover.SXNGPlugin:
+    active: true
+  searx.plugins.tor_check.SXNGPlugin:
+    active: true
+
+void:
+
+  # disable the result cache so tests do not see stale answers
+  result_cache_ttl: 0
 
 engines:
 

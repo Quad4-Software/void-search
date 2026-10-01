@@ -18,14 +18,12 @@
 
 __all__ = ["Result"]
 
-import typing as t
-import types
-
+import datetime
 import re
+import types
+import typing as t
 import urllib.parse
 import warnings
-import datetime
-
 from collections.abc import Callable
 
 import msgspec
@@ -203,7 +201,7 @@ def _filter_urls(
                 item["url"] = new_url
                 new_infobox_urls.append(item)
 
-        setattr(result, "urls", new_infobox_urls)
+        result.urls = new_infobox_urls
 
     # "attributes": are from infobox
     #
@@ -240,7 +238,7 @@ def _filter_urls(
                 item["image"]["src"] = new_url
                 new_infobox_attributes.append(item)
 
-        setattr(result, "attributes", new_infobox_attributes)
+        result.attributes = new_infobox_attributes
 
     result.normalize_result_fields()
 
@@ -535,6 +533,7 @@ class LegacyResult(dict[str, t.Any]):
                 f"engine {self.engine} is using deprecated `dict` for answers"
                 f" / use a class from searx.result_types.answer",
                 DeprecationWarning,
+                stacklevel=2,
             )
             self.template = "answer/legacy.html"
 
@@ -543,6 +542,7 @@ class LegacyResult(dict[str, t.Any]):
                 f"engine {self.engine} is using deprecated `dict` for key/value results"
                 f" / use a class from searx.result_types",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
     def __getattr__(self, name: str, default: t.Any = UNSET) -> t.Any:

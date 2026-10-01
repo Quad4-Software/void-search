@@ -4,20 +4,19 @@
 .. _Tiger: https://tiger.ch
 """
 
-from json import loads
 import random
-from urllib.parse import urlencode
-
 import typing as t
+from json import loads
+from urllib.parse import urlencode
 
 from dateutil import parser
 
+from searx.enginelib import EngineCache
 from searx.exceptions import SearxEngineAPIException
 from searx.extended_types import SXNG_Response
 from searx.network import get, post
 from searx.result_types import EngineResults
-from searx.utils import extr, eval_xpath_list, eval_xpath, extract_text
-from searx.enginelib import EngineCache
+from searx.utils import eval_xpath, eval_xpath_list, extr, extract_text
 
 if t.TYPE_CHECKING:
     from searx.search.processors import OnlineParams
@@ -46,7 +45,7 @@ CACHE: EngineCache
 
 def setup(engine_settings: dict[str, t.Any]) -> bool:
     if tiger_category not in ("Websuche", "News"):
-        raise ValueError("invalid search category: %s" % tiger_category)
+        raise ValueError(f"invalid search category: {tiger_category}")
 
     global CACHE  # pylint: disable=global-statement
     CACHE = EngineCache(engine_settings["name"])
@@ -80,9 +79,9 @@ def _obtain_session_code() -> str:
     # var z1 = Math.floor((Math.random() * 8) + 11);
     # var z2 = Math.floor((Math.random() * 8) + 1);
     # var z3 = Math.floor((Math.random() * 8) + 1);
-    num1 = random.randint(11, 19)
-    num2 = random.randint(1, 9)
-    num3 = random.randint(1, 9)
+    num1 = random.randint(11, 19)  # noqa: S311
+    num2 = random.randint(1, 9)  # noqa: S311
+    num3 = random.randint(1, 9)  # noqa: S311
 
     challenge = get(f"{base_url}/Services/Human.svc/Make?M1={num1}&M2={num2}&M3={num3}", cookies=results_page.cookies)
     signs = loads(challenge.json()["d"])[0]

@@ -1,27 +1,28 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring
 
-import math
 import contextlib
+import math
 from timeit import default_timer
 
 from searx.engines import engines
 from searx.openmetrics import OpenMetricsFamily
-from .models import HistogramStorage, CounterStorage, VoidHistogram, VoidCounterStorage
+
 from .error_recorder import count_error, count_exception, errors_per_engines
+from .models import CounterStorage, HistogramStorage, VoidCounterStorage, VoidHistogram
 
 __all__ = [
-    "initialize",
-    "get_engines_stats",
+    "count_error",
+    "count_exception",
+    "counter",
+    "counter_add",
+    "counter_inc",
     "get_engine_errors",
+    "get_engines_stats",
     "histogram",
     "histogram_observe",
     "histogram_observe_time",
-    "counter",
-    "counter_inc",
-    "counter_add",
-    "count_error",
-    "count_exception",
+    "initialize",
 ]
 
 
@@ -164,14 +165,13 @@ def get_reliabilities(engline_name_list):
 
 
 def get_engines_stats(engine_name_list: list[str]):
-    assert counter_storage is not None
-    assert histogram_storage is not None
+    assert counter_storage is not None  # noqa: S101
+    assert histogram_storage is not None  # noqa: S101
 
     list_time = []
     max_time_total = max_result_count = None
 
     for engine_name in engine_name_list:
-
         sent_count = counter('engine', engine_name, 'search', 'count', 'sent')
         if sent_count == 0:
             continue
@@ -210,7 +210,6 @@ def get_engines_stats(engine_name_list: list[str]):
         time_http_p80 = time_http_p95 = 0
 
         if time_http is not None:
-
             time_http_p80 = histogram('engine', engine_name, 'time', 'http').percentage(80)
             time_http_p95 = histogram('engine', engine_name, 'time', 'http').percentage(95)
 
@@ -219,7 +218,6 @@ def get_engines_stats(engine_name_list: list[str]):
             stats['http_p95'] = round(time_http_p95, 1)
 
         if time_total is not None:
-
             time_total_p80 = histogram('engine', engine_name, 'time', 'total').percentage(80)
             time_total_p95 = histogram('engine', engine_name, 'time', 'total').percentage(95)
 

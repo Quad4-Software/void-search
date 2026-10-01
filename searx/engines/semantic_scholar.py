@@ -24,14 +24,14 @@ Implementations
 """
 
 import typing as t
-
 from datetime import datetime
+
 from flask_babel import gettext  # pyright: ignore[reportUnknownVariableType]
 
-from searx.network import get
-from searx.utils import eval_xpath_getindex, html_to_text
 from searx.enginelib import EngineCache
+from searx.network import get
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath_getindex, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -115,13 +115,10 @@ def response(resp: "SXNG_Response") -> EngineResults:
             if alternatePaperLinks:
                 url = alternatePaperLinks[0].get("url")
         if not url:
-            url = base_url + "/paper/%s" % result["id"]
+            url = base_url + f"/paper/{result['id']}"
 
         publishedDate: datetime | None
-        if "pubDate" in result:
-            publishedDate = datetime.fromisoformat(result["pubDate"])
-        else:
-            publishedDate = None
+        publishedDate = datetime.fromisoformat(result['pubDate']) if 'pubDate' in result else None
 
         # authors
         authors: list[str] = [author[0]["name"] for author in result.get("authors", [])]

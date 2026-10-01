@@ -18,12 +18,13 @@ A valkey DB connect can be tested by::
 
 """
 
+import logging
 import os
 import pwd
-import logging
 import warnings
 
 import valkey
+
 from searx import get_setting
 
 _CLIENT: valkey.Valkey | None = None
@@ -38,7 +39,7 @@ def client() -> valkey.Valkey | None:
 def initialize():
     global _CLIENT  # pylint: disable=global-statement
     if get_setting('redis.url'):
-        warnings.warn("setting redis.url is deprecated, use valkey.url", DeprecationWarning)
+        warnings.warn("setting redis.url is deprecated, use valkey.url", DeprecationWarning, stacklevel=2)
     valkey_url = get_setting('valkey.url') or get_setting('redis.url')
     if not valkey_url:
         return False

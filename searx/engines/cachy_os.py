@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """CachyOS (packages, it)"""
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
+
 from searx.result_types import EngineResults
 
 about = {
@@ -48,7 +49,7 @@ def response(resp) -> EngineResults:
                     "url": f"https://packages.cachyos.org/package/{repo}/{arch}/{package_name}",
                     "title": f"{package_name} ({repo})",
                     "package_name": package_name,
-                    "publishedDate": datetime.fromtimestamp(item["pkg_builddate"]),
+                    "publishedDate": datetime.fromtimestamp(item["pkg_builddate"], tz=UTC),
                     "version": item["pkg_version"],
                     "content": item["pkg_desc"],
                     "tags": [arch],

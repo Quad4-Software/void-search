@@ -80,26 +80,26 @@ something like this:
 
 """
 
-import typing as t
-
 import re
-from urllib.parse import urlunparse, urlparse
+import typing as t
+from urllib.parse import urlparse, urlunparse
 
 from flask_babel import gettext  # pyright: ignore[reportUnknownVariableType]
 
 from searx import settings
-from searx.result_types._base import MainResult, LegacyResult
-from searx.settings_loader import get_yaml_cfg
 from searx.plugins import Plugin, PluginInfo
+from searx.result_types._base import LegacyResult, MainResult
+from searx.settings_loader import get_yaml_cfg
 
 from ._core import log
 
 if t.TYPE_CHECKING:
     import flask
-    from searx.search import SearchWithPlugins
+
     from searx.extended_types import SXNG_Request
-    from searx.result_types import Result
     from searx.plugins import PluginCfg
+    from searx.result_types import Result
+    from searx.search import SearchWithPlugins
 
 REPLACE: dict[re.Pattern, str] = {}
 REMOVE: set = set()
@@ -194,7 +194,6 @@ def filter_url_field(result: "Result|LegacyResult", field_name: str, url_src: st
     for pattern, replacement in REPLACE.items():
         if pattern.search(url_src_parsed.netloc):
             new_url = url_src_parsed._replace(netloc=pattern.sub(replacement, url_src_parsed.netloc))
-            new_url = urlunparse(new_url)
-            return new_url
+            return urlunparse(new_url)
 
     return True

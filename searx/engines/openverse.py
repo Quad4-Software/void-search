@@ -8,6 +8,7 @@ WEB browser to search on openverse.org or view images.
 
 import typing as t
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 from searx.result_types import EngineResults

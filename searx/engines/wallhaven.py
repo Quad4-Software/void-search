@@ -68,9 +68,8 @@ def response(resp):
 
     json = resp.json()
 
-    for result in json['data']:
-
-        results.append(
+    results.extend(
+        [
             {
                 'template': 'images.html',
                 'title': '',
@@ -83,6 +82,8 @@ def response(resp):
                 'img_format': result['file_type'],
                 'filesize': humanize_bytes(result['file_size']),
             }
-        )
+            for result in json['data']
+        ]
+    )
 
     return results

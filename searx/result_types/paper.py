@@ -27,6 +27,7 @@ __all__ = ["Paper"]
 import typing as t
 
 from searx.weather import DateTime
+
 from ._base import MainResult
 
 
@@ -46,13 +47,13 @@ class Paper(MainResult, kw_only=True):
     comments: str = ""
     """Free text display in italic below the content."""
 
-    tags: list[str] = []
+    tags: list[str] = []  # noqa: RUF012 msgspec field default
     """Free tag list."""
 
     type: str = ""
     """Short description of medium type, e.g. *book*, *pdf* or *html* ..."""
 
-    authors: list[str] | set[str] = []
+    authors: list[str] | set[str] = []  # noqa: RUF012 msgspec field default
     """List of authors of the work (authors with a "s" suffix, the "author" is
     in the :py:obj:`MainResult.author`)."""
 
@@ -77,10 +78,10 @@ class Paper(MainResult, kw_only=True):
     doi: str = ""
     """DOI number (like ``10.1038/d41586-018-07848-2``)."""
 
-    issn: list[str] = []
+    issn: list[str] = []  # noqa: RUF012 msgspec field default
     """List of ISSN numbers like ``1476-4687``"""
 
-    isbn: list[str] = []
+    isbn: list[str] = []  # noqa: RUF012 msgspec field default
     """List of ISBN numbers like ``9780201896831``"""
 
     pdf_url: str = ""

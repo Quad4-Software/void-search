@@ -37,8 +37,7 @@ Implementations
 """
 
 import typing as t
-
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 from searx.result_types import EngineResults
@@ -82,9 +81,9 @@ def setup(engine_settings: dict[str, t.Any]) -> bool:
     configured.
     """
     missing: list[str] = []
-    for cfg_name in ["base_url", "mount_prefix", "dl_prefix"]:
-        if not engine_settings.get(cfg_name):
-            missing.append(cfg_name)
+    missing.extend(
+        [cfg_name for cfg_name in ['base_url', 'mount_prefix', 'dl_prefix'] if not engine_settings.get(cfg_name)]
+    )
     if missing:
         logger.error("missing recoll configuration: %s", missing)
         return False
@@ -98,7 +97,7 @@ def search_after(time_range: str | None) -> str:
     offset = _s2i.get(time_range, 0)
     if not offset:
         return ""
-    return (date.today() - timedelta(days=offset)).isoformat()
+    return (datetime.now(tz=UTC).date() - timedelta(days=offset)).isoformat()
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -121,12 +120,11 @@ def response(resp: "SXNG_Response") -> EngineResults:
         return res
 
     for result in json_data.get("results", []):
-
         url = result.get("url", "").replace("file://" + mount_prefix, dl_prefix)
 
         mtype = subtype = result.get("mtype", "")
         if mtype:
-            mtype, subtype = (mtype.split("/", 1) + [""])[:2]
+            mtype, subtype = ([*mtype.split("/", 1), ""])[:2]
 
         # facilitate preview support for known mime types
         thumbnail = embedded = ""

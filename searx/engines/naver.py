@@ -2,22 +2,23 @@
 # pylint: disable=line-too-long
 """Naver for SearXNG"""
 
+import contextlib
 import typing as t
-
 from urllib.parse import urlencode
+
 from lxml import html
 
 from searx.exceptions import SearxEngineAPIException, SearxEngineXPathException
 from searx.result_types import EngineResults, MainResult
 from searx.utils import (
+    eval_xpath,
     eval_xpath_getindex,
     eval_xpath_list,
-    eval_xpath,
-    extract_text,
     extr,
+    extract_text,
     html_to_text,
-    parse_duration_string,
     js_obj_str_to_python,
+    parse_duration_string,
 )
 
 # engine metadata
@@ -104,19 +105,18 @@ def parse_general(data):
         thumbnail = extract_text(
             eval_xpath(
                 item,
-                ".//div[contains(@class, 'sds-comps-image') and not(contains(@class, 'sds-comps-image-circle'))]/img/@src",
+                ".//div[contains(@class, 'sds-comps-image') and not(contains(@class, 'sds-comps-image-circle'))]"
+                "/img/@src",
             )
         )
 
         title = extract_text(eval_xpath(item, ".//span[contains(@class, 'sds-comps-text-type-headline1')]"))
 
         url = None
-        try:
+        with contextlib.suppress(ValueError, TypeError, SearxEngineXPathException):
             url = eval_xpath_getindex(
                 item, ".//a[starts-with(@href, 'http') and not(contains(@href, 'keep.naver.com'))]/@href", 0
             )
-        except (ValueError, TypeError, SearxEngineXPathException):
-            pass
 
         content = extract_text(eval_xpath(item, ".//span[contains(@class, 'sds-comps-text-type-body1')]"))
 
@@ -141,18 +141,20 @@ def parse_images(data):
         json = js_obj_str_to_python(match.strip().rstrip(';'))
         items = json.get('content', {}).get('items', [])
 
-        for item in items:
-            results.append(
+        results.extend(
+            [
                 {
-                    "template": "images.html",
-                    "url": item.get('link'),
-                    "thumbnail_src": item.get('thumb'),
-                    "img_src": item.get('originalUrl'),
-                    "title": html_to_text(item.get('title')),
-                    "source": item.get('source'),
-                    "resolution": f"{item.get('orgWidth')} x {item.get('orgHeight')}",
+                    'template': 'images.html',
+                    'url': item.get('link'),
+                    'thumbnail_src': item.get('thumb'),
+                    'img_src': item.get('originalUrl'),
+                    'title': html_to_text(item.get('title')),
+                    'source': item.get('source'),
+                    'resolution': f"{item.get('orgWidth')} x {item.get('orgHeight')}",
                 }
-            )
+                for item in items
+            ]
+        )
 
     return results
 
@@ -171,14 +173,13 @@ def parse_news(data):
         content = extract_text(eval_xpath(item, ".//span[contains(@class, 'sds-comps-text-type-body1')]"))
 
         thumbnail = None
-        try:
+        with contextlib.suppress(ValueError, TypeError, SearxEngineXPathException):
             thumbnail = eval_xpath_getindex(
                 item,
-                ".//div[contains(@class, 'sds-comps-image') and contains(@class, 'sds-rego-thumb-overlay')]//img[@src]/@src",
+                ".//div[contains(@class, 'sds-comps-image') and contains(@class, 'sds-rego-thumb-overlay')]"
+                "//img[@src]/@src",
                 0,
             )
-        except (ValueError, TypeError, SearxEngineXPathException):
-            pass
 
         if title and content and url:
             results.add(
@@ -202,16 +203,12 @@ def parse_videos(data):
         url = eval_xpath_getindex(item, ".//a[contains(@class, 'info_title')]/@href", 0)
 
         thumbnail = ""
-        try:
+        with contextlib.suppress(ValueError, TypeError, SearxEngineXPathException):
             thumbnail = eval_xpath_getindex(item, ".//img[contains(@class, 'thumb')]/@src", 0)
-        except (ValueError, TypeError, SearxEngineXPathException):
-            pass
 
         length = None
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             length = parse_duration_string(extract_text(eval_xpath(item, ".//span[contains(@class, 'time')]")) or "")
-        except (ValueError, TypeError):
-            pass
 
         res.add(
             res.types.Video(

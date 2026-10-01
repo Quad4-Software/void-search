@@ -5,7 +5,7 @@
 """
 
 import re
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import babel
@@ -79,7 +79,7 @@ def request(query, params):
         params["url"] += "&boostLanguages[]=" + eng_lang
 
     if params["time_range"] in time_range_table:
-        time = datetime.now().date() + time_range_table[params["time_range"]]
+        time = datetime.now(tz=UTC).date() + time_range_table[params["time_range"]]
         params["url"] += "&startDate=" + time.isoformat()
 
     return params
@@ -168,13 +168,13 @@ def fetch_traits(engine_traits: EngineTraits):
         try:
             sxng_tag = language_tag(babel.Locale.parse(eng_tag))
         except babel.UnknownLocaleError:
-            print("ERROR: %s is unknown by babel" % eng_tag)
+            print(f"ERROR: {eng_tag} is unknown by babel")
             continue
 
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.languages[sxng_tag] = eng_tag
 

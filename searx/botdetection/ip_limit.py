@@ -45,14 +45,12 @@ from ipaddress import (
 import flask
 import werkzeug
 
-from searx.valkeylib import incr_sliding_window, drop_counter
+from searx.valkeylib import drop_counter, incr_sliding_window
 
-from . import link_token
-from . import config
-from . import valkeydb
+from . import config, link_token, valkeydb
 from ._helpers import (
-    too_many_requests,
     logger,
+    too_many_requests,
 )
 
 logger = logger.getChild('ip_limit')
@@ -107,7 +105,6 @@ def filter_request(
             return too_many_requests(network, "too many request in API_WINDOW")
 
     if cfg['botdetection.ip_limit.link_token']:
-
         suspicious = link_token.is_suspicious(network, request, True)
 
         if not suspicious:

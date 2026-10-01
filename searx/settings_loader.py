@@ -17,8 +17,8 @@ to be loaded. The rules used for this can be found in the
 
 """
 
-import typing as t
 import os.path
+import typing as t
 from collections.abc import MutableMapping
 from itertools import filterfalse
 from pathlib import Path
@@ -30,7 +30,7 @@ from searx.exceptions import SearxSettingsException
 JSONType: t.TypeAlias = dict[str, "JSONType"] | list["JSONType"] | str | int | float | bool | None
 SettingsType: t.TypeAlias = dict[str, JSONType]
 
-searx_dir = os.path.abspath(os.path.dirname(__file__))
+searx_dir = str(Path(__file__).resolve().parent)
 
 SETTINGS_YAML = Path("settings.yml")
 DEFAULT_SETTINGS_FILE = Path(searx_dir) / SETTINGS_YAML
@@ -40,9 +40,9 @@ DEFAULT_SETTINGS_FILE = Path(searx_dir) / SETTINGS_YAML
 def load_yaml(file_name: str | Path) -> SettingsType:
     """Load YAML config from a file."""
     try:
-        with open(file_name, 'r', encoding='utf-8') as settings_yaml:
+        with Path(file_name).open(encoding='utf-8') as settings_yaml:
             return yaml.safe_load(settings_yaml) or {}
-    except IOError as e:
+    except OSError as e:
         raise SearxSettingsException(e, str(file_name)) from e
     except yaml.YAMLError as e:
         raise SearxSettingsException(e, str(file_name)) from e
@@ -104,7 +104,7 @@ def get_user_cfg_folder() -> Path | None:
         elif settings_path.is_file():
             folder = settings_path.parent
         else:
-            raise EnvironmentError(1, f"{settings_path} not exists!", settings_path)
+            raise OSError(1, f"{settings_path} not exists!", settings_path)
 
     if not folder and not disable_etc:
         # default: rule 3.
@@ -144,7 +144,7 @@ def update_settings(default_settings: MutableMapping[str, t.Any], user_settings:
         default_settings['plugins'] = plugins
 
     # parse the engines
-    remove_engines: None | list[str] = None
+    remove_engines: list[str] | None = None
     keep_only_engines: list[str] | None = None
     use_default_settings: dict[str, t.Any] | None = user_settings.get('use_default_settings')
     if isinstance(use_default_settings, dict):
@@ -165,7 +165,7 @@ def update_settings(default_settings: MutableMapping[str, t.Any], user_settings:
         # parse "engines"
         user_engines = user_settings.get('engines')
         if user_engines:
-            engines_dict = dict((definition['name'], definition) for definition in engines)
+            engines_dict = {definition['name']: definition for definition in engines}
             for user_engine in user_engines:
                 default_engine: dict[str, t.Any] | None = engines_dict.get(user_engine['name'])
                 if default_engine:
@@ -206,12 +206,8 @@ def load_settings(load_user_settings: bool = True) -> tuple[SettingsType, str]:
         return cfg, msg
 
     settings_yml = os.environ.get("SEARXNG_SETTINGS_PATH")
-    if settings_yml and Path(settings_yml).is_file():
-        # see get_user_cfg_folder() --> SEARXNG_SETTINGS_PATH points to a file
-        settings_yml = Path(settings_yml).name
-    else:
-        # see get_user_cfg_folder() --> SEARXNG_SETTINGS_PATH points to a folder
-        settings_yml = SETTINGS_YAML
+    # see get_user_cfg_folder() --> SEARXNG_SETTINGS_PATH points to a file or a folder
+    settings_yml = Path(settings_yml).name if settings_yml and Path(settings_yml).is_file() else SETTINGS_YAML
 
     cfg_file = cfg_folder / settings_yml
     if not cfg_file.exists():

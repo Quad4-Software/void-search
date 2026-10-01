@@ -5,9 +5,11 @@ results from Google.
 .. _Kompas: https://www.kompaspublishing.nl/
 """
 
+import contextlib
+import datetime
 import typing as t
 from urllib.parse import urlencode
-import datetime
+
 from dateutil import parser
 
 from searx.result_types import EngineResults
@@ -40,7 +42,7 @@ api_url = "https://search.kompas.services"
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if startpagina_categ not in ("web", "images", "videos", "news"):
-        raise ValueError("invalid search type: %s" % startpagina_categ)
+        raise ValueError(f"invalid search type: {startpagina_categ}")
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -64,10 +66,8 @@ def response(resp: "SXNG_Response") -> EngineResults:
             )
         elif startpagina_categ == "news":
             publishedDate = None
-            try:
+            with contextlib.suppress(parser.ParserError):
                 publishedDate = parser.parse(result["date"])
-            except parser.ParserError:
-                pass
 
             res.add(
                 res.types.MainResult(

@@ -2,21 +2,20 @@
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
 import json
-import babel
-from mock import Mock
+from unittest.mock import Mock
 
-import searx.webapp
+import babel
+
 import searx.search
 import searx.search.processors
-from searx.result_types._base import MainResult
-
-from searx.results import Timing
+import searx.webapp
 from searx.preferences import Preferences
+from searx.result_types._base import MainResult
+from searx.results import Timing
 from tests import SearxTestCase
 
 
 class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
-
     def setUp(self):
         super().setUp()
 
@@ -81,10 +80,7 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
     def test_index_empty(self):
         result = self.client.post('/')
         self.assertEqual(result.status_code, 200)
-        self.assertIn(
-            b'<div class="title"><h1>SearXNG</h1></div>',
-            result.data,
-        )
+        self.assertIn(b'<h1>Void Search</h1>', result.data)
 
     def test_index_html_post(self):
         result = self.client.post('/', data={'q': 'test'})
@@ -99,7 +95,7 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
     def test_search_empty_html(self):
         result = self.client.post('/search', data={'q': ''})
         self.assertEqual(result.status_code, 200)
-        self.assertIn(b'<div class="title"><h1>SearXNG</h1></div>', result.data)
+        self.assertIn(b'<h1>Void Search</h1>', result.data)
 
     def test_search_empty_json(self):
         result = self.client.post('/search', data={'q': '', 'format': 'json'})
@@ -158,7 +154,7 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
     def test_search_rss(self):
         result = self.client.post('/search', data={'q': 'test', 'format': 'rss'})
 
-        self.assertIn(b'<description>Search results for "test" - SearXNG</description>', result.data)
+        self.assertIn(b'<description>Search results for "test" - Void Search</description>', result.data)
 
         self.assertIn(b'<title>First Test</title>', result.data)
 
@@ -185,7 +181,7 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(result.status_code, 200)
         self.assertIn(b'<form id="search_form" method="post" action="/preferences"', result.data)
         self.assertIn(b'<div id="categories_container">', result.data)
-        self.assertIn(b'<legend id="pref_ui_locale">Interface language</legend>', result.data)
+        self.assertIn(b'<legend id="pref_ui_locale">', result.data)
 
     def test_browser_locale(self):
         result = self.client.get('/preferences', headers={'Accept-Language': 'zh-tw;q=0.8'})
@@ -223,14 +219,12 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
     def test_robots_txt(self):
         result = self.client.get('/robots.txt')
         self.assertEqual(result.status_code, 200)
-        self.assertIn(b'Allow: /', result.data)
+        self.assertIn(b'Disallow: /', result.data)
 
     def test_opensearch_xml(self):
         result = self.client.get('/opensearch.xml')
         self.assertEqual(result.status_code, 200)
-        self.assertIn(
-            b'<Description>SearXNG is a metasearch engine that respects your privacy.</Description>', result.data
-        )
+        self.assertIn(b'<ShortName>Void Search</ShortName>', result.data)
 
     def test_favicon(self):
         result = self.client.get('/favicon.ico')

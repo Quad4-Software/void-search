@@ -5,8 +5,8 @@ from json import loads
 from time import time
 from urllib.parse import urlencode
 
-from searx.network import get as http_get
 from searx.engines.openstreetmap import get_key_label
+from searx.network import get as http_get
 
 about = {
     "website": 'https://www.apple.com/maps/',
@@ -38,7 +38,7 @@ def obtain_token():
         token['value'] = loads(actual_token.text)['authInfo']['access_token']
         token['last_updated'] = update_time
     # pylint: disable=bare-except
-    except:
+    except Exception:  # noqa: S110
         pass
     return token
 

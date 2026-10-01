@@ -1,20 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=invalid-name, missing-module-docstring, missing-class-docstring
 
-from abc import abstractmethod, ABC
 import re
+from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from searx import settings
-from searx.sxng_locales import sxng_locales
-from searx.engines import categories, engines, engine_shortcuts
+from searx.engines import categories, engine_shortcuts, engines
 from searx.external_bang import get_bang_definition_and_autocomplete
 from searx.search.models import EngineRef
+from searx.sxng_locales import sxng_locales
 from searx.webutils import VALID_LANGUAGE_CODE
 
 
 class QueryPartParser(ABC):
-
-    __slots__ = "raw_text_query", "enable_autocomplete"
+    __slots__ = "enable_autocomplete", "raw_text_query"
 
     @staticmethod
     @abstractmethod
@@ -92,7 +92,7 @@ class LanguageParser(QueryPartParser):
             # set it as new search-language
 
             if (
-                value == lang_id or value == lang_name or value == english_name or value.replace('-', ' ') == country
+                value in (lang_id, lang_name, english_name) or value.replace('-', ' ') == country
             ) and value not in self.raw_text_query.languages:
                 found = True
                 lang_parts = lang_id.split('-')
@@ -250,7 +250,7 @@ class FeelingLuckyParser(QueryPartParser):
 class RawTextQuery:
     """parse raw text query (the value from the html input)"""
 
-    PARSER_CLASSES = [
+    PARSER_CLASSES: ClassVar = [
         TimeoutParser,  # force the timeout
         LanguageParser,  # force a language
         ExternalBangParser,  # external bang (must be before BangParser)
@@ -259,7 +259,7 @@ class RawTextQuery:
     ]
 
     def __init__(self, query: str, disabled_engines: list):
-        assert isinstance(query, str)
+        assert isinstance(query, str)  # noqa: S101
         # input parameters
         self.query = query
         self.disabled_engines = disabled_engines if disabled_engines else []
@@ -327,7 +327,7 @@ class RawTextQuery:
         """
         get full query including whitespaces
         """
-        return '{0} {1}'.format(' '.join(self.query_parts), self.getQuery()).strip()
+        return f"{' '.join(self.query_parts)} {self.getQuery()}".strip()
 
     def __str__(self):
         return self.getFullQuery()

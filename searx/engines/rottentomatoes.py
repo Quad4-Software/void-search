@@ -2,6 +2,7 @@
 """RottenTomatoes (movies)"""
 
 from urllib.parse import quote_plus
+
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 # about

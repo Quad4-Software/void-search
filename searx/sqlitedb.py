@@ -20,13 +20,13 @@ Examplarical implementations based on :py:obj:`SQLiteAppl`:
 ----
 """
 
-import typing as t
 import abc
 import datetime
 import re
 import sqlite3
 import sys
 import threading
+import typing as t
 import uuid
 
 from searx import logger
@@ -65,7 +65,7 @@ class DBSession:
 
     @property
     def conn(self) -> sqlite3.Connection:
-        msg = f"[{threading.current_thread().ident}] DBSession: " f"{self.app.__class__.__name__}({self.app.db_url})"
+        msg = f"[{threading.current_thread().ident}] DBSession: {self.app.__class__.__name__}({self.app.db_url})"
         if self._conn is None:
             self._conn = self.app.connect()
             logger.debug("%s --> created new connection", msg)
@@ -84,16 +84,16 @@ class DBSession:
                 # msg = f"DBSession: close [{self.uuid}] {self.app.__class__.__name__}({self.app.db_url})"
                 # logger.debug(msg)
                 self._conn.close()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # pylint: disable=broad-exception-caught  # noqa: S110
             pass
 
 
-class SQLiteAppl(abc.ABC):
+class SQLiteAppl(abc.ABC):  # noqa: B024 abstract by convention
     """Abstract base class for implementing convenient DB access in SQLite
     applications.  In the constructor, a :py:obj:`SQLiteProperties` instance is
     already aggregated under ``self.properties``."""
 
-    DDL_CREATE_TABLES: dict[str, str] = {}
+    DDL_CREATE_TABLES: t.ClassVar[dict[str, str]] = {}
 
     DB_SCHEMA: int = 1
     """As soon as changes are made to the DB schema, the version number must be
@@ -121,7 +121,7 @@ class SQLiteAppl(abc.ABC):
 
     .. _WAL: https://sqlite.org/wal.html
     """
-    SQLITE_CONNECT_ARGS: dict[str, str | float | int | bool | None] = {
+    SQLITE_CONNECT_ARGS: t.ClassVar[dict[str, str | float | int | bool | None]] = {
         "timeout": 3.0,  # default is 5sec
         # "detect_types": 0,
         "check_same_thread": bool(SQLITE_THREADING_MODE != "serialized"),
@@ -348,7 +348,7 @@ class SQLiteAppl(abc.ABC):
         else:
             ver = int(ver)
             if ver != self.DB_SCHEMA:
-                raise sqlite3.DatabaseError("Expected DB schema v%s, DB schema is v%s" % (self.DB_SCHEMA, ver))
+                raise sqlite3.DatabaseError(f"Expected DB schema v{self.DB_SCHEMA}, DB schema is v{ver}")
             logger.debug("DB_SCHEMA = %s", ver)
 
         return True
@@ -401,7 +401,7 @@ CREATE TABLE IF NOT EXISTS properties (
         "SELECT name FROM sqlite_master"
         " WHERE type='table' AND name='properties'"
     )  # fmt:skip
-    SQLITE_CONNECT_ARGS: dict[str, str | int | bool | None] = dict(SQLiteAppl.SQLITE_CONNECT_ARGS)
+    SQLITE_CONNECT_ARGS: t.ClassVar[dict[str, str | int | bool | None]] = dict(SQLiteAppl.SQLITE_CONNECT_ARGS)
 
     # pylint: disable=super-init-not-called
     def __init__(self, db_url: str):  # pyright: ignore[reportMissingSuperCall]
@@ -454,7 +454,7 @@ CREATE TABLE IF NOT EXISTS properties (
             return default
 
         col_names = [column[0] for column in row.description]
-        return dict(zip(col_names, row))
+        return dict(zip(col_names, row, strict=True))
 
     def m_time(self, name: str, default: int = 0) -> int:
         """Last modification time of this property."""
@@ -472,6 +472,6 @@ CREATE TABLE IF NOT EXISTS properties (
         lines: list[str] = []
         for row in self.DB.execute("SELECT name, value, m_time FROM properties"):
             name, value, m_time = row
-            m_time = datetime.datetime.fromtimestamp(m_time).strftime("%Y-%m-%d %H:%M:%S")
+            m_time = datetime.datetime.fromtimestamp(m_time, tz=datetime.UTC).strftime("%Y-%m-%d %H:%M:%S")
             lines.append(f"[last modified: {m_time}] {name:20s}: {value}")
         return "\n".join(lines)

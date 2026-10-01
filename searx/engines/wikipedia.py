@@ -168,7 +168,7 @@ def response(resp):
     if resp.status_code == 400:
         try:
             api_result = resp.json()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except  # noqa: S110
             pass
         else:
             if (
@@ -194,17 +194,16 @@ def response(resp):
             }
         )
 
-    if "infobox" in display_type:
-        if api_result.get("type") == "standard":
-            results.append(
-                {
-                    "infobox": title,
-                    "id": wikipedia_link,
-                    "content": api_result.get("extract", ""),
-                    "img_src": api_result.get("thumbnail", {}).get("source"),
-                    "urls": [{"title": "Wikipedia", "url": wikipedia_link}],
-                }
-            )
+    if "infobox" in display_type and api_result.get("type") == "standard":
+        results.append(
+            {
+                "infobox": title,
+                "id": wikipedia_link,
+                "content": api_result.get("extract", ""),
+                "img_src": api_result.get("thumbnail", {}).get("source"),
+                "urls": [{"title": "Wikipedia", "url": wikipedia_link}],
+            }
+        )
 
     return results
 
@@ -228,7 +227,7 @@ lang_map.update(
         "nrm": "nrf",
         "roa-rup": "rup",
         "nds-nl": "nds",
-        #'simple: – invented code used for the Simple English Wikipedia (not the official IETF code en-simple)
+        #'simple: - invented code used for the Simple English Wikipedia (not the official IETF code en-simple)
         "zh-min-nan": "nan",
         "zh-yue": "yue",
         "an": "arg",
@@ -238,7 +237,7 @@ lang_map.update(
 
 def fetch_traits(engine_traits: EngineTraits):
     fetch_wikimedia_traits(engine_traits)
-    print("WIKIPEDIA_LANGUAGES: %s" % len(engine_traits.custom["WIKIPEDIA_LANGUAGES"]))
+    print(f"WIKIPEDIA_LANGUAGES: {len(engine_traits.custom['WIKIPEDIA_LANGUAGES'])}")
 
 
 def fetch_wikimedia_traits(engine_traits: EngineTraits):
@@ -312,14 +311,14 @@ def fetch_wikimedia_traits(engine_traits: EngineTraits):
                 continue
 
             if int(depth) < 20:
-                # Rough indicator of a Wikipedia’s quality, showing how
+                # Rough indicator of a Wikipedia's quality, showing how
                 # frequently its articles are updated.
                 continue
 
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
 
         engine_traits.languages[sxng_tag] = eng_tag

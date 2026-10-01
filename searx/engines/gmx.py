@@ -8,14 +8,13 @@ most of the results are still in English."""
 
 import time
 import typing as t
-
 from urllib.parse import urlencode
 
-from searx.result_types import EngineResults
 from searx.exceptions import SearxEngineCaptchaException
 from searx.extended_types import SXNG_Response
-from searx.utils import extr, gen_useragent, html_to_text, eval_xpath
 from searx.network import get
+from searx.result_types import EngineResults
+from searx.utils import eval_xpath, extr, gen_useragent, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.search.processors import OnlineParams
@@ -47,7 +46,9 @@ def _get_page_hash(query: str, page: int, headers: dict[str, str]) -> str:
         raise SearxEngineCaptchaException()
 
     # the text we search for looks like:
-    # load("/desk?lang="+eV.p.param['hl']+"&q="+eV['p']['q_encode']+"&page=5&h=aa45603&t=177582576&origin=web&comp=web_serp_pag&p=gmx-com&sp=&lr="+eV.p.param['lr0']+"&mkt="+eV.p.param['mkt0']+"&family="+eV.p.param['familyFilter']+"&fcons="+eV.p.perm.fCons,"google", "eMMO", "eMH","eMP");  # pylint: disable=line-too-long
+    # load("/desk?lang="+eV.p.param['hl']+"&q="+eV['p']['q_encode']+"&page=5&h=aa45603&t=177582576&origin=web"
+    #      +"&comp=web_serp_pag&p=gmx-com&sp=&lr="+eV.p.param['lr0']+"&mkt="+eV.p.param['mkt0']
+    #      +"&family="+eV.p.param['familyFilter']+"&fcons="+eV.p.perm.fCons,"google", "eMMO", "eMH","eMP");
     return extr(resp.text, "&h=", "&t=")
 
 

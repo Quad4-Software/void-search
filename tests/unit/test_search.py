@@ -4,8 +4,8 @@
 from copy import copy
 
 import searx.search
-from searx.search.models import SearchQuery, EngineRef
 from searx import settings
+from searx.search.models import EngineRef, SearchQuery
 from tests import SearxTestCase
 
 SAFESEARCH = 0
@@ -14,12 +14,11 @@ PUBLIC_ENGINE_NAME = "dummy engine"  # from the ./settings/test_settings.yml
 
 
 class SearchQueryTestCase(SearxTestCase):
-
     def test_repr(self):
         s = SearchQuery('test', [EngineRef('bing', 'general')], 'all', 0, 1, '1', 5.0, 'g')
         self.assertEqual(
             repr(s), "SearchQuery('test', [EngineRef('bing', 'general')], 'all', 0, 1, '1', 5.0, 'g', None)"
-        )  # noqa
+        )
 
     def test_eq(self):
         s = SearchQuery('test', [EngineRef('bing', 'general')], 'all', 0, 1, None, None, None)
@@ -34,7 +33,6 @@ class SearchQueryTestCase(SearxTestCase):
 
 
 class SearchTestCase(SearxTestCase):
-
     def test_timeout_simple(self):
         settings['outgoing']['max_request_timeout'] = None
         search_query = SearchQuery(

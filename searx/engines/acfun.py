@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Acfun search engine for searxng"""
 
-from urllib.parse import urlencode
-import re
+import contextlib
 import json
-from datetime import datetime, timedelta
+import re
+from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode
+
 from lxml import html
 
 from searx.utils import extract_text
@@ -82,15 +84,13 @@ def extract_video_data(video_block):
 
         published_date = None
         if create_time:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 published_date = datetime.fromisoformat(create_time.strip())
-            except (ValueError, TypeError):
-                pass
 
         length = None
         if video_duration:
             try:
-                timediff = datetime.strptime(video_duration.strip(), "%M:%S")
+                timediff = datetime.strptime(video_duration.strip(), "%M:%S").replace(tzinfo=UTC)
                 length = timedelta(minutes=timediff.minute, seconds=timediff.second)
             except (ValueError, TypeError):
                 pass

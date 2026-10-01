@@ -72,10 +72,10 @@ Implementations
 
 from urllib.parse import urlencode
 
-from searx.utils import extract_text, extract_url, eval_xpath, eval_xpath_list
+from searx.enginelib import EngineAbout
 from searx.network import raise_for_httperror
 from searx.result_types import EngineResults
-from searx.enginelib import EngineAbout
+from searx.utils import eval_xpath, eval_xpath_list, extract_text, extract_url
 
 about = EngineAbout()
 
@@ -318,6 +318,7 @@ def response(resp) -> EngineResults:  # pylint: disable=too-many-branches
                 map(extract_text, eval_xpath_list(dom, title_xpath)),
                 map(extract_text, eval_xpath_list(dom, content_xpath)),
                 map(extract_text, eval_xpath_list(dom, cached_xpath)),
+                strict=False,
             ):
                 results.append(
                     {
@@ -333,6 +334,7 @@ def response(resp) -> EngineResults:  # pylint: disable=too-many-branches
                 (extract_url(x, search_url) for x in eval_xpath_list(dom, url_xpath)),
                 map(extract_text, eval_xpath_list(dom, title_xpath)),
                 map(extract_text, eval_xpath_list(dom, content_xpath)),
+                strict=False,
             ):
                 results.append({'url': url, 'title': title, 'content': content, 'is_onion': is_onion})
 

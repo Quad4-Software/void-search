@@ -3,13 +3,12 @@
 """360Search search engine for searxng"""
 
 import typing as t
-
 from urllib.parse import urlencode
 
 from searx import logger
 from searx.enginelib import EngineCache
-from searx.utils import extract_text
 from searx.network import get as http_get
+from searx.utils import extract_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response

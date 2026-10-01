@@ -16,8 +16,7 @@ _IP6 = re.compile(r"\b(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}\b", re.I)
 def _scrub(text: str) -> str:
     text = _QUERY.sub(r"\1[redacted]", text)
     text = _IP4.sub("[redacted]", text)
-    text = _IP6.sub("[redacted]", text)
-    return text
+    return _IP6.sub("[redacted]", text)
 
 
 class NoQueryFilter(logging.Filter):

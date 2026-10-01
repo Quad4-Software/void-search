@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Tokyo Toshokan (A BitTorrent Library for Japanese Media)"""
 
+import contextlib
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from searx.utils import extract_text, int_or_zero
@@ -69,16 +70,14 @@ def response(resp):
         for item in desc.split('|'):
             item = item.strip()
             if item.startswith('Size:'):
-                try:
+                with contextlib.suppress(Exception):
                     params['filesize'] = size_re.search(item).group()
-                except:  # pylint: disable=bare-except
-                    pass
             elif item.startswith('Date:'):
                 try:
                     # Date: 2016-02-21 21:44 UTC
-                    date = datetime.strptime(item, 'Date: %Y-%m-%d %H:%M UTC')
+                    date = datetime.strptime(item, 'Date: %Y-%m-%d %H:%M UTC').replace(tzinfo=UTC)
                     params['publishedDate'] = date
-                except:  # pylint: disable=bare-except
+                except Exception:  # noqa: S110
                     pass
             elif item.startswith('Comment:'):
                 params['content'] = item

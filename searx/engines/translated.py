@@ -2,11 +2,10 @@
 """MyMemory Translated"""
 
 import typing as t
-
 import urllib.parse
 
-from searx.utils import html_to_text
 from searx.result_types import EngineResults
+from searx.utils import html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -47,7 +46,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
     results = EngineResults()
     data: dict[str, t.Any] = resp.json()
-    params: "OnlineDictParams" = resp.search_params  # pyright: ignore[reportAssignmentType]
+    params: OnlineDictParams = resp.search_params  # pyright: ignore[reportAssignmentType]
 
     args = {
         "q": params["query"],

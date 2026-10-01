@@ -39,17 +39,19 @@ def response(resp):
 
     data = json.loads(match.group(1))
     if "searchList" in data and "searchList" in data["searchList"]:
-        for item in data["searchList"]["searchList"]:
-            results.append(
+        results.extend(
+            [
                 {
-                    "template": "images.html",
-                    "url": item.get("url", ""),
-                    "thumbnail_src": item.get("picUrl", ""),
-                    "img_src": item.get("picUrl", ""),
-                    "content": item.get("content_major", ""),
-                    "title": item.get("title", ""),
-                    "source": item.get("ch_site_name", ""),
+                    'template': 'images.html',
+                    'url': item.get('url', ''),
+                    'thumbnail_src': item.get('picUrl', ''),
+                    'img_src': item.get('picUrl', ''),
+                    'content': item.get('content_major', ''),
+                    'title': item.get('title', ''),
+                    'source': item.get('ch_site_name', ''),
                 }
-            )
+                for item in data['searchList']['searchList']
+            ]
+        )
 
     return results

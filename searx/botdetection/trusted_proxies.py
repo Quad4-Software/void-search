@@ -4,20 +4,17 @@
 
 # pylint: disable=too-many-branches
 
-
 import typing as t
-
 from collections import abc
-from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network, IPv4Network, IPv6Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_address, ip_network
+
 from werkzeug.http import parse_list_header
 
 from . import config
 from ._helpers import log_error_only_once, logger
 
 if t.TYPE_CHECKING:
-    from _typeshed.wsgi import StartResponse
-    from _typeshed.wsgi import WSGIApplication
-    from _typeshed.wsgi import WSGIEnvironment
+    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
 
 @t.final
@@ -72,11 +69,7 @@ class ProxyFix:
         if addr is None:
             return False
 
-        for net in trusted_proxies:
-            if addr.version == net.version and addr in net:
-                return True
-
-        return False
+        return any(addr.version == net.version and addr in net for net in trusted_proxies)
 
     def trusted_remote_addr(
         self,

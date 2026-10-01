@@ -12,6 +12,7 @@ Output file: :origin:`searx/data/ahmia_blacklist.txt` (:origin:`CI Update data
 # pylint: disable=use-dict-literal
 
 import requests
+
 from searx.data import data_dir
 from searx.utils import searxng_useragent
 

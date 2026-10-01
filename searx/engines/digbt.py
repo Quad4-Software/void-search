@@ -4,6 +4,7 @@ DigBT (Videos, Music, Files)
 """
 
 from urllib.parse import urljoin
+
 from searx.utils import extract_text
 
 # about

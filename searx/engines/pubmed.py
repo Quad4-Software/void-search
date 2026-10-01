@@ -19,20 +19,20 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
-
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 from lxml import etree
 
-from searx.result_types import EngineResults
 from searx.network import get
+from searx.result_types import EngineResults
 from searx.utils import (
+    ElementType,
     eval_xpath_getindex,
     eval_xpath_list,
     extract_text,
-    ElementType,
 )
 
 if t.TYPE_CHECKING:
@@ -73,7 +73,7 @@ def request(query: str, params: "OnlineParams") -> None:
     )
     esearch_url = f"{eutils_api}/esearch.fcgi?{args}"
     # DTD: https://eutils.ncbi.nlm.nih.gov/eutils/dtd/20060628/esearch.dtd
-    esearch_resp: "SXNG_Response" = get(esearch_url, timeout=3)
+    esearch_resp: SXNG_Response = get(esearch_url, timeout=3)
     pmids_results = etree.XML(esearch_resp.content)
     pmids: list[str] = [i.text for i in pmids_results.xpath("//eSearchResult/IdList/Id")]
 
@@ -102,7 +102,6 @@ def response(resp: "SXNG_Response") -> EngineResults:  # pylint: disable=too-man
         return extract_text(elem, allow_none=True) or ""
 
     for pubmed_article in eval_xpath_list(efetch_xml, "//PubmedArticle"):
-
         medline_citation: ElementType = eval_xpath_getindex(pubmed_article, "./MedlineCitation", 0)
         pubmed_data: ElementType = eval_xpath_getindex(pubmed_article, "./PubmedData", 0)
 
@@ -118,8 +117,8 @@ def response(resp: "SXNG_Response") -> EngineResults:  # pylint: disable=too-man
 
         for author in eval_xpath_list(medline_citation, "./Article/AuthorList/Author"):
             f = eval_xpath_getindex(author, "./ForeName", 0, default=None)
-            l = eval_xpath_getindex(author, "./LastName", 0, default=None)
-            author_name = f"{f.text if f is not None else ''} {l.text if l is not None else ''}".strip()
+            lastname = eval_xpath_getindex(author, "./LastName", 0, default=None)
+            author_name = f"{f.text if f is not None else ''} {lastname.text if lastname is not None else ''}".strip()
             if author_name:
                 authors.append(author_name)
 
@@ -131,10 +130,8 @@ def response(resp: "SXNG_Response") -> EngineResults:  # pylint: disable=too-man
             year = eval_xpath_getindex(accepted_date, "./Year", 0)
             month = eval_xpath_getindex(accepted_date, "./Month", 0)
             day = eval_xpath_getindex(accepted_date, "./Day", 0)
-            try:
-                pub_date = datetime(year=int(year.text), month=int(month.text), day=int(day.text))
-            except ValueError:
-                pass
+            with contextlib.suppress(ValueError):
+                pub_date = datetime(year=int(year.text), month=int(month.text), day=int(day.text), tzinfo=UTC)
 
         res.add(
             res.types.Paper(

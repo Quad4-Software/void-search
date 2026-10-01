@@ -17,7 +17,7 @@ class ResultContainerTestCase(SearxTestCase):
         self.assertEqual(container.get_ordered_results(), [])
 
     def test_one_result(self):
-        result = dict(url="https://example.org", title="title ..", content="Lorem ..")
+        result = {"url": "https://example.org", "title": "title ..", "content": "Lorem .."}
 
         container = ResultContainer()
         container.extend("google", [result])
@@ -30,7 +30,7 @@ class ResultContainerTestCase(SearxTestCase):
         self.assertIn(res, container.get_ordered_results())
 
     def test_one_suggestion(self):
-        result = dict(suggestion="lorem ipsum ..")
+        result = {"suggestion": "lorem ipsum .."}
 
         container = ResultContainer()
         container.extend("duckduckgo", [result])
@@ -46,8 +46,8 @@ class ResultContainerTestCase(SearxTestCase):
             url="https://example.org", title="very long title, lorem ipsum", content="Lorem ipsum dolor sit amet .."
         )
         result.normalize_result_fields()
-        eng1 = dict(url=result.url, title="short title", content=result.content, engine="google")
-        eng2 = dict(url="http://example.org", title=result.title, content="lorem ipsum", engine="duckduckgo")
+        eng1 = {"url": result.url, "title": "short title", "content": result.content, "engine": "google"}
+        eng2 = {"url": "http://example.org", "title": result.title, "content": "lorem ipsum", "engine": "duckduckgo"}
 
         container = ResultContainer()
         container.extend(None, [eng1, eng2])

@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Sogou-WeChat search engine for retrieving WeChat Article from Sogou"""
 
-from urllib.parse import urlencode
-from datetime import datetime
 import re
+from datetime import UTC, datetime
+from urllib.parse import urlencode
 
 from searx.utils import extract_text
 
@@ -59,7 +59,7 @@ def response(resp):
         if timestamp:
             match = re.search(r"timeConvert\('(\d+)'\)", timestamp)
             if match:
-                published_date = datetime.fromtimestamp(int(match.group(1)))
+                published_date = datetime.fromtimestamp(int(match.group(1)), tz=UTC)
 
         if title and url:
             results.append(

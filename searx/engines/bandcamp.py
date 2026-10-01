@@ -8,7 +8,8 @@
 
 """
 
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse
+
 from dateutil.parser import parse as dateparse
 
 from searx.utils import (
@@ -48,7 +49,6 @@ def response(resp):
     dom = resp.html()
 
     for result in eval_xpath_list(dom, '//li[contains(@class, "searchresult")]'):
-
         link = eval_xpath_getindex(result, './/div[@class="itemurl"]/a', 0, default=None)
         if link is None:
             continue
@@ -71,9 +71,9 @@ def response(resp):
 
         result_id = parse_qs(urlparse(link.get('href')).query)["search_item_id"][0]
         itemtype = extract_text(result.xpath('.//div[@class="itemtype"]')).lower()
-        if "album" == itemtype:
+        if itemtype == "album":
             new_result["iframe_src"] = iframe_src.format(type='album', result_id=result_id)
-        elif "track" == itemtype:
+        elif itemtype == "track":
             new_result["iframe_src"] = iframe_src.format(type='track', result_id=result_id)
 
         results.append(new_result)

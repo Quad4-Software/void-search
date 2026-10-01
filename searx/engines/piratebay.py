@@ -3,11 +3,12 @@
 Piratebay (Videos, Music, Files)
 """
 
+import contextlib
+from datetime import UTC, datetime
 from json import loads
-from datetime import datetime
 from operator import itemgetter
-
 from urllib.parse import quote
+
 from searx.utils import humanize_bytes
 
 # about
@@ -79,10 +80,8 @@ def response(resp):
         }
 
         # extract and convert creation date
-        try:
-            params['publishedDate'] = datetime.fromtimestamp(float(result["added"]))
-        except:  # pylint: disable=bare-except
-            pass
+        with contextlib.suppress(Exception):
+            params['publishedDate'] = datetime.fromtimestamp(float(result["added"]), tz=UTC)
 
         # let's try to calculate the torrent size
         params['filesize'] = humanize_bytes(int(result["size"]))

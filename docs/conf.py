@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from searx import get_setting
-from searx.version import VERSION_STRING, GIT_URL, GIT_BRANCH
+from searx.version import GIT_BRANCH, GIT_URL, VERSION_STRING
 
 # Project --------------------------------------------------------------
 
@@ -39,14 +39,14 @@ numfig = True
 
 exclude_patterns = ['build-templates/*.rst', 'user/*.md']
 
-import searx.engines
-import searx.plugins
-import searx.webutils
+import searx.engines  # noqa: E402
+import searx.plugins  # noqa: E402
+import searx.webutils  # noqa: E402
 
 # import searx.webapp is needed to init the engines & plugins, to init a
 # (empty) secret_key is needed.
 searx.settings['server']['secret_key'] = ''
-import searx.webapp
+import searx.webapp  # noqa: E402
 
 searx.engines.load_engines(searx.settings['engines'])
 
@@ -54,9 +54,7 @@ jinja_contexts = {
     'searx': {
         'engines': searx.engines.engines,
         'plugins': searx.plugins.STORAGE,
-        'version': {
-            'node': os.getenv('NODE_MINIMUM_VERSION')
-        },
+        'version': {'node': os.getenv('NODE_MINIMUM_VERSION')},
         'enabled_engine_count': sum(not x.disabled for x in searx.engines.engines.values()),
         'categories': searx.engines.categories,
         'categories_as_tabs': {c: searx.engines.categories[c] for c in searx.settings['categories_as_tabs']},
@@ -66,13 +64,14 @@ jinja_filters = {
     'group_engines_in_tab': searx.webutils.group_engines_in_tab,
 }
 
+
 # Let the Jinja template in configured_engines.rst access documented_modules
 # to automatically link documentation for modules if it exists.
 def setup(app):
     ENGINES_DOCNAME = 'user/configured_engines'
 
     def before_read_docs(app, env, docnames):
-        assert ENGINES_DOCNAME in docnames
+        assert ENGINES_DOCNAME in docnames  # noqa: S101 sphinx docname ordering guard
         docnames.remove(ENGINES_DOCNAME)
         docnames.append(ENGINES_DOCNAME)
         # configured_engines must come last so that sphinx already has
@@ -84,6 +83,7 @@ def setup(app):
 
     app.connect('env-before-read-docs', before_read_docs)
     app.connect('source-read', source_read)
+
 
 # usage::   lorem :patch:`f373169` ipsum
 extlinks = {}
@@ -98,16 +98,12 @@ extlinks['origin'] = (GIT_URL + '/blob/' + GIT_BRANCH + '/%s', 'git://%s')
 extlinks['patch'] = (GIT_URL + '/commit/%s', '#%s')
 extlinks['docs'] = (DOCS_URL + '/%s', 'docs: %s')
 extlinks['man'] = ('https://manpages.debian.org/jump?q=%s', '%s')
-#extlinks['role'] = (
+# extlinks['role'] = (
 #    'https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-%s', '')
-extlinks['duref'] = (
-    'https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#%s', '%s')
-extlinks['durole'] = (
-    'https://docutils.sourceforge.io/docs/ref/rst/roles.html#%s', '%s')
-extlinks['dudir'] =  (
-    'https://docutils.sourceforge.io/docs/ref/rst/directives.html#%s', '%s')
-extlinks['ctan'] =  (
-    'https://ctan.org/pkg/%s', 'CTAN: %s')
+extlinks['duref'] = ('https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#%s', '%s')
+extlinks['durole'] = ('https://docutils.sourceforge.io/docs/ref/rst/roles.html#%s', '%s')
+extlinks['dudir'] = ('https://docutils.sourceforge.io/docs/ref/rst/directives.html#%s', '%s')
+extlinks['ctan'] = ('https://ctan.org/pkg/%s', 'CTAN: %s')
 
 extensions = [
     'sphinx.ext.imgmath',
@@ -115,13 +111,13 @@ extensions = [
     'sphinx.ext.viewcode',
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    "sphinx_issues", # https://github.com/sloria/sphinx-issues/blob/master/README.rst
+    "sphinx_issues",  # https://github.com/sloria/sphinx-issues/blob/master/README.rst
     "sphinx_jinja",  # https://github.com/tardyp/sphinx-jinja
     "sphinxcontrib.programoutput",  # https://github.com/NextThought/sphinxcontrib-programoutput
     'linuxdoc.kernel_include',  # Implementation of the 'kernel-include' reST-directive.
-    'linuxdoc.rstFlatTable',    # Implementation of the 'flat-table' reST-directive.
-    'linuxdoc.kfigure',         # Sphinx extension which implements scalable image handling.
-    "sphinx_tabs.tabs", # https://github.com/djungelorm/sphinx-tabs
+    'linuxdoc.rstFlatTable',  # Implementation of the 'flat-table' reST-directive.
+    'linuxdoc.kfigure',  # Sphinx extension which implements scalable image handling.
+    "sphinx_tabs.tabs",  # https://github.com/djungelorm/sphinx-tabs
     'myst_parser',  # https://www.sphinx-doc.org/en/master/usage/markdown.html
     'notfound.extension',  # https://github.com/readthedocs/sphinx-notfound-page
 ]
@@ -131,21 +127,19 @@ autodoc_default_options = {
     'member-order': 'bysource',
 }
 
-myst_enable_extensions = [
-  "replacements", "smartquotes"
-]
+myst_enable_extensions = ["replacements", "smartquotes"]
 
 suppress_warnings = ['myst.domains']
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "babel" : ("https://babel.readthedocs.io/en/latest/", None),
+    "babel": ("https://babel.readthedocs.io/en/latest/", None),
     "flask": ("https://flask.palletsprojects.com/en/stable/", None),
     "flask_babel": ("https://python-babel.github.io/flask-babel/", None),
     "werkzeug": ("https://werkzeug.palletsprojects.com/en/stable/", None),
     "jinja": ("https://jinja.palletsprojects.com/en/stable/", None),
-    "linuxdoc" : ("https://return42.github.io/linuxdoc/", None),
-    "sphinx" : ("https://www.sphinx-doc.org/en/master/", None),
+    "linuxdoc": ("https://return42.github.io/linuxdoc/", None),
+    "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
     "valkey": ('https://valkey-py.readthedocs.io/en/stable/', None),
     "pygments": ("https://pygments.org/", None),
     "lxml": ('https://lxml.de/apidoc', None),
@@ -161,7 +155,6 @@ html_theme_options = {
     "source_repository": "https://github.com/searxng/searxng/",
     "source_branch": "master",
     "source_directory": "docs/",
-
     # Show link to repository & searx.space in footer
     "footer_icons": [
         {
@@ -206,12 +199,10 @@ imgmath_font_size = 14
 
 html_show_sphinx = False
 html_logo = "../client/simple/src/brand/searxng-wordmark.svg"
-html_title = "SearXNG Documentation ({})".format(VERSION_STRING)
+html_title = f"SearXNG Documentation ({VERSION_STRING})"
 html_show_sourcelink = True
 html_copy_source = True
 
 # LaTeX ----------------------------------------------------------------
 
-latex_documents = [
-    (master_doc, "searxng-{}.tex".format(VERSION_STRING), html_title, author, "manual")
-]
+latex_documents = [(master_doc, f"searxng-{VERSION_STRING}.tex", html_title, author, "manual")]

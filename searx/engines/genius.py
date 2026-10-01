@@ -2,8 +2,8 @@
 # pylint: disable=invalid-name
 """Genius"""
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
 # about
 about = {
@@ -38,10 +38,7 @@ def request(query, params):
 def parse_lyric(hit):
     content = ''
     highlights = hit['highlights']
-    if highlights:
-        content = hit['highlights'][0]['value']
-    else:
-        content = hit['result'].get('title_with_featured', '')
+    content = hit['highlights'][0]['value'] if highlights else hit['result'].get('title_with_featured', '')
 
     timestamp = hit['result']['lyrics_updated_at']
     result = {
@@ -51,7 +48,7 @@ def parse_lyric(hit):
         'thumbnail': hit['result']['song_art_image_thumbnail_url'],
     }
     if timestamp:
-        result.update({'publishedDate': datetime.fromtimestamp(timestamp)})
+        result.update({'publishedDate': datetime.fromtimestamp(timestamp, tz=UTC)})
     api_path = hit['result'].get('api_path')
     if api_path:
         # The players are just playing 30sec from the title.  Some of the player
@@ -62,13 +59,12 @@ def parse_lyric(hit):
 
 
 def parse_artist(hit):
-    result = {
+    return {
         'url': hit['result']['url'],
         'title': hit['result']['name'],
         'content': '',
         'thumbnail': hit['result']['image_url'],
     }
-    return result
 
 
 def parse_album(hit):
@@ -78,7 +74,7 @@ def parse_album(hit):
     if x:
         x = x.get('year')
         if x:
-            content = "%s / %s" % (x, content)
+            content = f"{x} / {content}"
     return {
         'url': res['url'],
         'title': res['full_title'],

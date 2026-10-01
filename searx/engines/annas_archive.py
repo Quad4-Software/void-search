@@ -118,7 +118,7 @@ def setup(_engine_settings: dict[str, t.Any]) -> bool:
 
 def _get_base_url_choice() -> str:
     if isinstance(base_url, list):
-        return random.choice(base_url)
+        return random.choice(base_url)  # noqa: S311
 
     return base_url
 
@@ -134,7 +134,7 @@ def request(query: str, params: "OnlineParams") -> None:
         "page": params["pageno"],
     }
     # filter out empty values
-    filtered_args = dict((k, v) for k, v in args.items() if v)
+    filtered_args = {k: v for k, v in args.items() if v}
 
     params["base_url"] = _get_base_url_choice()
     params["url"] = f"{params['base_url']}/search?{urlencode(filtered_args)}"
@@ -272,7 +272,7 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
         conflict = engine_traits.languages.get(sxng_lang)
         if conflict:
             if conflict != eng_lang:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_lang, conflict, eng_lang))
+                print(f"CONFLICT: babel {sxng_lang} --> {conflict}, {eng_lang}")
             continue
         engine_traits.languages[sxng_lang] = eng_lang
 

@@ -9,12 +9,12 @@ PDFs, documents, archives, videos, datasets, and more.
 .. _FindFiles.net: https://findfiles.net
 """
 
-from os.path import basename
-from urllib.parse import urlencode
 import typing as t
+from pathlib import Path
+from urllib.parse import urlencode
 
 from searx.result_types import EngineResults
-from searx.utils import extract_text, eval_xpath, eval_xpath_list
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from extended_types import SXNG_Response
@@ -56,7 +56,7 @@ findfiles_categ: FindFilesCategory = "all"
 
 def setup(_: dict[str, t.Any]) -> bool:
     if findfiles_categ not in FINDFILES_CATEGORIES:
-        raise ValueError("invalid category: %s" % findfiles_categ)
+        raise ValueError(f"invalid category: {findfiles_categ}")
     return True
 
 
@@ -100,7 +100,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
             )
     else:
         for result in eval_xpath_list(dom, "//ol/li[contains(@class, 'result-item')]/article"):
-            filename = basename(extract_text(eval_xpath(result, ".//h3")) or "")
+            filename = Path(extract_text(eval_xpath(result, ".//h3")) or "").name
             res.add(
                 res.types.File(
                     url=extract_text(eval_xpath(result, ".//h3/a/@href")) or "",

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """FindThatMeme (Images)"""
 
+from datetime import UTC, datetime
 from json import dumps
-from datetime import datetime
+
 from searx.utils import humanize_bytes
 
 about = {
@@ -38,7 +39,7 @@ def response(resp):
         img = 'https://s3.thehackerblog.com/findthatmeme/' + item['image_path']
         thumb = 'https://s3.thehackerblog.com/findthatmeme/thumb/' + item.get('thumbnail', '')
         date = datetime.fromisoformat(item["updated_at"].split("T")[0])
-        formatted_date = datetime.fromtimestamp(date.timestamp())
+        formatted_date = datetime.fromtimestamp(date.timestamp(), tz=UTC)
 
         results.append(
             {

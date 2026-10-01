@@ -4,6 +4,7 @@
 # pylint: disable = too-few-public-methods
 
 import typing as t
+
 import msgspec
 
 

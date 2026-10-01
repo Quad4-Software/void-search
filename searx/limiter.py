@@ -92,32 +92,32 @@ Implementation
 
 """
 
-from ipaddress import ip_address
 import sys
-
+from ipaddress import ip_address
 from pathlib import Path
+
 import flask
 import werkzeug
 
 import searx.compat
 from searx import (
+    botdetection,
     logger,
     valkeydb,
 )
-from searx import botdetection
-from searx.extended_types import SXNG_Request, sxng_request
 from searx.botdetection import (
     config,
+    dump_request,
+    get_network,
     http_accept,
     http_accept_encoding,
     http_accept_language,
-    http_user_agent,
     http_sec_fetch,
+    http_user_agent,
     ip_limit,
     ip_lists,
-    get_network,
-    dump_request,
 )
+from searx.extended_types import SXNG_Request, sxng_request
 
 # the configuration are limiter.toml and "limiter" in settings.yml so, for
 # coherency, the logger is "limiter"
@@ -176,7 +176,7 @@ def filter_request(request: SXNG_Request) -> werkzeug.Response | None:
     match, msg = ip_lists.block_ip(real_ip, cfg)
     if match:
         logger.error("BLOCK %s: matched BLOCKLIST - %s", network.compressed, msg)
-        return flask.make_response(('IP is on BLOCKLIST - %s' % msg, 429))
+        return flask.make_response((f'IP is on BLOCKLIST - {msg}', 429))
 
     # methods applied on all requests
 
@@ -191,7 +191,6 @@ def filter_request(request: SXNG_Request) -> werkzeug.Response | None:
     # methods applied on /search requests
 
     if request.path == '/search':
-
         for func in [
             http_accept,
             http_accept_encoding,

@@ -2,10 +2,9 @@
 """This module implements functions needed for the autocompleter."""
 
 # pylint: disable=use-dict-literal
-import string
-import random
-
 import json
+import random
+import string
 import typing as t
 from urllib.parse import urlencode
 
@@ -14,15 +13,16 @@ import lxml.html
 from curl_cffi.requests.exceptions import RequestException
 
 from searx import settings
+from searx.data import ENGINE_TRAITS
+from searx.enginelib.traits import EngineTraits
 from searx.engines import (
     engines,
     google,
 )
-from searx.network import get as http_get, post as http_post
 from searx.exceptions import SearxEngineResponseException
+from searx.network import get as http_get
+from searx.network import post as http_post
 from searx.utils import extr, gen_useragent
-from searx.data import ENGINE_TRAITS
-from searx.enginelib.traits import EngineTraits
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -53,8 +53,7 @@ def baidu(query: str, _sxng_locale: str) -> list[str]:
     if response.ok:
         data: dict[str, t.Any] = response.json()
         if 'g' in data:
-            for item in data['g']:
-                results.append(item['q'])
+            results.extend([item['q'] for item in data['g']])
     return results
 
 
@@ -62,7 +61,7 @@ def bing(query: str, _sxng_locale: str) -> list[str]:
     # bing search autocompleter
     base_url = "https://www.bing.com/AS/Suggestions?"
     # cvid has to be a 32 character long string consisting of numbers and uppsercase characters
-    cvid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))
+    cvid = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))  # noqa: S311
     response = get(base_url + urlencode({'qry': query, 'csr': 1, 'cvid': cvid}), enable_http3=True)
     results: list[str] = []
 
@@ -89,14 +88,13 @@ def brave(query: str, _sxng_locale: str) -> list[str]:
 
     if resp.ok:
         data: list[list[str]] = resp.json()
-        for item in data[1]:
-            results.append(item)
+        results.extend(data[1])
     return results
 
 
 def dbpedia(query: str, _sxng_locale: str) -> list[str]:
     autocomplete_url = 'https://lookup.dbpedia.org/api/search.asmx/KeywordSearch?'
-    resp = get(autocomplete_url + urlencode(dict(QueryString=query)))
+    resp = get(autocomplete_url + urlencode({'QueryString': query}))
     results: list[str] = []
 
     if resp.ok:
@@ -151,8 +149,7 @@ def google_complete(query: str, sxng_locale: str) -> list[str]:
     if resp and resp.ok:
         json_txt = resp.text[resp.text.find('[') : resp.text.find(']', -3) + 1]
         data = json.loads(json_txt)
-        for item in data[0]:
-            results.append(lxml.html.fromstring(item[0]).text_content())
+        results.extend([lxml.html.fromstring(item[0]).text_content() for item in data[0]])
     return results
 
 
@@ -195,8 +192,7 @@ def naver(query: str, _sxng_locale: str) -> list[str]:
     if response.ok:
         data: dict[str, t.Any] = response.json()
         if data.get('items'):
-            for item in data['items'][0]:
-                results.append(item[0])
+            results.extend([item[0] for item in data['items'][0]])
     return results
 
 
@@ -226,8 +222,7 @@ def qihu360search(query: str, _sxng_locale: str) -> list[str]:
     if response.ok:
         data: dict[str, t.Any] = response.json()
         if 'result' in data:
-            for item in data['result']:
-                results.append(item['word'])
+            results.extend([item['word'] for item in data['result']])
     return results
 
 
@@ -239,8 +234,7 @@ def quark(query: str, _sxng_locale: str) -> list[str]:
 
     if response.ok:
         data = response.json()
-        for item in data.get('r', []):
-            results.append(item['w'])
+        results.extend([item['w'] for item in data.get('r', [])])
     return results
 
 
@@ -345,8 +339,7 @@ def qwant(query: str, sxng_locale: str) -> list[str]:
     if resp.ok:
         data = resp.json()
         if data['status'] == 'success':
-            for item in data['data']['items']:
-                results.append(item['value'])
+            results.extend([item['value'] for item in data['data']['items']])
 
     return results
 
@@ -381,7 +374,7 @@ def wikipedia(query: str, sxng_locale: str) -> list[str]:
 def yandex(query: str, _sxng_locale: str) -> list[str]:
     # yandex autocompleter
     url = "https://suggest.yandex.com/suggest-ff.cgi?{0}"
-    resp = json.loads(get(url.format(urlencode(dict(part=query)))).text)
+    resp = json.loads(get(url.format(urlencode({'part': query}))).text)
     results: list[str] = []
 
     if len(resp) > 1:

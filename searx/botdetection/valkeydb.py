@@ -3,7 +3,7 @@
 
 import valkey
 
-__all__ = ["set_valkey_client", "get_valkey_client"]
+__all__ = ["get_valkey_client", "set_valkey_client"]
 
 CLIENT: valkey.Valkey | None = None
 """Global Valkey DB connection (Valkey client object)."""

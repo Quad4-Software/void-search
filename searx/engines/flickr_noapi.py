@@ -2,9 +2,10 @@
 """Flickr (Images)"""
 
 import json
-from time import time
 import re
+from time import time
 from urllib.parse import urlencode
+
 from searx.utils import ecma_unescape, html_to_text
 
 # about
@@ -96,7 +97,7 @@ def response(resp):  # pylint: disable=too-many-branches
                 break
 
         if not size_data:
-            logger.debug('cannot find valid image size: {0}'.format(repr(photo['sizes']['data'])))
+            logger.debug(f"cannot find valid image size: {photo['sizes']['data']!r}")
             continue
 
         img_src = size_data['url']
@@ -110,11 +111,8 @@ def response(resp):  # pylint: disable=too-many-branches
         else:
             thumbnail_src = img_src
 
-        if 'ownerNsid' not in photo:
-            # should not happen, disowned photo? Show it anyway
-            url = img_src
-        else:
-            url = build_flickr_url(photo['ownerNsid'], photo['id'])
+        # should not happen, disowned photo? Show it anyway
+        url = img_src if 'ownerNsid' not in photo else build_flickr_url(photo['ownerNsid'], photo['id'])
 
         result = {
             'url': url,

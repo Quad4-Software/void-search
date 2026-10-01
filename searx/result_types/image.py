@@ -22,7 +22,7 @@ from collections.abc import Callable
 
 import msgspec
 
-from ._base import MainResult, Result, log, LegacyResult
+from ._base import LegacyResult, MainResult, Result, log
 
 MimeSubType = t.Literal["png", "svg+xml", "jpeg", "bmp", "x-icon", "tiff"]
 
@@ -82,7 +82,7 @@ class Image(MainResult, kw_only=True):
     """Size of bytes in :py:obj:`human readable <searx.humanize_bytes>` notation
     (e.g. ``1MB`` for ``1024*1024`` Bytes filesize)."""
 
-    formats: list[ImageRef] = []
+    formats: list[ImageRef] = []  # noqa: RUF012 msgspec field default
     """List of links to alternative image formats."""
 
     def __post_init__(self):

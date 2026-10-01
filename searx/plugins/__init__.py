@@ -113,11 +113,12 @@ Implementation
    :members:
 """
 
-__all__ = ["PluginInfo", "Plugin", "PluginStorage", "PluginCfg"]
+__all__ = ["Plugin", "PluginCfg", "PluginInfo", "PluginStorage"]
 
 
 import searx
-from ._core import PluginInfo, Plugin, PluginStorage, PluginCfg
+
+from ._core import Plugin, PluginCfg, PluginInfo, PluginStorage
 
 STORAGE: PluginStorage = PluginStorage()
 

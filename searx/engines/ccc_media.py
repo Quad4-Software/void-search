@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """media.ccc.de"""
 
-import typing as t
 import datetime
+import typing as t
 from urllib.parse import urlencode
 
 import dateutil.parser

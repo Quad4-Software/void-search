@@ -2,12 +2,11 @@
 """Open Meteo (weather)"""
 
 import typing as t
-
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
-from searx.result_types import EngineResults, WeatherAnswer
 from searx import weather
+from searx.result_types import EngineResults, WeatherAnswer
 
 about = {
     "website": "https://open-meteo.com",
@@ -135,7 +134,6 @@ def response(resp):
     )
 
     for index, time in enumerate(json_data["hourly"]["time"]):
-
         if time < json_data["current"]["time"]:
             # Cut off the hours that are already in the past
             continue
@@ -145,7 +143,7 @@ def response(resp):
             hourly_data[key] = json_data["hourly"][key][index]
 
         forecast_data = _weather_data(location, hourly_data)
-        forecast_data.datetime = weather.DateTime(datetime.fromtimestamp(time))
+        forecast_data.datetime = weather.DateTime(datetime.fromtimestamp(time, tz=UTC))
         weather_answer.forecasts.append(forecast_data)
 
     res.add(weather_answer)

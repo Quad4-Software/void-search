@@ -24,17 +24,18 @@ an example in which the command line is called in the development environment::
 
 """
 
-__all__ = ["EngineCache", "Engine", "EngineAbout", "ENGINES_CACHE"]
+__all__ = ["ENGINES_CACHE", "Engine", "EngineAbout", "EngineCache"]
 
-import typing as t
 import abc
-from collections.abc import Callable
 import logging
 import string
-import typer
-import msgspec
+import typing as t
+from collections.abc import Callable
 
-from ..cache import ExpireCacheSQLite, ExpireCacheCfg
+import msgspec
+import typer
+
+from searx.cache import ExpireCacheCfg, ExpireCacheSQLite
 
 if t.TYPE_CHECKING:
     from searx.enginelib import traits
@@ -277,7 +278,7 @@ class Engine(abc.ABC):  # pylint: disable=too-few-public-methods
     this search engine (file name from :origin:`searx/engines` without
     ``.py``)."""
 
-    categories: list[str] = ["general"]
+    categories: t.ClassVar[list[str]] = ["general"]
     """Specifies to which :ref:`engine categories` the engine should be added."""
 
     language: str = ""
@@ -347,7 +348,7 @@ class Engine(abc.ABC):  # pylint: disable=too-few-public-methods
     selected by the user is used to build and send a ``Accept-Language`` header
     in the request to the origin search engine."""
 
-    tokens: list[str] = []
+    tokens: t.ClassVar[list[str]] = []
     """A list of secret tokens to make this engine *private*, more details see
     :ref:`private engines`."""
 

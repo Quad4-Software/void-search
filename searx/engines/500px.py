@@ -9,9 +9,8 @@ through our exclusive distribution partners.
 
 """
 
-import typing as t
-
 import codecs
+import typing as t
 
 from searx.result_types import EngineResults
 
@@ -112,7 +111,7 @@ query searchResource(
 def request(query: str, params: "OnlineParams") -> None:
     # cursor is the base64 hash of the string "pos-<offset-1>", e.g. "pos-29" -> "cG9zLTI5"
     offset = ((params["pageno"] - 1) * results_per_page) - 1
-    cursor = codecs.encode(f"pos-{offset}".encode("utf-8"), "base64").decode("utf-8")
+    cursor = codecs.encode(f"pos-{offset}".encode(), "base64").decode("utf-8")
 
     params["url"] = f"{api_url}/graphql"
     params["method"] = "POST"

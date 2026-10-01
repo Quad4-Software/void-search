@@ -3,15 +3,16 @@
 
 import typing as t
 
-__all__ = ["log_error_only_once", "dump_request", "get_network", "logger", "too_many_requests"]
+__all__ = ["dump_request", "get_network", "log_error_only_once", "logger", "too_many_requests"]
 
 from ipaddress import (
-    IPv4Network,
-    IPv6Network,
     IPv4Address,
+    IPv4Network,
     IPv6Address,
+    IPv6Network,
     ip_network,
 )
+
 import flask
 import werkzeug
 
@@ -26,19 +27,19 @@ logger = logger.getChild('botdetection')
 def dump_request(request: flask.Request):
     return (
         request.path
-        + " || X-Forwarded-For: %s" % request.headers.get('X-Forwarded-For')
-        + " || X-Real-IP: %s" % request.headers.get('X-Real-IP')
-        + " || form: %s" % request.form
-        + " || Accept: %s" % request.headers.get('Accept')
-        + " || Accept-Language: %s" % request.headers.get('Accept-Language')
-        + " || Accept-Encoding: %s" % request.headers.get('Accept-Encoding')
-        + " || Content-Type: %s" % request.headers.get('Content-Type')
-        + " || Content-Length: %s" % request.headers.get('Content-Length')
-        + " || Connection: %s" % request.headers.get('Connection')
-        + " || User-Agent: %s" % request.headers.get('User-Agent')
-        + " || Sec-Fetch-Site: %s" % request.headers.get('Sec-Fetch-Site')
-        + " || Sec-Fetch-Mode: %s" % request.headers.get('Sec-Fetch-Mode')
-        + " || Sec-Fetch-Dest: %s" % request.headers.get('Sec-Fetch-Dest')
+        + f" || X-Forwarded-For: {request.headers.get('X-Forwarded-For')}"
+        + f" || X-Real-IP: {request.headers.get('X-Real-IP')}"
+        + f" || form: {request.form}"
+        + f" || Accept: {request.headers.get('Accept')}"
+        + f" || Accept-Language: {request.headers.get('Accept-Language')}"
+        + f" || Accept-Encoding: {request.headers.get('Accept-Encoding')}"
+        + f" || Content-Type: {request.headers.get('Content-Type')}"
+        + f" || Content-Length: {request.headers.get('Content-Length')}"
+        + f" || Connection: {request.headers.get('Connection')}"
+        + f" || User-Agent: {request.headers.get('User-Agent')}"
+        + f" || Sec-Fetch-Site: {request.headers.get('Sec-Fetch-Site')}"
+        + f" || Sec-Fetch-Mode: {request.headers.get('Sec-Fetch-Mode')}"
+        + f" || Sec-Fetch-Dest: {request.headers.get('Sec-Fetch-Dest')}"
     )
 
 
@@ -72,9 +73,8 @@ def get_network(real_ip: IPv4Address | IPv6Address, cfg: "config.Config") -> IPv
     prefix: int = cfg["botdetection.ipv4_prefix"]
     if real_ip.version == 6:
         prefix = cfg["botdetection.ipv6_prefix"]
-    network = ip_network(f"{real_ip}/{prefix}", strict=False)
+    return ip_network(f"{real_ip}/{prefix}", strict=False)
     # logger.debug("get_network(): %s", network.compressed)
-    return network
 
 
 _logged_errors: list[str] = []

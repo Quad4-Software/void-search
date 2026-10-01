@@ -3,10 +3,11 @@
 
 import re
 from urllib.parse import urlencode
-from dateutil import parser
 
 import babel
 import flask_babel
+from dateutil import parser
+
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 about = {

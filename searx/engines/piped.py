@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """An alternative privacy-friendly YouTube frontend which is efficient by
-design.  `Piped’s architecture`_ consists of 3 components:
+design.  `Piped's architecture`_ consists of 3 components:
 
 - :py:obj:`backend <backend_url>`
 - :py:obj:`frontend <frontend_url>`
 - proxy
 
-.. _Piped’s architecture: https://docs.piped.video/docs/architecture/
+.. _Piped's architecture: https://docs.piped.video/docs/architecture/
 
 Configuration
 =============
@@ -48,10 +48,11 @@ Implementations
 
 """
 
-import time
-import random
-from urllib.parse import urlencode
 import datetime
+import random
+import time
+from urllib.parse import urlencode
+
 from dateutil import parser
 
 from searx.utils import humanize_number
@@ -97,7 +98,7 @@ def _backend_url() -> str:
 
     url: list[str] | str = backend_url or engines["piped"].backend_url  # type: ignore
     if isinstance(url, list):
-        url = random.choice(url)
+        url = random.choice(url)  # noqa: S311
     return url
 
 

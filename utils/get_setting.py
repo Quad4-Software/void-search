@@ -1,12 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""build environment used by shell scripts
-"""
+"""build environment used by shell scripts"""
 
 # set path
-import sys
-import importlib.util
 import re
-
+import sys
 from pathlib import Path
 
 repo_root = Path(__file__).resolve().parent.parent
@@ -15,7 +12,7 @@ repo_root = Path(__file__).resolve().parent.parent
 def main(setting_name):
 
     settings_path = repo_root / "searx" / "settings.yml"
-    with open(settings_path) as f:
+    with Path(settings_path).open() as f:
         settings = parse_yaml(f.read())
     print(get_setting_value(settings, setting_name))
 
@@ -54,9 +51,9 @@ def parse_yaml(yaml_str):
             g = match.groups()
             if g[0] is not None:
                 return str, g[0]
-            elif g[2] is not None:
+            if g[2] is not None:
                 return str, g[2]
-            elif g[4] is not None:
+            if g[4] is not None:
                 return None, g[4].strip()
         return None, line.strip()
 

@@ -16,17 +16,16 @@ the :origin:`CI Update data ... <.github/workflows/data-update.yml>`
 # pylint: disable=invalid-name
 
 import typing as t
-
-from unicodedata import lookup
 from pathlib import Path
 from pprint import pformat
+from unicodedata import lookup
+
 import babel
 import typer
 
-from searx import settings, searx_dir
-from searx import network
-from searx.engines import load_engines
+from searx import network, searx_dir, settings
 from searx.enginelib.traits import EngineTraitsMap
+from searx.engines import load_engines
 
 # Output files.
 sxng_locales_file = Path(searx_dir) / 'sxng_locales.py'
@@ -111,7 +110,7 @@ def cli(engines: t.Annotated[list[str] | None, typer.Argument()] = None):
         _map.update(traits_map)
         traits_map = _map
 
-    print("write json file: %s" % traits_map.ENGINE_TRAITS_FILE)
+    print(f"write json file: {traits_map.ENGINE_TRAITS_FILE}")
     traits_map.save_data()
     sxng_tag_list = filter_locales(traits_map)
     write_sxng_locales_file(sxng_tag_list)
@@ -125,7 +124,7 @@ def fetch_traits_map() -> EngineTraitsMap:
         print(msg)
 
     traits_map = EngineTraitsMap.fetch_traits(log=log)
-    print("fetched properties from %s engines" % len(traits_map))
+    print(f"fetched properties from {len(traits_map)} engines")
     return traits_map
 
 
@@ -137,15 +136,15 @@ def filter_locales(traits_map: EngineTraitsMap) -> set[str]:
 
     _: dict[str, int] = {}
     for eng in traits_map.values():
-        for reg in eng.regions.keys():
+        for reg in eng.regions:
             _[reg] = _.get(reg, 0) + 1
 
-    regions = set(k for k, v in _.items() if v >= min_eng_per_region)
-    lang_from_region = set(k.split('-')[0] for k in regions)
+    regions = {k for k, v in _.items() if v >= min_eng_per_region}
+    lang_from_region = {k.split('-')[0] for k in regions}
 
     _ = {}
     for eng in traits_map.values():
-        for lang in eng.languages.keys():
+        for lang in eng.languages:
             # ignore script types like zh_Hant, zh_Hans or sr_Latin, pa_Arab (they
             # already counted by existence of 'zh' or 'sr', 'pa')
             if '_' in lang:
@@ -153,7 +152,7 @@ def filter_locales(traits_map: EngineTraitsMap) -> set[str]:
                 continue
             _[lang] = _.get(lang, 0) + 1
 
-    languages = set(k for k, v in _.items() if v >= min_eng_per_lang)
+    languages = {k for k, v in _.items() if v >= min_eng_per_lang}
 
     sxng_tag_list: set[str] = set()
     sxng_tag_list.update(regions)
@@ -185,10 +184,8 @@ def write_sxng_locales_file(sxng_tag_list: set[str]):
     _codes = tuple(language_codes)
 
     with sxng_locales_file.open('w', encoding='utf-8') as new_file:
-        file_content = "{header} {language_codes}{footer}".format(
-            header=sxng_locales_file_header,
-            language_codes=pformat(_codes, width=120, indent=4)[1:-1],
-            footer=sxng_locales_file_footer,
+        file_content = (
+            f"{sxng_locales_file_header} {pformat(_codes, width=120, indent=4)[1:-1]}{sxng_locales_file_footer}"
         )
         new_file.write(file_content)
         new_file.close()
@@ -220,7 +217,7 @@ def get_unicode_flag(locale: babel.Locale):
         c2 = lookup('REGIONAL INDICATOR SYMBOL LETTER ' + locale.territory[1])
         # print("OK   : %s --> %s%s" % (locale, c1, c2))
     except KeyError as exc:
-        print("ERROR: %s --> %s" % (locale, exc))
+        print(f"ERROR: {locale} --> {exc}")
         return None
 
     return c1 + c2

@@ -326,7 +326,7 @@ def google_request(
         args["safe"] = (safesearch_map or filter_mapping)[params["safesearch"]]
 
     params["url"] = f"https://www.google.com/wml/search?{urlencode(args)}"
-    params["headers"]["User-Agent"] = random.choice(nokia_useragents)
+    params["headers"]["User-Agent"] = random.choice(nokia_useragents)  # noqa: S311
     params["impersonate"] = "chrome99_android"
 
 
@@ -340,7 +340,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
     # parse results
     for result in eval_xpath_list(dom, '//div[contains(@class, "zMzFAb")]'):
-
         try:
             title_tag = eval_xpath_getindex(
                 result, './/a[contains(@class, "fuLhoc")]//span[contains(@class, "CVA68e")]', 0, default=None
@@ -433,14 +432,14 @@ def fetch_traits(engine_traits: EngineTraits):
         try:
             locale = babel.Locale.parse(lang_map.get(eng_lang, eng_lang), sep="-")
         except babel.UnknownLocaleError:
-            print("INFO:  google UI language %s (%s) is unknown by babel" % (eng_lang, x.text.split("(")[0].strip()))
+            print(f"INFO:  google UI language {eng_lang} ({x.text.split('(')[0].strip()}) is unknown by babel")
             continue
         sxng_lang = language_tag(locale)
 
         conflict = engine_traits.languages.get(sxng_lang)
         if conflict:
             if conflict != eng_lang:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_lang, conflict, eng_lang))
+                print(f"CONFLICT: babel {sxng_lang} --> {conflict}, {eng_lang}")
             continue
         engine_traits.languages[sxng_lang] = "lang_" + eng_lang
 
@@ -461,7 +460,7 @@ def fetch_traits(engine_traits: EngineTraits):
         sxng_locales = get_official_locales(eng_country, engine_traits.languages.keys(), regional=True)
 
         if not sxng_locales:
-            print("ERROR: can't map from google country %s (%s) to a babel region." % (x.get("data-name"), eng_country))
+            print(f"ERROR: can't map from google country {x.get('data-name')} ({eng_country}) to a babel region.")
             continue
 
         for sxng_locale in sxng_locales:

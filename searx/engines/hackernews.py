@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Hackernews"""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from dateutil.relativedelta import relativedelta
 
+from dateutil.relativedelta import relativedelta
 from flask_babel import gettext
+
 from searx.utils import html_to_text
 
 # Engine metadata
@@ -59,8 +60,7 @@ def request(query, params):
             search_type = 'search_by_date'
             timestamp = (
                 # pylint: disable=unexpected-keyword-arg
-                datetime.now()
-                - relativedelta(**{f"{params['time_range']}s": 1})  # type: ignore
+                datetime.now(tz=UTC) - relativedelta(**{f"{params['time_range']}s": 1})  # type: ignore
             ).timestamp()
             query_params["numericFilters"] = f"created_at_i>{timestamp}"
 
@@ -80,7 +80,7 @@ def response(resp):
 
         metadata = ""
         if points != 0 or num_comments != 0:
-            metadata = f"{gettext('points')}: {points}" f" | {gettext('comments')}: {num_comments}"
+            metadata = f"{gettext('points')}: {points} | {gettext('comments')}: {num_comments}"
         results.append(
             {
                 "title": hit.get("title") or f"{gettext('author')}: {hit['author']}",
@@ -88,7 +88,7 @@ def response(resp):
                 "content": content,
                 "metadata": metadata,
                 "author": hit["author"],
-                "publishedDate": datetime.fromtimestamp(hit["created_at_i"]),
+                "publishedDate": datetime.fromtimestamp(hit["created_at_i"], tz=UTC),
             }
         )
 

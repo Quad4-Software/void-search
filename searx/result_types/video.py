@@ -14,6 +14,7 @@ __all__ = ["Video"]
 import typing as t
 
 from searx.utils import get_embedded_stream_url
+
 from ._base import MainResult
 
 

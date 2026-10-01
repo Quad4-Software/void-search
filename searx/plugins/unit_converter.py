@@ -9,20 +9,20 @@ of measurement are evaluated.  The weighting in the evaluation results from the
 sorting of the :py:obj:`list of unit converters<symbol_to_si>`.
 """
 
-import typing
 import re
+import typing
+
 import babel.numbers
+from flask_babel import get_locale, gettext
 
-from flask_babel import gettext, get_locale
-
-from searx.wikidata_units import symbol_to_si
 from searx.plugins import Plugin, PluginInfo
 from searx.result_types import EngineResults
+from searx.wikidata_units import symbol_to_si
 
 if typing.TYPE_CHECKING:
-    from searx.search import SearchWithPlugins
     from searx.extended_types import SXNG_Request
     from searx.plugins import PluginCfg
+    from searx.search import SearchWithPlugins
 
 
 CONVERT_KEYWORDS = ["in", "to", "as"]
@@ -100,7 +100,6 @@ def _parse_text_and_convert(from_query, to_query) -> str | None:
     source_list, target_list = [], []
 
     for symbol, si_name, from_si, to_si, orig_symbol in symbol_to_si():
-
         if symbol == measured.group('unit'):
             source_list.append((si_name, to_si))
         if symbol == to_query:
@@ -130,17 +129,11 @@ def _parse_text_and_convert(from_query, to_query) -> str | None:
 
     # convert value to SI unit
 
-    if isinstance(source_to_si, (float, int)):
-        value = float(value) * source_to_si
-    else:
-        value = source_to_si(float(value))
+    value = float(value) * source_to_si if isinstance(source_to_si, (float, int)) else source_to_si(float(value))
 
     # convert value from SI unit to target unit
 
-    if isinstance(target_from_si, (float, int)):
-        value = float(value) * target_from_si
-    else:
-        value = target_from_si(float(value))
+    value = float(value) * target_from_si if isinstance(target_from_si, (float, int)) else target_from_si(float(value))
 
     if measured.group('E'):
         # when incoming notation is scientific, outgoing notation is scientific

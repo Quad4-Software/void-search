@@ -8,10 +8,11 @@ import typing as t
 from urllib.parse import urlencode
 
 from searx.result_types import EngineResults
-from searx.utils import eval_xpath_list, eval_xpath, extract_text
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from lxml.etree import ElementBase
+
     from searx.extended_types import SXNG_Response
     from searx.search.processors import OnlineParams
 
@@ -37,7 +38,7 @@ category_map = {"general": 1, "images": 2, "videos": 3}
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if vuhuv_category not in category_map:
-        raise ValueError("invalid category: %s" % vuhuv_category)
+        raise ValueError(f"invalid category: {vuhuv_category}")
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -107,4 +108,4 @@ def response(resp: "SXNG_Response") -> EngineResults:
         case "videos":
             return _video_results(doc)
         case _:
-            raise ValueError("invalid vuhuv category: %s" % vuhuv_category)
+            raise ValueError(f"invalid vuhuv category: {vuhuv_category}")

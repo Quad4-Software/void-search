@@ -7,12 +7,13 @@ from json import loads
 from urllib.parse import urlencode
 
 from searx.enginelib import EngineCache
+from searx.engines.google import (
+    filter_mapping,
+    get_google_info,
+)
 from searx.exceptions import SearxEngineAPIException, SearxEngineTooManyRequestsException
 from searx.network import get
-from searx.result_types import EngineResults, Result, MainResult, Image
-
-from searx.engines.google import fetch_traits  # pylint: disable=unused-import
-from searx.engines.google import filter_mapping, get_google_info
+from searx.result_types import EngineResults, Image, MainResult, Result
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -50,7 +51,7 @@ def setup(engine_settings: dict[str, t.Any]) -> bool:
     global CACHE  # pylint: disable=global-statement
 
     if google_categ not in t.get_args(GoogleCategType):
-        raise ValueError("invalid google cse category: %s" % google_categ)
+        raise ValueError(f"invalid google cse category: {google_categ}")
 
     CACHE = EngineCache(engine_settings["name"])
     return True
@@ -86,7 +87,7 @@ def _cse_token() -> dict[str, str]:
 def _get_start_and_end_date_str(time_range: str) -> tuple[str, str]:
     time_range_map = {"day": 1, "week": 7, "month": 30, "year": 365}
 
-    end_date = datetime.datetime.now()
+    end_date = datetime.datetime.now(tz=datetime.UTC)
     start_date = end_date - datetime.timedelta(days=time_range_map[time_range])
 
     return start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
@@ -146,7 +147,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
     results = EngineResults()
 
     for item in data.get("results", []):
-
         res: Result | None
         if google_categ == "":
             res = web_item(item)

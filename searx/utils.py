@@ -1,35 +1,30 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Utility functions for the engines"""
 
-from hashlib import pbkdf2_hmac
-
-import re
 import importlib
 import importlib.util
 import json
+import re
 import types
-
 import typing as t
-from collections.abc import MutableMapping, Callable
-
-from numbers import Number
-from os.path import splitext, join
-from random import choice
-from html.parser import HTMLParser
-from html import escape
-from urllib.parse import urljoin, urlparse, parse_qs, urlencode
+from collections.abc import Callable, MutableMapping
 from datetime import timedelta
-from markdown_it import MarkdownIt
+from hashlib import pbkdf2_hmac
+from html import escape
+from html.parser import HTMLParser
+from numbers import Number
+from pathlib import Path
+from random import choice
+from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 
 from lxml import html
-from lxml.etree import XPath, XPathError, XPathSyntaxError
-from lxml.etree import ElementBase, _Element  # pyright: ignore[reportPrivateUsage]
+from lxml.etree import ElementBase, XPath, XPathError, XPathSyntaxError, _Element  # pyright: ignore[reportPrivateUsage]
+from markdown_it import MarkdownIt
 
-from searx import settings
+from searx import logger, settings
 from searx.data import USER_AGENTS
+from searx.exceptions import SearxEngineXPathException, SearxXPathSyntaxException
 from searx.version import VERSION_TAG
-from searx.exceptions import SearxXPathSyntaxException, SearxEngineXPathException
-from searx import logger
 
 logger = logger.getChild('utils')
 
@@ -84,8 +79,8 @@ def gen_useragent(os_string: str | None = None) -> str:
     See searx/data/useragents.json
     """
     return USER_AGENTS['ua'].format(
-        os=os_string or choice(USER_AGENTS['os']),
-        version=choice(USER_AGENTS['versions']),
+        os=os_string or choice(USER_AGENTS['os']),  # noqa: S311
+        version=choice(USER_AGENTS['versions']),  # noqa: S311
     )
 
 
@@ -123,10 +118,7 @@ class HTMLTextExtractor(HTMLParser):
     def handle_charref(self, name: str) -> None:
         if not self.is_valid_tag():
             return
-        if name[0] in ('x', 'X'):
-            codepoint = int(name[1:], 16)
-        else:
-            codepoint = int(name)
+        codepoint = int(name[1:], 16) if name[0] in ('x', 'X') else int(name)
         self.result.append(chr(codepoint))
 
     def handle_entityref(self, name: str) -> None:
@@ -283,7 +275,7 @@ def normalize_url(url: str, base_url: str) -> str:
     if url.startswith('//'):
         # add http or https to this kind of url //example.com/
         parsed_search_url = urlparse(base_url)
-        url = '{0}:{1}'.format(parsed_search_url.scheme or 'http', url)
+        url = f"{parsed_search_url.scheme or 'http'}:{url}"
     elif url.startswith('/'):
         # fix relative url to the search engine
         url = urljoin(base_url, url)
@@ -361,7 +353,7 @@ def humanize_bytes(size: int | float, precision: int = 2):
     while size > 1024 and p < x:
         p += 1
         size = size / 1024.0
-    return "%.*f %s" % (precision, size, s[p])
+    return f"{size:.{precision}f} {s[p]}"
 
 
 def humanize_number(size: int | float, precision: int = 0):
@@ -373,7 +365,7 @@ def humanize_number(size: int | float, precision: int = 0):
     while size > 1000 and p < x:
         p += 1
         size = size / 1000.0
-    return "%.*f%s" % (precision, size, s[p])
+    return f"{size:.{precision}f}{s[p]}"
 
 
 def convert_str_to_int(number_str: str) -> int:
@@ -425,8 +417,8 @@ def int_or_zero(num: list[str] | str) -> int:
 
 
 def load_module(filename: str, module_dir: str) -> types.ModuleType:
-    modname = splitext(filename)[0]
-    modpath = join(module_dir, filename)
+    modname = Path(filename).stem
+    modpath = Path(module_dir) / filename
     # and https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     spec = importlib.util.spec_from_file_location(modname, modpath)
     if not spec:
@@ -464,8 +456,7 @@ def ecma_unescape(string: str) -> str:
     # "%u5409" becomes "吉"
     string = _ECMA_UNESCAPE4_RE.sub(lambda e: chr(int(e.group(1), 16)), string)
     # "%20" becomes " ", "%F3" becomes "ó"
-    string = _ECMA_UNESCAPE2_RE.sub(lambda e: chr(int(e.group(1), 16)), string)
-    return string
+    return _ECMA_UNESCAPE2_RE.sub(lambda e: chr(int(e.group(1), 16)), string)
 
 
 def remove_pua_from_str(string: str):
@@ -519,7 +510,7 @@ def get_xpath(xpath_spec: XPathSpecType) -> XPath:
       Raised when there is a syntax error in the *XPath* selector (``str``).
     """
     if isinstance(xpath_spec, str):
-        result = _XPATH_CACHE.get(xpath_spec, None)
+        result = _XPATH_CACHE.get(xpath_spec)
         if result is None:
             try:
                 result = XPath(xpath_spec)
@@ -631,10 +622,7 @@ def get_embedded_stream_url(url: str) -> str:
 
     # Instagram
     elif parsed_url.netloc in ['www.instagram.com', 'instagram.com'] and parsed_url.path.startswith('/p/'):
-        if parsed_url.path.endswith('/'):
-            iframe_src = url + 'embed'
-        else:
-            iframe_src = url + '/embed'
+        iframe_src = url + 'embed' if parsed_url.path.endswith('/') else url + '/embed'
 
     # TikTok
     elif (
@@ -678,7 +666,11 @@ def _j2p_process_escape(match: re.Match[str]) -> str:
     return (
         Rf'\{_escape}'
         if _escape in _JSON_PASSTHROUGH_ESCAPES
-        else R'\u00' if _escape == 'x' else '' if _escape == '\n' else _escape
+        else R'\u00'
+        if _escape == 'x'
+        else ''
+        if _escape == '\n'
+        else _escape
     )
 
 
@@ -796,8 +788,7 @@ def js_obj_str_to_json_str(js_obj_str: str) -> str:
     # { "a": 12 }
     s = _JS_QUOTE_KEYS_RE.sub(r'\1"\2"\3', s)
     # replace the surogate character by colon and strip whitespaces
-    s = s.replace(chr(1), ':').strip()
-    return s
+    return s.replace(chr(1), ':').strip()
 
 
 def parse_duration_string(duration_str: str) -> timedelta | None:
@@ -813,7 +804,7 @@ def parse_duration_string(duration_str: str) -> timedelta | None:
 
     try:
         # prepending ["00"] here inits hours to 0 if they are not provided
-        time_parts = (["00"] + duration_str.split(":"))[-3:]
+        time_parts = (["00", *duration_str.split(":")])[-3:]
         hours, minutes, seconds = map(int, time_parts)
         return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Sogou-Videos: A search engine for retrieving videos from Sogou."""
 
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
-from datetime import datetime, timedelta
 
 from searx.exceptions import SearxEngineAPIException
 
@@ -61,7 +61,7 @@ def response(resp):
         length = None
         if entry.get("date") and entry.get("duration"):
             try:
-                timediff = datetime.strptime(entry['duration'], "%M:%S")
+                timediff = datetime.strptime(entry['duration'], "%M:%S").replace(tzinfo=UTC)
                 length = timedelta(minutes=timediff.minute, seconds=timediff.second)
             except (ValueError, TypeError):
                 length = None

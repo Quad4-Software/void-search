@@ -26,7 +26,7 @@ re_transliteration_unsupported = "Direction '.*' is not supported"
 
 
 def request(_query, params):
-    request_url = random.choice(base_url) if isinstance(base_url, list) else base_url
+    request_url = random.choice(base_url) if isinstance(base_url, list) else base_url  # noqa: S311
 
     args = {'from': params['from_lang'][1], 'to': params['to_lang'][1], 'text': params['query'], 'engine': mozhi_engine}
     params['url'] = f"{request_url}/api/translate?{urllib.parse.urlencode(args)}"

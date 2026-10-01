@@ -2,6 +2,7 @@
 """pypi.org"""
 
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 from searx.utils import (

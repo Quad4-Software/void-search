@@ -11,7 +11,7 @@ Dailymotion (Videos)
 """
 
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import babel
@@ -132,7 +132,7 @@ def request(query, params):
 
     time_delta = time_delta_dict.get(params["time_range"])
     if time_delta:
-        created_after = datetime.now() - time_delta
+        created_after = datetime.now(tz=UTC) - time_delta
         args["created_after"] = datetime.timestamp(created_after)
 
     query_str = urlencode(args)
@@ -162,13 +162,10 @@ def response(resp):
         if len(content) > 300:
             content = content[:300] + "..."
 
-        publishedDate = datetime.fromtimestamp(res["created_time"], None)
+        publishedDate = datetime.fromtimestamp(res["created_time"], tz=UTC)
 
         length = time.gmtime(res.get("duration"))
-        if length.tm_hour:
-            length = time.strftime("%H:%M:%S", length)
-        else:
-            length = time.strftime("%M:%S", length)
+        length = time.strftime('%H:%M:%S', length) if length.tm_hour else time.strftime('%M:%S', length)
 
         thumbnail = res["thumbnail_360_url"]
         thumbnail = thumbnail.replace("http://", "https://")
@@ -223,13 +220,13 @@ def fetch_traits(engine_traits: EngineTraits):
         try:
             sxng_tag = region_tag(babel.Locale.parse(eng_tag))
         except babel.UnknownLocaleError:
-            print("ERROR: item unknown --> %s" % item)
+            print(f"ERROR: item unknown --> {item}")
             continue
 
         conflict = engine_traits.regions.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.regions[sxng_tag] = eng_tag
 

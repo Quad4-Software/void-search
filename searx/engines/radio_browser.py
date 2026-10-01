@@ -109,7 +109,7 @@ def request(query, params):
         params["url"] = None
         return
 
-    server = random.choice(servers)
+    server = random.choice(servers)  # noqa: S311
 
     args = {
         "name": query,
@@ -125,11 +125,10 @@ def request(query, params):
         if lang:
             args["language"] = lang
 
-    if "countrycode" in station_filters:
-        if len(params["searxng_locale"].split("-")) > 1:
-            countrycode = params["searxng_locale"].split("-")[-1].upper()
-            if countrycode in traits.custom["countrycodes"]:  # type: ignore
-                args["countrycode"] = countrycode
+    if "countrycode" in station_filters and len(params["searxng_locale"].split("-")) > 1:
+        countrycode = params["searxng_locale"].split("-")[-1].upper()
+        if countrycode in traits.custom["countrycodes"]:  # type: ignore
+            args["countrycode"] = countrycode
 
     params["url"] = f"{server}/json/stations/search?{urlencode(args)}"
 
@@ -235,7 +234,7 @@ def fetch_traits(engine_traits: EngineTraits):
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.languages[sxng_tag] = eng_tag
 

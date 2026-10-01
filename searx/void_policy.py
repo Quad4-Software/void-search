@@ -92,7 +92,7 @@ _DROP_HEADERS = frozenset(
 )
 
 
-def apply_engine_policy(settings: "SettingsType") -> None:
+def apply_engine_policy(settings: SettingsType) -> None:
     """Disable engines that burn instance reputation with providers."""
     engines = settings.get("engines")
     if not isinstance(engines, list):

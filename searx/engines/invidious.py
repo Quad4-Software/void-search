@@ -8,10 +8,11 @@ No public instance offer a public API now
 
 """
 
-import typing as t
-import time
 import random
+import time
+import typing as t
 from urllib.parse import quote_plus, urlparse
+
 from dateutil import parser
 
 from searx.utils import humanize_number
@@ -49,20 +50,20 @@ def request(query, params):
     }
 
     if isinstance(base_url, list):
-        params["base_url"] = random.choice(base_url)
+        params["base_url"] = random.choice(base_url)  # noqa: S311
     else:
         params["base_url"] = base_url
 
     search_url = params["base_url"] + "/api/v1/search?q={query}"
-    params["url"] = search_url.format(query=quote_plus(query)) + "&page={pageno}".format(pageno=params["pageno"])
+    params["url"] = search_url.format(query=quote_plus(query)) + f"&page={params['pageno']}"
 
     if params["time_range"] in time_range_dict:
-        params["url"] += "&date={timerange}".format(timerange=time_range_dict[params["time_range"]])
+        params["url"] += f"&date={time_range_dict[params['time_range']]}"
 
     if params["language"] != "all":
         lang = params["language"].split("-")
         if len(lang) == 2:
-            params["url"] += "&range={lrange}".format(lrange=lang[1])
+            params["url"] += f"&range={lang[1]}"
 
     return params
 
@@ -83,10 +84,7 @@ def response(resp):
             url = base_invidious_url + videoid
             thumbs = result.get("videoThumbnails", [])
             thumb = next((th for th in thumbs if th["quality"] == "sddefault"), None)
-            if thumb:
-                thumbnail = thumb.get("url", "")
-            else:
-                thumbnail = ""
+            thumbnail = thumb.get('url', '') if thumb else ''
 
             # some instances return a partial thumbnail url
             # we check if the url is partial, and prepend the base_url if it is
@@ -95,10 +93,7 @@ def response(resp):
 
             publishedDate = parser.parse(time.ctime(result.get("published", 0)))
             length = time.gmtime(result.get("lengthSeconds"))
-            if length.tm_hour:
-                length = time.strftime("%H:%M:%S", length)
-            else:
-                length = time.strftime("%M:%S", length)
+            length = time.strftime('%H:%M:%S', length) if length.tm_hour else time.strftime('%M:%S', length)
 
             results.append(
                 {

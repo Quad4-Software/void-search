@@ -4,40 +4,38 @@
 # pylint: disable=too-few-public-methods
 
 __all__ = [
-    "symbol_url",
-    "Temperature",
-    "Pressure",
-    "WindSpeed",
-    "RelativeHumidity",
     "Compass",
-    "WeatherConditionType",
     "DateTime",
     "GeoLocation",
+    "Pressure",
+    "RelativeHumidity",
+    "Temperature",
+    "WeatherConditionType",
+    "WindSpeed",
+    "symbol_url",
 ]
 
 # msgspec: note that if using PEP 563 “postponed evaluation of annotations”
 # (e.g. from __future__ import annotations) only the following spellings will
 # work: https://jcristharif.com/msgspec/structs.html#class-variables
-from typing import ClassVar
-import typing as t
-
 import base64
 import datetime
+import typing as t
 import zoneinfo
-
+from typing import ClassVar
 from urllib.parse import quote_plus
 
 import babel
-import babel.numbers
 import babel.dates
 import babel.languages
+import babel.numbers
 import flask_babel  # pyright: ignore[reportMissingTypeStubs]
 import msgspec
 
 from searx import network
 from searx.cache import ExpireCache, ExpireCacheCfg
 from searx.extended_types import sxng_request
-from searx.wikidata_units import convert_to_si, convert_from_si
+from searx.wikidata_units import convert_from_si, convert_to_si
 
 WEATHER_DATA_CACHE: ExpireCache | None = None
 """A simple cache for weather data (geo-locations, icons, ..)"""
@@ -154,14 +152,12 @@ class GeoLocation(msgspec.Struct, kw_only=True):
         # by region of the search language
         sxng_tag = _get_sxng_locale_tag()
         if "-" in sxng_tag:
-            locale = babel.Locale.parse(_get_sxng_locale_tag(), sep='-')
-            return locale
+            return babel.Locale.parse(_get_sxng_locale_tag(), sep='-')
 
         # by most popular language in the region (country code)
         for lang in babel.languages.get_official_languages(self.country_code):
             try:
-                locale = babel.Locale.parse(f"{lang}_{self.country_code}")
-                return locale
+                return babel.Locale.parse(f"{lang}_{self.country_code}")
             except babel.UnknownLocaleError:
                 continue
 
@@ -653,7 +649,6 @@ YR_WEATHER_SYMBOL_MAP = {
 """
 
 if __name__ == "__main__":
-
     # test: fetch all symbols of the type catalog ..
     for c in t.get_args(WeatherConditionType):
         symbol_url(condition=c)

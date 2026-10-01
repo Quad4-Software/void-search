@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Niconico search engine for searxng"""
 
+import contextlib
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
-from datetime import datetime, timedelta
 
-from searx.utils import eval_xpath_getindex, eval_xpath_list, eval_xpath, extract_text
+from searx.utils import eval_xpath, eval_xpath_getindex, eval_xpath_list, extract_text
 
 about = {
     "website": "https://www.nicovideo.jp/",
@@ -38,7 +39,7 @@ def request(query, params):
 
     if time_range_dict.get(params['time_range']):
         time_diff_days = time_range_dict[params['time_range']]
-        start_date = datetime.now() - timedelta(days=time_diff_days)
+        start_date = datetime.now(tz=UTC) - timedelta(days=time_diff_days)
         query_params['start'] = start_date.strftime('%Y-%m-%d')
 
     params['url'] = f"{base_url}/search/{query}?{urlencode(query_params)}"
@@ -60,7 +61,7 @@ def response(resp):
         video_length = eval_xpath_getindex(item, video_length_xpath, 0)
         if len(video_length) > 0:
             try:
-                timediff = datetime.strptime(video_length, "%M:%S")
+                timediff = datetime.strptime(video_length, "%M:%S").replace(tzinfo=UTC)
                 length = timedelta(minutes=timediff.minute, seconds=timediff.second)
             except ValueError:
                 pass
@@ -68,10 +69,8 @@ def response(resp):
         published_date = None
         upload_time = eval_xpath_getindex(item, upload_time_xpath, 0)
         if len(upload_time) > 0:
-            try:
-                published_date = datetime.strptime(upload_time, "%Y/%m/%d %H:%M")
-            except ValueError:
-                pass
+            with contextlib.suppress(ValueError):
+                published_date = datetime.strptime(upload_time, "%Y/%m/%d %H:%M").replace(tzinfo=UTC)
 
         results.append(
             {

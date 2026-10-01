@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """BASE (Scholar publications)"""
 
-from datetime import datetime
 import re
-
+from datetime import UTC, datetime
 from urllib.parse import urlencode
+
 from lxml import etree
+
 from searx.utils import searxng_useragent
 
 # about
@@ -81,7 +82,7 @@ def response(resp):
         content = "No description available"
         url = ""
         title = ""
-        date = datetime.now()  # needed in case no dcdate is available for an item
+        date = datetime.now(tz=UTC)  # needed in case no dcdate is available for an item
 
         for item in entry:
             if item.attrib["name"] == "dcdate":
@@ -102,9 +103,9 @@ def response(resp):
         publishedDate = None
         for date_format in ['%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d', '%Y-%m', '%Y']:
             try:
-                publishedDate = datetime.strptime(date, date_format)
+                publishedDate = datetime.strptime(date, date_format).replace(tzinfo=UTC)
                 break
-            except:  # pylint: disable=bare-except
+            except Exception:  # noqa: S110
                 pass
 
         if publishedDate is not None:

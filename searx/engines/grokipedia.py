@@ -2,8 +2,9 @@
 """Grokipedia (general)"""
 
 from urllib.parse import urlencode
-from searx.utils import html_to_text
+
 from searx.result_types import EngineResults
+from searx.utils import html_to_text
 
 about = {
     "website": 'https://grokipedia.com',
@@ -40,7 +41,6 @@ def response(resp) -> EngineResults:
     search_res = resp.json()
 
     for item in search_res["results"]:
-
         results.add(
             results.types.MainResult(
                 url='https://grokipedia.com/page/' + item["slug"],

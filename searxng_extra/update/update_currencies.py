@@ -9,13 +9,13 @@ Output file: :origin:`searx/data/currencies.json` (:origin:`CI Update data ...
 
 # pylint: disable=invalid-name
 
+import json
 import re
 import unicodedata
-import json
 
-from searx.locales import LOCALE_NAMES, locales_initialize
-from searx.engines import wikidata, set_loggers
 from searx.data.currencies import CurrenciesDB
+from searx.engines import set_loggers, wikidata
+from searx.locales import LOCALE_NAMES, locales_initialize
 from searx.wikidata import send_wikidata_query
 
 set_loggers(wikidata, 'wikidata')
@@ -54,7 +54,7 @@ ORDER BY ?iso4217 ?article_name
 
 
 LANGUAGES = LOCALE_NAMES.keys()
-LANGUAGES_SPARQL = ', '.join(set(map(lambda l: repr(l.split('_')[0]), LANGUAGES)))
+LANGUAGES_SPARQL = ', '.join({repr(loc.split('_')[0]) for loc in LANGUAGES})
 
 
 def remove_accents(name):
@@ -70,8 +70,7 @@ def remove_extra(name):
 
 def _normalize_name(name):
     name = re.sub(' +', ' ', remove_accents(name.lower()).replace('-', ' '))
-    name = remove_extra(name)
-    return name
+    return remove_extra(name)
 
 
 def add_currency_name(db, name, iso4217, normalize_name=True):

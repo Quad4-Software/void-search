@@ -53,13 +53,12 @@ def get_external_url(url_id: str, item_id: str | None, alternative: str = "defau
 
 
 def get_earth_coordinates_url(latitude, longitude, osm_zoom, alternative='default'):
-    url = (
+    return (
         get_external_url('map', None, alternative)
         .replace('${latitude}', str(latitude))
         .replace('${longitude}', str(longitude))
         .replace('${zoom}', str(osm_zoom))
     )
-    return url
 
 
 def area_to_osm_zoom(area):

@@ -21,10 +21,10 @@ A ``searxng.msg`` file is a python file that is *executed* by the
 
 """
 
-from os import path
+from pathlib import Path
 
 SEARXNG_MSG_FILE = "searxng.msg"
-_MSG_FILES = [path.join(path.dirname(__file__), SEARXNG_MSG_FILE)]
+_MSG_FILES = [str(Path(__file__).parent / SEARXNG_MSG_FILE)]
 
 
 def extract(
@@ -40,10 +40,10 @@ def extract(
        https://babel.pocoo.org/en/latest/messages.html#writing-extraction-methods
     """
     if fileobj.name not in _MSG_FILES:
-        raise RuntimeError("don't know how to extract messages from %s" % fileobj.name)
+        raise RuntimeError(f"don't know how to extract messages from {fileobj.name}")
 
     namespace = {}
-    exec(fileobj.read(), {}, namespace)  # pylint: disable=exec-used
+    exec(fileobj.read(), {}, namespace)  # pylint: disable=exec-used  # noqa: S102
 
     for obj_name in namespace['__all__']:
         obj = namespace[obj_name]

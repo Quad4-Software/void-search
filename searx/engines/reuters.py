@@ -22,9 +22,10 @@ Implementations
 
 """
 
+from datetime import UTC, datetime, timedelta
 from json import dumps
 from urllib.parse import quote_plus
-from datetime import datetime, timedelta
+
 from dateutil import parser
 
 from searx.result_types import EngineResults
@@ -66,7 +67,7 @@ def request(query, params):
     }
     if params["time_range"]:
         time_diff_days = time_range_duration_map[params["time_range"]]
-        start_date = datetime.now() - timedelta(days=time_diff_days)
+        start_date = datetime.now(tz=UTC) - timedelta(days=time_diff_days)
         args["start_date"] = start_date.isoformat()
 
     params["url"] = f"{base_url}/pf/api/v3/content/fetch/articles-by-search-v2?query={quote_plus(dumps(args))}"

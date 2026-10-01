@@ -140,7 +140,7 @@ def fetch_traits(engine_traits: EngineTraits):
         if netloc != "wiki.archlinux.org":
             title = title_map.get(sxng_tag)
             if not title:
-                print("ERROR: title tag from %s (%s) is unknown" % (netloc, sxng_tag))
+                print(f"ERROR: title tag from {netloc} ({sxng_tag}) is unknown")
                 continue
             engine_traits.custom["wiki_netloc"][sxng_tag] = netloc
             engine_traits.custom["title"][sxng_tag] = title  # type: ignore

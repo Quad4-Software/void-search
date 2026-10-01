@@ -8,17 +8,17 @@ Yahoo News is "English only" and do not offer localized nor language queries.
 # pylint: disable=invalid-name
 
 import re
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
-from datetime import datetime, timedelta
+
 from dateutil import parser
 
+from searx.engines.yahoo import parse_url
 from searx.utils import (
-    eval_xpath_list,
     eval_xpath_getindex,
+    eval_xpath_list,
     extract_text,
 )
-
-from searx.engines.yahoo import parse_url
 
 # about
 about = {
@@ -39,8 +39,7 @@ categories = ['news']
 # search-url
 search_url = (
     # fmt: off
-    'https://news.search.yahoo.com/search'
-    '?{query}&b={offset}'
+    'https://news.search.yahoo.com/search?{query}&b={offset}'
     # fmt: on
 )
 
@@ -69,7 +68,6 @@ def response(resp):
 
     # parse results
     for result in eval_xpath_list(dom, '//ol[contains(@class,"searchCenterMiddle")]//li'):
-
         url = eval_xpath_getindex(result, './/h4/a/@href', 0, None)
         if url is None:
             continue
@@ -85,7 +83,7 @@ def response(resp):
         if ago:
             number = int(ago.group(1))
             delta = AGO_TIMEDELTA[ago.group(2)]
-            pub_date = datetime.now() - delta * number
+            pub_date = datetime.now(tz=UTC) - delta * number
         else:
             try:
                 pub_date = parser.parse(pub_date)
@@ -96,7 +94,11 @@ def response(resp):
             item['publishedDate'] = pub_date
         results.append(item)
 
-        for suggestion in eval_xpath_list(dom, '//div[contains(@class,"AlsoTry")]//td'):
-            results.append({'suggestion': extract_text(suggestion)})
+        results.extend(
+            [
+                {'suggestion': extract_text(suggestion)}
+                for suggestion in eval_xpath_list(dom, '//div[contains(@class,"AlsoTry")]//td')
+            ]
+        )
 
     return results

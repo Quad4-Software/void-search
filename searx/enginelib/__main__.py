@@ -14,7 +14,7 @@ The following commands can be used for maintenance and introspection
 
 import typer
 
-from .. import enginelib
+from searx import enginelib
 
 app = typer.Typer()
 app.add_typer(enginelib.app, name="cache", help="Commands related to the cache of the engines.")

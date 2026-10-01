@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Seek ninja (general)"""
 
-from json import loads
-from hashlib import sha256
-from urllib.parse import urlencode, quote_plus
-
 import typing as t
+from hashlib import sha256
+from json import loads
+from urllib.parse import quote_plus, urlencode
 
 from searx.extended_types import SXNG_Response
 from searx.network import get
@@ -59,7 +58,7 @@ def _solve_pow(challenge: PowChallenge) -> list[int]:
 
     leading = int(indifficulty)
     frac = indifficulty - leading
-    prefix = "".join("0" for _ in range(0, leading))
+    prefix = "".join("0" for _ in range(leading))
 
     maxNib = 15 - int(frac * 16) if frac else 15
 

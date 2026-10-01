@@ -5,26 +5,25 @@ results.
 .. _Luxxle: https://luxxle.com
 """
 
+import typing as t
 from json import dumps
 from urllib.parse import quote_plus, unquote_plus
 
-import typing as t
-
-from searx.result_types import EngineResults
 from searx.network import get
+from searx.result_types import EngineResults
 from searx.utils import (
-    extr,
-    gen_useragent,
-    eval_xpath_list,
-    extract_text,
-    eval_xpath,
-    parse_duration_string,
     ElementType,
+    eval_xpath,
+    eval_xpath_list,
+    extr,
+    extract_text,
+    gen_useragent,
+    parse_duration_string,
 )
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 
 about = {
@@ -48,7 +47,7 @@ safe_search_map = {0: "Off", 1: "Moderate", 2: "Strict"}
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if luxxle_categ not in ("search", "images", "videos", "news"):
-        raise ValueError("invalid luxxle category: %s" % luxxle_categ)
+        raise ValueError(f"invalid luxxle category: {luxxle_categ}")
 
 
 def _obtain_telemetry_data(query: str) -> dict[str, str]:
@@ -199,6 +198,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
         case "news":
             _news_results(doc, res)
         case _:
-            raise ValueError("unsupported category: %s" % luxxle_categ)
+            raise ValueError(f"unsupported category: {luxxle_categ}")
 
     return res

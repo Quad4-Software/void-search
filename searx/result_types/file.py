@@ -14,11 +14,10 @@ template.
 
 # pylint: disable=too-few-public-methods
 
-
 __all__ = ["File"]
 
-import typing as t
 import mimetypes
+import typing as t
 
 from ._base import MainResult
 
@@ -74,12 +73,11 @@ class File(MainResult, kw_only=True):
         super().__post_init__()
 
         if not self.mtype or not self.subtype:
-
             fn = self.filename or self.embedded
             if not self.mimetype and fn:
                 self.mimetype = mimetypes.guess_type(fn, strict=False)[0] or ""
 
-            mtype, subtype = (self.mimetype.split("/", 1) + [""])[:2]
+            mtype, subtype = ([*self.mimetype.split("/", 1), ""])[:2]
 
             if not self.mtype:
                 # I don't know why, but the ogg video stream is not displayed,

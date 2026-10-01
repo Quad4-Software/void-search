@@ -4,25 +4,27 @@
 
 __all__ = ["get_network"]
 
+import asyncio
+import atexit
+import contextlib
+import ipaddress
 import typing as t
 from collections.abc import Generator
-
-
-import atexit
-import asyncio
-import ipaddress
 from itertools import cycle
 
 from curl_cffi import CurlHttpVersion
 from curl_cffi.requests.exceptions import (
     ConnectionError as CurlConnectionError,
+)
+from curl_cffi.requests.exceptions import (
     ProxyError,
     RequestException,
 )
 
 from searx import logger, sxng_debug
 from searx.extended_types import SXNG_Response
-from .client import DEFAULT_IMPERSONATE, AsyncClient, new_client, get_loop
+
+from .client import DEFAULT_IMPERSONATE, AsyncClient, get_loop, new_client
 from .raise_for_httperror import raise_for_httperror
 
 logger = logger.getChild('network')
@@ -42,31 +44,30 @@ PROXY_PATTERN_MAPPING = {
     'socks5h:': 'socks5h://',
 }
 
-ADDRESS_MAPPING = {'ipv4': '0.0.0.0', 'ipv6': '::'}
+ADDRESS_MAPPING = {'ipv4': '0.0.0.0', 'ipv6': '::'}  # noqa: S104
 
 
 @t.final
 class Network:
-
     __slots__ = (
+        '_clients',
+        '_local_addresses_cycle',
+        '_logger',
+        '_proxies_cycle',
         'enable_http',
-        'verify',
         'enable_http2',
         'enable_http3',
-        'max_connections',
         'local_addresses',
-        'proxies',
-        'using_tor_proxy',
+        'max_connections',
         'max_redirects',
+        'proxies',
         'retries',
         'retry_on_http_error',
-        '_local_addresses_cycle',
-        '_proxies_cycle',
-        '_clients',
-        '_logger',
+        'using_tor_proxy',
+        'verify',
     )
 
-    _TOR_CHECK_RESULT = {}
+    _TOR_CHECK_RESULT: t.ClassVar = {}
     _CLIENT_KWARGS = ('verify', 'max_redirects', 'impersonate', 'curl_options', 'enable_http3')
 
     def __init__(
@@ -76,14 +77,14 @@ class Network:
         verify: bool = True,
         enable_http2: bool = False,
         enable_http3: bool = False,
-        max_connections: int = None,  # pyright: ignore[reportArgumentType]
+        max_connections: int | None = None,
         proxies: str | dict[str, str] | None = None,
         using_tor_proxy: bool = False,
         local_addresses: str | list[str] | None = None,
         retries: int = 0,
         retry_on_http_error: bool = False,
         max_redirects: int = 30,
-        logger_name: str = None,  # pyright: ignore[reportArgumentType]
+        logger_name: str | None = None,
     ):
 
         self.enable_http = enable_http
@@ -156,7 +157,7 @@ class Network:
             # pylint: disable=stop-iteration-return
             yield tuple((pattern, next(proxy_url_cycle)) for pattern, proxy_url_cycle in proxy_settings.items())
 
-    _HTTP_VERSION = {
+    _HTTP_VERSION: t.ClassVar = {
         int(CurlHttpVersion.V1_0): "HTTP/1.0",
         int(CurlHttpVersion.V1_1): "HTTP/1.1",
         int(CurlHttpVersion.V2_0): "HTTP/2",
@@ -228,10 +229,8 @@ class Network:
 
     async def aclose(self):
         async def close_client(client):
-            try:
+            with contextlib.suppress(RequestException):
                 await client.aclose()
-            except RequestException:
-                pass
 
         await asyncio.gather(*[close_client(client) for client in self._clients.values()], return_exceptions=False)
 
@@ -260,13 +259,11 @@ class Network:
 
     def is_valid_response(self, response: SXNG_Response):
         # pylint: disable=too-many-boolean-expressions
-        if (
+        return not (
             (self.retry_on_http_error is True and 400 <= response.status_code <= 599)
             or (isinstance(self.retry_on_http_error, list) and response.status_code in self.retry_on_http_error)
             or (isinstance(self.retry_on_http_error, int) and response.status_code == self.retry_on_http_error)
-        ):
-            return False
-        return True
+        )
 
     async def call_client(self, stream: bool, method: str, url: str, **kwargs: t.Any) -> SXNG_Response:
         retries = self.retries
@@ -300,6 +297,7 @@ class Network:
                 if retries <= 0:
                     raise e
             retries -= 1
+        raise RuntimeError("network retry loop exited without a response")  # pragma: no cover
 
     async def request(self, method: str, url: str, **kwargs: t.Any) -> SXNG_Response:
         return await self.call_client(False, method, url, **kwargs)
@@ -335,12 +333,12 @@ def check_network_configuration():
 
 
 def initialize(
-    settings_engines: list[dict[str, t.Any]] = None,  # pyright: ignore[reportArgumentType]
-    settings_outgoing: dict[str, t.Any] = None,  # pyright: ignore[reportArgumentType]
+    settings_engines: list[dict[str, t.Any]] | None = None,
+    settings_outgoing: dict[str, t.Any] | None = None,
 ) -> None:
     # pylint: disable=import-outside-toplevel)
-    from searx.engines import engines
     from searx import settings
+    from searx.engines import engines
 
     # pylint: enable=import-outside-toplevel)
 
@@ -384,7 +382,7 @@ def initialize(
         done()
     NETWORKS.clear()
     NETWORKS[DEFAULT_NAME] = new_network({}, logger_name='default')
-    NETWORKS['ipv4'] = new_network({'local_addresses': '0.0.0.0'}, logger_name='ipv4')
+    NETWORKS['ipv4'] = new_network({'local_addresses': '0.0.0.0'}, logger_name='ipv4')  # noqa: S104
     NETWORKS['ipv6'] = new_network({'local_addresses': '::'}, logger_name='ipv6')
 
     # define networks from outgoing.networks
@@ -405,7 +403,7 @@ def initialize(
             NETWORKS[engine_name] = new_network(network, logger_name=engine_name)
 
     # define networks from engines.[i].network (references)
-    for engine_name, engine, network in iter_networks():
+    for engine_name, _engine, network in iter_networks():
         if isinstance(network, str):
             NETWORKS[engine_name] = NETWORKS[network]
 

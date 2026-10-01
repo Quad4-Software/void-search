@@ -43,7 +43,6 @@ def response(resp):
     dom = resp.html()
 
     for result in eval_xpath_list(dom, '//div[starts-with(@class, "EmojisList")]/a'):
-
         url = base_url + result.attrib.get('href')
         res = {'url': url, 'title': extract_text(result), 'content': ''}
 

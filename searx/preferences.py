@@ -4,20 +4,18 @@
 # pylint: disable=useless-object-inheritance
 
 import typing as t
-
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-from zlib import compress, decompressobj
-from urllib.parse import parse_qs, urlencode
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from collections import OrderedDict
 from collections.abc import Iterable
+from urllib.parse import parse_qs, urlencode
+from zlib import compress, decompressobj
 
-import flask
 import babel
 import babel.core
+import flask
 
 import searx.plugins
-
-from searx import get_setting, settings, autocomplete, favicons
+from searx import autocomplete, favicons, get_setting, settings
 from searx.enginelib import Engine
 from searx.engines import DEFAULT_CATEGORY
 from searx.extended_types import SXNG_Request
@@ -91,7 +89,7 @@ class EnumStringSetting(Setting):
 
     def _validate_selection(self, selection: str):
         if selection not in self.choices:
-            raise ValidationException('Invalid value: "{0}"'.format(selection))
+            raise ValidationException(f'Invalid value: "{selection}"')
 
     def parse(self, data: str):
         """Parse and validate ``data`` and store the result at ``self.value``"""
@@ -110,7 +108,7 @@ class MultipleChoiceSetting(Setting):
     def _validate_selections(self, selections: list[str]):
         for item in selections:
             if item not in self.choices:
-                raise ValidationException('Invalid value: "{0}"'.format(selections))
+                raise ValidationException(f'Invalid value: "{selections}"')
 
     def parse(self, data: str):
         """Parse and validate ``data`` and store the result at ``self.value``"""
@@ -176,7 +174,7 @@ class SearchLanguageSetting(EnumStringSetting):
 
     def _validate_selection(self, selection: str):
         if selection != '' and selection != 'auto' and not VALID_LANGUAGE_CODE.match(selection):
-            raise ValidationException('Invalid language code: "{0}"'.format(selection))
+            raise ValidationException(f'Invalid language code: "{selection}"')
 
     def parse(self, data: str):
         """Parse and validate ``data`` and store the result at ``self.value``"""
@@ -201,9 +199,7 @@ class MapSetting(Setting):
     key: str
     value: object
 
-    def __init__(
-        self, default_value: object, map: dict[str, object], locked: bool = False
-    ):  # pylint: disable=redefined-builtin
+    def __init__(self, default_value: object, map: dict[str, object], locked: bool = False):  # pylint: disable=redefined-builtin
         super().__init__(default_value, locked)
         self.map: dict[str, object] = map
 
@@ -214,7 +210,7 @@ class MapSetting(Setting):
         """Parse and validate ``data`` and store the result at ``self.value``"""
 
         if data not in self.map:
-            raise ValidationException('Invalid choice: {0}'.format(data))
+            raise ValidationException(f'Invalid choice: {data}')
         self.value = self.map[data]
         self.key = data  # pylint: disable=attribute-defined-outside-init
 
@@ -234,7 +230,7 @@ class BooleanSetting(Setting):
         for v_str, v_obj in MAP_STR2BOOL.items():
             if val == v_obj:
                 return v_str
-        raise ValueError("Invalid value: %s (%s) is not a boolean!" % (repr(val), type(val)))
+        raise ValueError(f"Invalid value: {val!r} ({type(val)}) is not a boolean!")
 
     def parse(self, data: str):
         """Parse and validate ``data`` and store the result at ``self.value``"""
@@ -291,8 +287,8 @@ class BooleanChoices:
         """Save cookie in the HTTP response object"""
         disabled_changed = (k for k in self.disabled if self.default_choices[k])
         enabled_changed = (k for k in self.enabled if not self.default_choices[k])
-        resp.set_cookie('disabled_{0}'.format(self.name), ','.join(disabled_changed), max_age=COOKIE_MAX_AGE)
-        resp.set_cookie('enabled_{0}'.format(self.name), ','.join(enabled_changed), max_age=COOKIE_MAX_AGE)
+        resp.set_cookie(f'disabled_{self.name}', ','.join(disabled_changed), max_age=COOKIE_MAX_AGE)
+        resp.set_cookie(f'enabled_{self.name}', ','.join(enabled_changed), max_age=COOKIE_MAX_AGE)
 
     def get_disabled(self):
         return self.transform_values(list(self.disabled))
@@ -308,9 +304,9 @@ class EnginesSetting(BooleanChoices):
         choices = {}
         for engine in engines:
             for category in engine.categories:
-                if not category in list(settings['categories_as_tabs'].keys()) + [DEFAULT_CATEGORY]:
+                if category not in [*list(settings['categories_as_tabs'].keys()), DEFAULT_CATEGORY]:
                     continue
-                choices['{}__{}'.format(engine.name, category)] = not engine.disabled
+                choices[f'{engine.name}__{category}'] = not engine.disabled
         super().__init__(default_value, choices)
 
     def transform_form_items(self, items):
@@ -369,9 +365,9 @@ class ClientPref:
             return cls(locale=None)
 
         pairs: list[tuple[babel.Locale, float]] = []
-        for l in al_header.split(','):
+        for lang_entry in al_header.split(','):
             # fmt: off
-            lang, qvalue = [_.strip() for _ in (l.split(';') + ['q=1',])[:2]]
+            lang, qvalue = [_.strip() for _ in ([*lang_entry.split(';'), 'q=1'])[:2]]
             # fmt: on
             try:
                 qvalue = float(qvalue.split('=')[-1])
@@ -408,27 +404,27 @@ class Preferences:
             'categories': MultipleChoiceSetting(
                 ["general"],
                 locked="categories" in self.cfg.lock,
-                choices=categories + ["none"],
+                choices=[*categories, "none"],
             ),
             'language': SearchLanguageSetting(
                 get_setting("search.default_lang"),
                 locked="language" in self.cfg.lock,
-                choices=get_setting("search.languages") + [""],
+                choices=[*get_setting("search.languages"), ""],
             ),
             'locale': EnumStringSetting(
                 get_setting("ui.default_locale"),
                 locked="locale" in self.cfg.lock,
-                choices=list(LOCALE_NAMES.keys()) + [""],
+                choices=[*list(LOCALE_NAMES.keys()), ""],
             ),
             'autocomplete': EnumStringSetting(
                 get_setting("search.autocomplete"),
                 locked="autocomplete" in self.cfg.lock,
-                choices=list(autocomplete.backends.keys()) + [""],
+                choices=[*list(autocomplete.backends.keys()), ""],
             ),
             'favicon_resolver': EnumStringSetting(
                 get_setting("search.favicon_resolver"),
                 locked="favicon_resolver" in self.cfg.lock,
-                choices=list(favicons.proxy.CFG.resolver_map.keys()) + [''],
+                choices=[*list(favicons.proxy.CFG.resolver_map.keys()), ''],
             ),
             'image_proxy': BooleanSetting(
                 get_setting("server.image_proxy"),
@@ -546,7 +542,7 @@ class Preferences:
         # boolean preferences are not sent by the form if they're false,
         # so we have to add them as false manually if they're not sent (then they would be true)
         for key, setting in self.key_value_settings.items():
-            if key not in input_data.keys() and isinstance(setting, BooleanSetting):
+            if key not in input_data and isinstance(setting, BooleanSetting):
                 input_data[key] = 'False'
 
         for user_setting_name, user_setting in input_data.items():

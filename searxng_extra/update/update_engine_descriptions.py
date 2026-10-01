@@ -10,21 +10,20 @@ Output file: :origin:`searx/data/engine_descriptions.json`.
 # pylint: disable=invalid-name, global-statement
 
 import json
+from pathlib import Path
 from urllib.parse import urlparse
-from os.path import join
 
 from lxml.html import fromstring
 
 import searx.engines
-from searx.engines import wikidata, set_loggers
-from searx.wikidata import send_wikidata_query
-from searx.utils import extract_text
-from searx.locales import LOCALE_NAMES, locales_initialize, match_locale
-from searx import searx_dir
-from searx.utils import gen_useragent
-import searx.search
 import searx.network
-from searx.data import data_dir, ENGINE_DESCRIPTIONS
+import searx.search
+from searx import searx_dir
+from searx.data import ENGINE_DESCRIPTIONS, data_dir
+from searx.engines import set_loggers, wikidata
+from searx.locales import LOCALE_NAMES, locales_initialize, match_locale
+from searx.utils import extract_text, gen_useragent
+from searx.wikidata import send_wikidata_query
 
 DATA_FILE = data_dir / "engine_descriptions.json"
 
@@ -71,10 +70,8 @@ NOT_A_DESCRIPTION: list[str] = [
 ]
 
 SKIP_ENGINE_SOURCE: list[tuple[str, str]] = [
-    # fmt: off
     ("gitlab", "wikidata")
     # descriptions are about wikipedia disambiguation pages
-    # fmt: on
 ]
 
 WIKIPEDIA_LANGUAGES: dict[str, str] = {}
@@ -88,10 +85,9 @@ wd_to_engine_name: dict[str, set[str]] = {}
 
 
 def normalize_description(description: str):
-    for c in [chr(c) for c in range(0, 31)]:
+    for c in [chr(c) for c in range(31)]:
         description = description.replace(c, " ")
-    description = " ".join(description.strip().split())
-    return description
+    return " ".join(description.strip().split())
 
 
 def update_description(engine_name: str, lang: str, description: str, source: str, replace: bool = True) -> None:
@@ -213,13 +209,13 @@ def initialize():
             continue
         WIKIPEDIA_LANGUAGES[sxng_ui_lang] = wiki_lang
 
-    LANGUAGES_SPARQL = ", ".join(f"'{l}'" for l in set(WIKIPEDIA_LANGUAGES.values()))
+    LANGUAGES_SPARQL = ", ".join(f"'{lang}'" for lang in set(WIKIPEDIA_LANGUAGES.values()))
     for engine_name, engine in searx.engines.engines.items():
         descriptions[engine_name] = {}
         if engine.about.wikidata_id:
             wd_to_engine_name.setdefault(engine.about.wikidata_id, set()).add(engine_name)
 
-    IDS = " ".join(list(map(lambda wd_id: "wd:" + wd_id, wd_to_engine_name.keys())))
+    IDS = " ".join(["wd:" + wd_id for wd_id in wd_to_engine_name])
 
 
 def fetch_wikidata_descriptions():
@@ -269,11 +265,10 @@ def fetch_wikipedia_descriptions():
                 if not desc:
                     if descriptions.get(searxng_locale, {}).get(engine_name) is None:
                         _descr = ENGINE_DESCRIPTIONS.get(searxng_locale, {}).get(engine_name)
-                        if _descr is not None:
-                            if len(_descr) == 2 and _descr[1] == 'ref':
-                                ref_engine, ref_lang = _descr[0].split(':')
-                                _descr = ENGINE_DESCRIPTIONS[ref_lang][ref_engine]
-                                update_description(engine_name, searxng_locale, _descr[0], _descr[1])
+                        if _descr is not None and len(_descr) == 2 and _descr[1] == 'ref':
+                            ref_engine, ref_lang = _descr[0].split(':')
+                            _descr = ENGINE_DESCRIPTIONS[ref_lang][ref_engine]
+                            update_description(engine_name, searxng_locale, _descr[0], _descr[1])
 
                     continue
                 print(
@@ -286,8 +281,7 @@ def fetch_wikipedia_descriptions():
 def normalize_url(url: str):
     url = url.replace("{language}", "en")
     url = urlparse(url)._replace(path="/", params="", query="", fragment="").geturl()
-    url = url.replace("https://api.", "https://")
-    return url
+    return url.replace("https://api.", "https://")
 
 
 def fetch_website_description(engine_name: str, website: str):
@@ -301,7 +295,7 @@ def fetch_website_description(engine_name: str, website: str):
     # to specify an order in where the most common languages are in front of the
     # language list ..
     languages = ["en", "es", "pt", "ru", "tr", "fr"]
-    languages = languages + [l for l in LOCALE_NAMES if l not in languages]
+    languages = languages + [lang for lang in LOCALE_NAMES if lang not in languages]
 
     previous_matched_lang: str | None = None
     previous_count: int = 0
@@ -351,7 +345,7 @@ def fetch_website_descriptions():
 
 
 def get_engine_descriptions_filename():
-    return join(join(searx_dir, "data"), "engine_descriptions.json")
+    return str(Path(searx_dir) / "data" / "engine_descriptions.json")
 
 
 def get_output():

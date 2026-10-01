@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Bing-Images: description see :py:obj:`searx.engines.bing`."""
 
-import typing as t
 import json
+import typing as t
 from urllib.parse import urlencode
 
-from searx.engines.bing import fetch_traits  # pylint: disable=unused-import
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
@@ -63,7 +62,7 @@ def request(query: str, params: "OnlineParams"):
     # time range
     # - example: one year (525600 minutes) 'qft=filterui:age-lt525600'
     if params["time_range"]:
-        query_params["qft"] = "filterui:age-lt%s" % time_map[params["time_range"]]
+        query_params["qft"] = f"filterui:age-lt{time_map[params['time_range']]}"
 
     params["url"] = base_url + "/images/async?" + urlencode(query_params)
 

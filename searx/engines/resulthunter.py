@@ -8,18 +8,19 @@ import typing as t
 from urllib.parse import urlencode
 
 from searx import locales
-from searx.exceptions import SearxEngineResponseException
-from searx.result_types import EngineResults
-from searx.utils import eval_xpath_list, eval_xpath, extract_text
 
 # as it uses brave internally, it has the same locales and timerange/safesearch types
-from searx.engines.brave import safesearch_map, time_range_map, fetch_traits  # pylint: disable=unused-import
+from searx.engines.brave import safesearch_map, time_range_map  # pylint: disable=unused-import
+from searx.exceptions import SearxEngineResponseException
+from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from lxml.etree import ElementBase
+
+    from searx.enginelib.traits import EngineTraits
     from searx.extended_types import SXNG_Response
     from searx.search.processors import OnlineParams
-    from searx.enginelib.traits import EngineTraits
 
     traits: EngineTraits
 
@@ -43,7 +44,7 @@ resulthunter_categ = "web"
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if resulthunter_categ not in ("web", "images"):
-        raise ValueError("invalid category: %s" % resulthunter_categ)
+        raise ValueError(f"invalid category: {resulthunter_categ}")
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -122,4 +123,4 @@ def response(resp: "SXNG_Response") -> EngineResults:
         case "images":
             return _image_results(doc)
         case _:
-            raise ValueError("invalid resulthunter category: %s" % resulthunter_categ)
+            raise ValueError(f"invalid resulthunter category: {resulthunter_categ}")

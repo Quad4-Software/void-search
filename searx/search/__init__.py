@@ -3,36 +3,36 @@
 
 __all__ = ["SearchWithPlugins"]
 
-import typing as t
-
 import threading
+import typing as t
 from timeit import default_timer
 from uuid import uuid4
 
 from flask import copy_current_request_context
 
-from searx import logger
-from searx import settings
 import searx.answerers
 import searx.plugins
+from searx import logger, result_cache, settings
 from searx.engines import load_engines
 from searx.external_bang import get_bang_url
-from searx.metrics import initialize as initialize_metrics, counter_inc
-from searx.network import initialize as initialize_network, check_network_configuration
+from searx.metrics import counter_inc
+from searx.metrics import initialize as initialize_metrics
+from searx.network import check_network_configuration
+from searx.network import initialize as initialize_network
 from searx.results import ResultContainer
-from searx import result_cache
 from searx.search.processors import PROCESSORS
 from searx.search.processors.abstract import RequestParams
 
 if t.TYPE_CHECKING:
-    from .models import SearchQuery
     from searx.extended_types import SXNG_Request
+
+    from .models import SearchQuery
 
 logger = logger.getChild('search')
 
 
 def initialize(
-    settings_engines: list[dict[str, t.Any]] = None,  # pyright: ignore[reportArgumentType]
+    settings_engines: list[dict[str, t.Any]] | None = None,
     check_network: bool = False,
     enable_metrics: bool = True,
 ):
@@ -52,7 +52,7 @@ class Search:
         """Initialize the Search"""
         # init vars
         super().__init__()
-        self.search_query: "SearchQuery" = search_query
+        self.search_query: SearchQuery = search_query
         self.result_container: ResultContainer = ResultContainer()
         self.result_container.query = search_query.query
         self.result_container.lang = getattr(search_query, "lang", "") or ""
@@ -129,9 +129,8 @@ class Search:
             actual_timeout = min(query_timeout, max_request_timeout)
 
         logger.debug(
-            "actual_timeout={0} (default_timeout={1}, ?timeout_limit={2}, max_request_timeout={3})".format(
-                actual_timeout, default_timeout, query_timeout, max_request_timeout
-            )
+            f"actual_timeout={actual_timeout} (default_timeout={default_timeout},"
+            f" ?timeout_limit={query_timeout}, max_request_timeout={max_request_timeout})"
         )
 
         return requests, actual_timeout
@@ -176,9 +175,8 @@ class Search:
     # do search-request
     def search(self) -> ResultContainer:
         self.start_time = default_timer()
-        if not self.search_external_bang():
-            if not self.search_answerers():
-                self.search_standard()
+        if not self.search_external_bang() and not self.search_answerers():
+            self.search_standard()
         return self.result_container
 
 

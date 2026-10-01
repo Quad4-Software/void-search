@@ -74,11 +74,12 @@ Implementations
 ===============
 """
 
-import typing as t
 import re
-from os.path import expanduser, isabs, realpath, commonprefix
+import typing as t
+from os.path import commonprefix
+from pathlib import Path
 from shlex import split as shlex_split
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 from threading import Thread
 
 from searx import logger
@@ -92,7 +93,7 @@ parse_regex = {}
 query_type = ''
 query_enum = []
 environment_variables = {}
-working_dir = realpath('.')
+working_dir = str(Path().resolve())
 result_separator = '\n'
 timeout = 4.0
 
@@ -112,8 +113,8 @@ def setup(engine_settings: dict[str, t.Any]) -> bool | None:
 
     if 'working_dir' in engine_settings:
         working_dir = engine_settings['working_dir']
-        if not isabs(engine_settings['working_dir']):
-            working_dir = realpath(working_dir)
+        if not Path(engine_settings['working_dir']).is_absolute():
+            working_dir = str(Path(working_dir).resolve())
 
     if 'parse_regex' in engine_settings:
         parse_regex = engine_settings['parse_regex']
@@ -157,7 +158,7 @@ def _get_results_from_process(res: EngineResults, cmd, pageno):
     leftover = ''
     count = 0
     start, end = __get_results_limits(pageno)
-    with Popen(cmd, stdout=PIPE, stderr=PIPE, env=environment_variables) as process:
+    with Popen(cmd, stdout=PIPE, stderr=PIPE, env=environment_variables) as process:  # noqa: S603
         line = process.stdout.readline()
         while line:
             buf = leftover + line.decode('utf-8')
@@ -199,8 +200,8 @@ def __check_query_params(params):
 
     if query_type == 'path':
         query_path = params[-1]
-        query_path = expanduser(query_path)
-        if commonprefix([realpath(query_path), working_dir]) != working_dir:
+        query_path = str(Path(query_path).expanduser())
+        if commonprefix([str(Path(query_path).resolve()), working_dir]) != working_dir:
             raise ValueError('requested path is outside of configured working directory')
     elif query_type == 'enum' and len(query_enum) > 0:
         for param in params:
@@ -216,9 +217,10 @@ def check_parsing_options(engine_settings):
     if 'delimiter' in engine_settings and 'parse_regex' in engine_settings:
         raise ValueError('failed to init settings for parsing lines: too many settings')
 
-    if 'delimiter' in engine_settings:
-        if 'chars' not in engine_settings['delimiter'] or 'keys' not in engine_settings['delimiter']:
-            raise ValueError
+    if 'delimiter' in engine_settings and (
+        'chars' not in engine_settings['delimiter'] or 'keys' not in engine_settings['delimiter']
+    ):
+        raise ValueError
 
 
 def __parse_single_result(raw_result):

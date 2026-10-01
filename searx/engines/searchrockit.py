@@ -4,18 +4,19 @@ but the results seem to come from Google."""
 
 import typing as t
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 from searx.result_types import EngineResults
 from searx.utils import (
+    eval_xpath,
     eval_xpath_list,
     extract_text,
-    eval_xpath,
 )
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 about = {
     "website": "https://searchrockit.com",
@@ -36,7 +37,7 @@ base_url = "https://searchrockit.com"
 
 def setup(_):
     if searchrockit_categ not in t.get_args(SearchrockitCateg):
-        raise ValueError("invalid search category: %s" % searchrockit_categ)
+        raise ValueError(f"invalid search category: {searchrockit_categ}")
 
 
 def request(query: str, params: "OnlineParams") -> None:

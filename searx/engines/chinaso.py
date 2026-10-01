@@ -37,12 +37,12 @@ Implementations
 
 """
 
-import typing as t
 import base64
+import contextlib
 import secrets
-
+import typing as t
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
 from searx.exceptions import SearxEngineAPIException
 from searx.utils import html_to_text
@@ -125,10 +125,8 @@ def response(resp):
     for entry in data["data"]["data"]:
         published_date = None
         if entry.get("timestamp"):
-            try:
-                published_date = datetime.fromtimestamp(int(entry["timestamp"]))
-            except (ValueError, TypeError):
-                pass
+            with contextlib.suppress(ValueError, TypeError):
+                published_date = datetime.fromtimestamp(int(entry["timestamp"]), tz=UTC)
 
         results.append(
             {

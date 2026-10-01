@@ -144,7 +144,7 @@ class EngineTraits:
         if self.data_type == "traits_v1":
             self._set_traits_v1(engine)  # pyright: ignore[reportArgumentType]
         else:
-            raise TypeError("engine traits of type %s is unknown" % self.data_type)
+            raise TypeError(f"engine traits of type {self.data_type} is unknown")
 
     def _set_traits_v1(self, engine: "Engine") -> None:
         # For an engine, when there is `language: ...` in the YAML settings the engine
@@ -159,15 +159,12 @@ class EngineTraits:
 
         _msg = "settings.yml - engine: '%s' / %s: '%s' not supported"
 
-        if engine.language:
-            if engine.language_support:
-                if not len(traits.languages) > 1:
-                    raise ValueError(
-                        f"engine {engine.name}: activated language_support with just one or less languages"
-                    )
-                if engine.language not in traits.languages:
-                    raise ValueError(_msg % (engine.name, "language", engine.language))
-                traits.languages = {engine.language: traits.languages[engine.language]}
+        if engine.language and engine.language_support:
+            if not len(traits.languages) > 1:
+                raise ValueError(f"engine {engine.name}: activated language_support with just one or less languages")
+            if engine.language not in traits.languages:
+                raise ValueError(_msg % (engine.name, "language", engine.language))
+            traits.languages = {engine.language: traits.languages[engine.language]}
 
         if engine.region:
             if engine.region not in traits.regions:
@@ -188,7 +185,7 @@ class EngineTraitsMap(dict[str, EngineTraits]):
 
     def save_data(self):
         """Store EngineTraitsMap in in file :py:obj:`self.ENGINE_TRAITS_FILE`"""
-        with open(self.ENGINE_TRAITS_FILE, "w", encoding="utf-8") as f:
+        with pathlib.Path(self.ENGINE_TRAITS_FILE).open("w", encoding="utf-8") as f:
             json.dump(self, f, indent=2, sort_keys=True, cls=EngineTraitsEncoder)
 
     @classmethod
@@ -217,17 +214,17 @@ class EngineTraitsMap(dict[str, EngineTraits]):
             try:
                 traits = EngineTraits.fetch_traits(engine)
             except Exception as exc:
-                log("ERROR: while fetch_traits %s: %s" % (engine_name, exc))
+                log(f"ERROR: while fetch_traits {engine_name}: {exc}")
                 v = ENGINE_TRAITS.get(engine_name)
                 if v:
-                    log("WARNING: re-use old values from fetch_traits - ENGINE_TRAITS[%s]" % engine_name)
+                    log(f"WARNING: re-use old values from fetch_traits - ENGINE_TRAITS[{engine_name}]")
                     traits = EngineTraits(**v)
                 else:
-                    log("WARNING: no old values available for ENGINE_TRAITS[%s], skipping" % engine_name)
+                    log(f"WARNING: no old values available for ENGINE_TRAITS[{engine_name}], skipping")
 
             if traits is not None:
-                log("%-20s: SearXNG languages --> %s " % (engine_name, len(traits.languages)))
-                log("%-20s: SearXNG regions   --> %s" % (engine_name, len(traits.regions)))
+                log(f"{engine_name:20}: SearXNG languages --> {len(traits.languages)} ")
+                log(f"{engine_name:20}: SearXNG regions   --> {len(traits.regions)}")
                 obj[engine_name] = traits
 
         return obj

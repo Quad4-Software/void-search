@@ -2,12 +2,12 @@
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 """Shared testing code."""
 
-import sys
 import os
-import subprocess
-import traceback
 import pathlib
 import shutil
+import subprocess
+import sys
+import traceback
 
 from splinter import Browser
 
@@ -31,7 +31,7 @@ class SearxRobotLayer:
         os.environ['SEARXNG_SETTINGS_PATH'] = str(tests_path / 'robot' / 'settings_robot.yml')
 
         # run the server
-        self.server = subprocess.Popen(  # pylint: disable=consider-using-with
+        self.server = subprocess.Popen(  # pylint: disable=consider-using-with  # noqa: S603
             [exe, webapp], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         if hasattr(self.server.stdout, 'read1'):
@@ -44,7 +44,7 @@ class SearxRobotLayer:
 
 
 def run_robot_tests(tests):
-    print('Running {0} tests'.format(len(tests)))
+    print(f'Running {len(tests)} tests')
     print(f'{shutil.which("geckodriver")}')
     print(f'{shutil.which("firefox")}')
 
@@ -59,7 +59,7 @@ def main():
         test_layer.setUp()
         run_robot_tests([getattr(test_webapp, x) for x in dir(test_webapp) if x.startswith('test_')])
     except Exception:  # pylint: disable=broad-except
-        print('Error occurred: {0}'.format(traceback.format_exc()))
+        print(f'Error occurred: {traceback.format_exc()}')
         sys.exit(1)
     finally:
         test_layer.tearDown()

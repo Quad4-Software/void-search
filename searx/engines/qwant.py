@@ -38,10 +38,11 @@ Implementations
 
 """
 
+import contextlib
 import random
 import typing as t
-
 from datetime import (
+    UTC,
     datetime,
     timedelta,
 )
@@ -63,8 +64,8 @@ from searx.network import raise_for_httperror
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 # about
 about = {
@@ -91,7 +92,7 @@ safesearch = True
 # tgp seems to be short for "test group" - its actual value doesn't matter, as
 # long as it's sent and at the correct position in the query params and doesn't
 # change too frequently
-test_group_value = random.randint(1, 3)
+test_group_value = random.randint(1, 3)  # noqa: S311
 
 # fmt: off
 qwant_news_locales = [
@@ -164,10 +165,8 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
     # Try to load JSON result
     search_results: dict[str, t.Any] = {}
-    try:
+    with contextlib.suppress(ValueError):
         search_results = resp.json()
-    except ValueError:
-        pass
 
     data: dict[str, t.Any] = search_results.get("data", {})  # pyright: ignore[reportAny]
 
@@ -225,10 +224,10 @@ def response(resp: "SXNG_Response") -> EngineResults:
             _date: float | None = item.get("date")
             if _date:
                 try:
-                    pub_date = datetime.fromtimestamp(_date)
+                    pub_date = datetime.fromtimestamp(_date, tz=UTC)
                 except ValueError:
                     # news' date value milli seconds
-                    pub_date = datetime.fromtimestamp(_date / 1000)
+                    pub_date = datetime.fromtimestamp(_date / 1000, tz=UTC)
 
             if mainline_type == "web":
                 res.add(
@@ -328,7 +327,7 @@ def fetch_traits(engine_traits: EngineTraits):
 
     for country, v in q_locales.items():
         for lang in v["langs"]:
-            _locale = "{lang}_{country}".format(lang=lang, country=country)
+            _locale = f"{lang}_{country}"
 
             if qwant_categ == "news" and _locale.lower() not in qwant_news_locales:
                 # qwant-news does not support all locales from qwant-web:
@@ -340,12 +339,12 @@ def fetch_traits(engine_traits: EngineTraits):
         try:
             sxng_tag = region_tag(babel.Locale.parse(eng_tag, sep="_"))
         except babel.UnknownLocaleError:
-            print("ERROR: can't determine babel locale of quant's locale %s" % eng_tag)
+            print(f"ERROR: can't determine babel locale of quant's locale {eng_tag}")
             continue
 
         conflict = engine_traits.regions.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.regions[sxng_tag] = eng_tag

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """MediathekViewWeb (API)"""
 
-import typing as t
 import datetime
+import typing as t
 
 from searx.result_types import EngineResults
 from searx.utils import parse_duration_string
@@ -70,9 +70,9 @@ def response(resp: "SXNG_Response") -> EngineResults:
         res.add(
             res.types.Video(
                 url=video_url,
-                title="%(channel)s: %(title)s (%(hms)s)" % item,
+                title=f"{item['channel']}: {item['title']} ({item['hms']})",
                 length=parse_duration_string(item["hms"]),
-                content="%(description)s" % item,
+                content=f"{item['description']}",
                 iframe_src=video_url,
             )
         )

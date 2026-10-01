@@ -6,6 +6,7 @@ BTDigg (Videos, Music, Files)
 from urllib.parse import quote, urljoin
 
 from lxml import html
+
 from searx.utils import extract_text
 
 # about
@@ -63,7 +64,7 @@ def response(resp):
         # convert files to int if possible
         try:
             files = int(files)
-        except:  # pylint: disable=bare-except
+        except Exception:
             files = None
 
         magnetlink = result.xpath('.//div[@class="torrent_magnet"]//a')[0].attrib['href']

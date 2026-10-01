@@ -52,16 +52,15 @@ def response(resp):
     json_data = loads(resp.text)
 
     for result in json_data['items']:
-
-        content = "[%s]" % ", ".join(result['tags'])
-        content += " %s" % result['owner']['display_name']
+        content = f"[{', '.join(result['tags'])}]"
+        content += f" {result['owner']['display_name']}"
         if result['is_answered']:
             content += ' // is answered'
-        content += " // score: %s" % result['score']
+        content += f" // score: {result['score']}"
 
         results.append(
             {
-                'url': "https://%s.com/q/%s" % (api_site, result['question_id']),
+                'url': f"https://{api_site}.com/q/{result['question_id']}",
                 'title': html.unescape(result['title']),
                 'content': html.unescape(content),
             }

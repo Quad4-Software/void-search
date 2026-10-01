@@ -3,17 +3,18 @@
 
 import random
 import string
+
 import lxml.etree
 from lxml import html
 from parameterized.parameterized import parameterized
 
-from searx.exceptions import SearxXPathSyntaxException, SearxEngineXPathException
 from searx import utils
+from searx.exceptions import SearxEngineXPathException, SearxXPathSyntaxException
 from tests import SearxTestCase
 
 
 def random_string(length, choices=string.ascii_letters):
-    return ''.join(random.choices(choices, k=length))
+    return ''.join(random.choices(choices, k=length))  # noqa: S311
 
 
 class TestUtils(SearxTestCase):
@@ -25,6 +26,12 @@ class TestUtils(SearxTestCase):
     def test_searxng_useragent(self):
         self.assertIsInstance(utils.searxng_useragent(), str)
         self.assertIsNotNone(utils.searxng_useragent())
+        # void.anonymize_outgoing is enabled by default: engines see a
+        # generic browser UA instead of a SearXNG version tag
+        self.assertTrue(utils.searxng_useragent().startswith('Mozilla'))
+        void_cfg = utils.settings.setdefault('void', {})
+        self.addCleanup(void_cfg.__setitem__, 'anonymize_outgoing', void_cfg.get('anonymize_outgoing'))
+        void_cfg['anonymize_outgoing'] = False
         self.assertTrue(utils.searxng_useragent().startswith('SearXNG'))
 
     def test_extract_text(self):
@@ -71,7 +78,7 @@ class TestUtils(SearxTestCase):
         self.assertEqual(f('/path?a=1', 'https://example.com'), 'https://example.com/path?a=1')
         with self.assertRaises(lxml.etree.ParserError):
             f('', 'https://example.com')
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception):  # noqa: B017
             utils.extract_url([], 'https://example.com')
 
     def test_ecma_unscape(self):

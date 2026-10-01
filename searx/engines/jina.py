@@ -16,10 +16,12 @@ The engine requires an API key, you can get one from the
 By default, Jina's own index is used. You can change that by setting a different :py:obj:`jina_engine`.
 """
 
+import contextlib
 import typing as t
 from urllib.parse import urlencode
 
 from dateutil import parser
+
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
@@ -72,10 +74,8 @@ def response(resp: "SXNG_Response"):
     for result in json_resp["data"]:
         published_date = None
         if result.get("date"):
-            try:
+            with contextlib.suppress(parser.ParserError):
                 published_date = parser.parse(result["date"])
-            except parser.ParserError:
-                pass
 
         res.add(
             res.types.MainResult(

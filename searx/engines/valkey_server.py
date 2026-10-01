@@ -77,14 +77,14 @@ def search(query, _params) -> EngineResults:
         res.add(res.types.KeyValue(kvmap=kvmap))
     elif " " in query:
         qset, rest = query.split(" ", 1)
-        for row in _valkey_client.hscan_iter(qset, match='*{}*'.format(rest)):
+        for row in _valkey_client.hscan_iter(qset, match=f'*{rest}*'):
             res.add(res.types.KeyValue(kvmap={row[0]: row[1]}))
     return res
 
 
 def search_keys(query) -> list[dict]:
     ret = []
-    for key in _valkey_client.scan_iter(match='*{}*'.format(query)):
+    for key in _valkey_client.scan_iter(match=f'*{query}*'):
         key_type = _valkey_client.type(key)
         res = None
 

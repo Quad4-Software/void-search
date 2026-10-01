@@ -42,7 +42,7 @@ def _max_items() -> int:
         return 4096
 
 
-def cache_key(search_query: "SearchQuery") -> str:
+def cache_key(search_query: SearchQuery) -> str:
     """Return a stable key that does not include the client."""
     engines = ",".join(sorted(ref.name for ref in search_query.engineref_list))
     raw = "|".join(
@@ -93,7 +93,7 @@ def _unpack(payload: dict[str, t.Any]) -> ResultContainer:
     return container
 
 
-def get(search_query: "SearchQuery") -> ResultContainer | None:
+def get(search_query: SearchQuery) -> ResultContainer | None:
     """Return a cached container or None."""
     ttl = _ttl()
     if ttl <= 0:
@@ -123,7 +123,7 @@ def get(search_query: "SearchQuery") -> ResultContainer | None:
         return _reopen(_unpack(payload), search_query)
 
 
-def _reopen(container: ResultContainer, search_query: "SearchQuery") -> ResultContainer:
+def _reopen(container: ResultContainer, search_query: SearchQuery) -> ResultContainer:
     """Rescore a cached payload using the current query without storing it."""
     container.query = search_query.query
     container.lang = getattr(search_query, "lang", "") or ""
@@ -133,12 +133,16 @@ def _reopen(container: ResultContainer, search_query: "SearchQuery") -> ResultCo
     return container
 
 
-def put(search_query: "SearchQuery", container: ResultContainer) -> None:
+def put(search_query: SearchQuery, container: ResultContainer) -> None:
     """Store a closed result container."""
     ttl = _ttl()
     if ttl <= 0:
         return
     if not container.get_ordered_results() and not container.answers:
+        return
+    if container.answers:
+        # answers can embed request-local values (self_info exposes the client
+        # IP and user-agent), so never serve them to a different client
         return
     key = cache_key(search_query)
     payload = _pack(container)

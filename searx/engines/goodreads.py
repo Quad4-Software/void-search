@@ -3,7 +3,7 @@
 
 from urllib.parse import urlencode
 
-from searx.utils import extract_text, eval_xpath, eval_xpath_list
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 about = {
     'website': 'https://www.goodreads.com',
@@ -41,8 +41,8 @@ def response(resp):
 
     dom = resp.html()
 
-    for result in eval_xpath_list(dom, results_xpath):
-        results.append(
+    results.extend(
+        [
             {
                 'url': base_url + extract_text(eval_xpath(result, url_xpath)),
                 'title': extract_text(eval_xpath(result, title_xpath)),
@@ -50,6 +50,8 @@ def response(resp):
                 'content': extract_text(eval_xpath(result, info_text_xpath)),
                 'metadata': extract_text(eval_xpath(result, author_xpath)),
             }
-        )
+            for result in eval_xpath_list(dom, results_xpath)
+        ]
+    )
 
     return results

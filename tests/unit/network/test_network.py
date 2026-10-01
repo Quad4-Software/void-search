@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
+from unittest.mock import Mock, patch
+
 from curl_cffi.requests.exceptions import RequestException
-from mock import Mock, patch
 
 from searx.network.client import AsyncClient
-from searx.network.network import Network, NETWORKS
+from searx.network.network import NETWORKS, Network
 from tests import SearxTestCase
 
 
@@ -24,8 +25,8 @@ class TestNetwork(SearxTestCase):
         self.assertEqual(next(network._local_addresses_cycle), '::')
 
         network = NETWORKS['ipv4']
-        self.assertEqual(next(network._local_addresses_cycle), '0.0.0.0')
-        self.assertEqual(next(network._local_addresses_cycle), '0.0.0.0')
+        self.assertEqual(next(network._local_addresses_cycle), '0.0.0.0')  # noqa: S104
+        self.assertEqual(next(network._local_addresses_cycle), '0.0.0.0')  # noqa: S104
 
         network = Network(local_addresses=['192.168.0.1', '192.168.0.2'])
         self.assertEqual(next(network._local_addresses_cycle), '192.168.0.1')
@@ -130,7 +131,6 @@ class TestNetwork(SearxTestCase):
 
 
 class TestNetworkRequestRetries(SearxTestCase):
-
     TEXT = 'Lorem Ipsum'
 
     def setUp(self):
@@ -206,7 +206,6 @@ class TestNetworkRequestRetries(SearxTestCase):
 
 
 class TestNetworkStreamRetries(SearxTestCase):
-
     TEXT = 'Lorem Ipsum'
 
     def setUp(self):

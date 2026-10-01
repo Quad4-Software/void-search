@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Ipernity (images)"""
 
-from datetime import datetime
-from json import loads, JSONDecodeError
-
+from datetime import UTC, datetime
+from json import JSONDecodeError, loads
 from urllib.parse import quote_plus
 
-from searx.utils import extr, extract_text, eval_xpath, eval_xpath_list
+from searx.utils import eval_xpath, eval_xpath_list, extr, extract_text
 
 about = {
     'website': 'https://www.ipernity.com',
@@ -62,7 +61,7 @@ def response(resp):
                 'title': info_item.get('title'),
                 'content': info_item.get('content', ''),
                 'resolution': resolution,
-                'publishedDate': datetime.fromtimestamp(int(info_item['posted_at'])),
+                'publishedDate': datetime.fromtimestamp(int(info_item['posted_at']), tz=UTC),
                 'thumbnail_src': thumbnail_src,
                 'img_src': img_src,
             }

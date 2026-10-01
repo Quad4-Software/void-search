@@ -14,6 +14,7 @@ list in ``settings.yml``:
 """
 
 from urllib.parse import urlencode
+
 from searx.result_types import EngineResults, MainResult
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
@@ -64,7 +65,6 @@ def response(resp) -> EngineResults:
     doc = resp.html()
 
     for result in eval_xpath_list(doc, "//div[@class='article']"):
-
         res_obj = MainResult(
             title=extract_text(eval_xpath(result, "./div[@class='content']/h2[@class='title']/a")),
             content=extract_text(eval_xpath(result, "./div[@class='content']/div[@class='text']")),

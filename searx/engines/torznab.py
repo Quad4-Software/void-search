@@ -51,6 +51,7 @@ Implementations
 import typing as t
 from datetime import datetime
 from urllib.parse import quote
+
 from lxml import etree  # type: ignore
 
 from searx.exceptions import SearxEngineAPIException
@@ -229,7 +230,7 @@ def get_attribute(item: etree.Element, property_name: str) -> str | None:
 def get_torznab_attribute(item: etree.Element, attribute_name: str) -> str | None:
     """Get torznab special attribute from item."""
     element: etree.Element | None = item.find(
-        './/torznab:attr[@name="{attribute_name}"]'.format(attribute_name=attribute_name),
+        f'.//torznab:attr[@name="{attribute_name}"]',
         {'torznab': 'http://torznab.com/schemas/2015/feed'},
     )
     if element is not None:

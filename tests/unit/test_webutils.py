@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
-import mock
+from unittest import mock
+
 from parameterized.parameterized import parameterized
+
 from searx import webutils
 from tests import SearxTestCase
 
 
 class TestWebUtils(SearxTestCase):
-
     @parameterized.expand(
         [
             ('https://searx.me/', 'https://searx.me/'),
@@ -60,12 +61,8 @@ class TestWebUtils(SearxTestCase):
             (
                 'match this "exact phrase"',
                 'this string contains the exact phrase we want to match',
-                ''.join(
-                    [
-                        '<span class="highlight">this</span> string contains the <span class="highlight">exact</span> ',
-                        '<span class="highlight">phrase</span> we want to <span class="highlight">match</span>',
-                    ]
-                ),
+                '<span class="highlight">this</span> string contains the <span class="highlight">exact</span> '
+                '<span class="highlight">phrase</span> we want to <span class="highlight">match</span>',
             ),
             (
                 'a class',
@@ -79,7 +76,6 @@ class TestWebUtils(SearxTestCase):
 
 
 class TestUnicodeWriter(SearxTestCase):
-
     def setUp(self):
         super().setUp()
         self.unicode_writer = webutils.CSVWriter(mock.MagicMock())
@@ -96,7 +92,6 @@ class TestUnicodeWriter(SearxTestCase):
 
 
 class TestNewHmac(SearxTestCase):
-
     @parameterized.expand(
         [
             b'secret',

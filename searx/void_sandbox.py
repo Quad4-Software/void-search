@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 from pathlib import Path
@@ -74,6 +75,8 @@ def apply() -> bool:
             "/workspace",
             sys.prefix,
             sys.base_prefix,
+            # source checkout of this package (development installs and tests)
+            str(Path(__file__).resolve().parent.parent),
             os.environ.get("__SEARXNG_CONFIG_PATH", "/etc/searxng"),
         ]
     )
@@ -92,43 +95,38 @@ def apply() -> bool:
     )
     write_paths = _existing(
         [
-            "/tmp",
-            "/var/tmp",
+            "/tmp",  # noqa: S108
+            "/var/tmp",  # noqa: S108
             "/var/cache/searxng",
             os.environ.get("__SEARXNG_DATA_PATH", "/var/cache/searxng"),
         ]
     )
 
+    # quiet rules are only valid when the ruleset declares the rights they may
+    # carry quiet for, otherwise landlock_add_rule() fails with EINVAL
+    quiet_fs_mask = read_fs | file_fs | write_fs
+    quiet_net_mask = AccessNet.CONNECT_TCP | AccessNet.BIND_TCP
+
     try:
-        with Ruleset() as ruleset:
+        with Ruleset(quiet_fs=quiet_fs_mask, quiet_net=quiet_net_mask) as ruleset:
             for path in read_paths:
-                try:
+                with contextlib.suppress(Exception):
                     ruleset.allow_path(str(path), read_fs, quiet=True)
-                except Exception:
-                    pass
             for path in read_files:
-                try:
+                with contextlib.suppress(Exception):
                     ruleset.allow_path(str(path), file_fs, quiet=True)
-                except Exception:
-                    pass
             for path in write_paths:
-                try:
+                with contextlib.suppress(Exception):
                     ruleset.allow_path(str(path), write_fs, quiet=True)
-                except Exception:
-                    pass
             try:
                 listen = int(get_setting("server.port") or 8080)
             except Exception:
                 listen = 8080
             for port in {80, 443, 6379, 8080, 8443, 8888, 48731, listen}:
-                try:
+                with contextlib.suppress(Exception):
                     ruleset.allow_port(int(port), AccessNet.CONNECT_TCP, quiet=True)
-                except Exception:
-                    pass
-            try:
+            with contextlib.suppress(Exception):
                 ruleset.allow_port(listen, AccessNet.BIND_TCP, quiet=True)
-            except Exception:
-                pass
             ruleset.restrict()
         log.info("Landlock applied")
         return True

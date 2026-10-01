@@ -1,19 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Installer for SearXNG package."""
 
-from setuptools import setup, find_packages
+from pathlib import Path
 
-from searx.version import VERSION_TAG, GIT_URL
+from setuptools import find_packages, setup
+
 from searx import get_setting
+from searx.version import GIT_URL, VERSION_TAG
 
-with open('README.rst', encoding='utf-8') as f:
+with Path('README.rst').open(encoding='utf-8') as f:
     long_description = f.read()
 
-with open('requirements.txt') as f:
-    requirements = [l.strip() for l in f.readlines()]
+with Path('requirements.txt').open() as f:
+    requirements = [line.strip() for line in f.readlines()]
 
-with open('requirements-dev.txt') as f:
-    dev_requirements = [l.strip() for l in f.readlines()]
+with Path('requirements-dev.txt').open() as f:
+    dev_requirements = [line.strip() for line in f.readlines()]
 
 setup(
     name='searxng',
@@ -38,9 +40,7 @@ setup(
         "Programming Language :: Python :: 3.13",
     ],
     project_urls={"Code": GIT_URL, "Issue tracker": get_setting('brand.issue_url')},
-    entry_points={
-        'console_scripts': ['searxng-run = searx.webapp:run']
-    },
+    entry_points={'console_scripts': ['searxng-run = searx.webapp:run']},
     packages=find_packages(
         include=[
             'searx',

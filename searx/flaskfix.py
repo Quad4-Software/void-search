@@ -56,7 +56,6 @@ class ReverseProxyPathFix:
         self.server = None
 
         if settings['server']['base_url']:
-
             # If base_url is specified, then these values from are given
             # preference over any Flask's generics.
 
@@ -89,7 +88,7 @@ class ReverseProxyPathFix:
 
 def patch_application(app):
     # serve pages with HTTP/1.1
-    WSGIRequestHandler.protocol_version = "HTTP/{}".format(settings['server']['http_protocol_version'])
+    WSGIRequestHandler.protocol_version = f"HTTP/{settings['server']['http_protocol_version']}"
     WSGIRequestHandler.server_version = ""
     WSGIRequestHandler.sys_version = ""
     # patch app to handle non root url-s behind proxy

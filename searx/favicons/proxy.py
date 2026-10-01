@@ -1,25 +1,23 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Implementations for a favicon proxy"""
 
-from typing import Callable
-
-import importlib
 import base64
+import importlib
 import pathlib
 import urllib.parse
+from collections.abc import Callable
 
 import flask
-from curl_cffi.requests.exceptions import RequestException
 import msgspec
+from curl_cffi.requests.exceptions import RequestException
 
 from searx import get_setting
-
-from searx.webutils import new_hmac, is_hmac_of
 from searx.exceptions import SearxEngineResponseException
 from searx.extended_types import sxng_request
+from searx.webutils import is_hmac_of, new_hmac
 
-from .resolvers import DEFAULT_RESOLVER_MAP
 from . import cache
+from .resolvers import DEFAULT_RESOLVER_MAP
 
 DEFAULT_FAVICON_URL = {}
 CFG: "FaviconProxyConfig" = None  # type: ignore
@@ -92,7 +90,7 @@ class FaviconProxyConfig(msgspec.Struct):
     def favicon_data_url(self, **replacements):
         """Returns data image URL of the default favicon."""
 
-        cache_key = ", ".join(f"{x}:{replacements[x]}" for x in sorted(list(replacements.keys()), key=str))
+        cache_key = ", ".join(f"{x}:{replacements[x]}" for x in sorted(replacements, key=str))
         data_url = DEFAULT_FAVICON_URL.get(cache_key)
         if data_url is not None:
             return data_url
@@ -139,7 +137,7 @@ def favicon_proxy():
 
     resolver = sxng_request.preferences.get_value('favicon_resolver')  # type: ignore
     # if resolver is empty or not valid, just return HTTP 400.
-    if not resolver or resolver not in CFG.resolver_map.keys():
+    if not resolver or resolver not in CFG.resolver_map:
         return "", 400
 
     data, mime = search_favicon(resolver, authority)
@@ -155,7 +153,7 @@ def favicon_proxy():
     return flask.send_from_directory(fav.parent, fav.name, mimetype=mimetype)
 
 
-def search_favicon(resolver: str, authority: str) -> tuple[None | bytes, None | str]:
+def search_favicon(resolver: str, authority: str) -> tuple[bytes | None, str | None]:
     """Sends the request to the favicon resolver and returns a tuple for the
     favicon.  The tuple consists of ``(data, mime)``, if the resolver has not
     determined a favicon, both values are ``None``.
@@ -216,7 +214,7 @@ def favicon_url(authority: str) -> str:
 
     resolver = sxng_request.preferences.get_value('favicon_resolver')  # type: ignore
     # if resolver is empty or not valid, just return nothing.
-    if not resolver or resolver not in CFG.resolver_map.keys():
+    if not resolver or resolver not in CFG.resolver_map:
         return ""
 
     data_mime = cache.CACHE(resolver, authority)

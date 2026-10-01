@@ -4,7 +4,7 @@ governmental institution aiming to reduce misinformation by providing resources
 about politics and history.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 about = {
@@ -51,7 +51,7 @@ def response(resp):
 
         publishedDate = None
         if result['extension'].get('publishingDate'):
-            publishedDate = datetime.fromtimestamp(result['extension']['publishingDate'])
+            publishedDate = datetime.fromtimestamp(result['extension']['publishingDate'], tz=UTC)
 
         results.append(
             {

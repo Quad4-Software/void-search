@@ -20,11 +20,11 @@ Implementations
 
 """
 
-import typing as t
 import json
+import typing as t
 
+from searx.enginelib import EngineAbout, EngineCache
 from searx.result_types import EngineResults
-from searx.enginelib import EngineCache, EngineAbout
 
 if t.TYPE_CHECKING:
     from searx.search.processors import RequestParams
@@ -61,12 +61,13 @@ def setup(engine_settings: dict[str, t.Any]) -> bool:
 
     CACHE = EngineCache(engine_settings["name"])
 
+    engine_name = engine_settings.get('name')
     _my_offline_engine = (
-        '[ {"value": "%s"}'
+        f'[ {{"value": "{engine_name}"}}'
         ', {"value":"first item"}'
         ', {"value":"second item"}'
         ', {"value":"third item"}'
-        ']' % engine_settings.get('name')
+        ']'
     )
 
     return True

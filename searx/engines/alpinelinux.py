@@ -10,8 +10,8 @@ servers and for Docker images.
 """
 
 import re
-
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
@@ -58,7 +58,6 @@ def response(resp):
 
     doc = resp.html()
     for result in eval_xpath_list(doc, "//table/tbody/tr"):
-
         if len(result.xpath("./td")) < 9:
             # skip non valid entries in the result table
             # e.g the "No item found..." message

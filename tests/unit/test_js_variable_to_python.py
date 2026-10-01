@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the function ``searx.utils.js_obj_str_to_python``
 
 The tests are copied from:
@@ -15,7 +14,6 @@ import math
 from parameterized import parameterized
 
 from searx.utils import js_obj_str_to_python
-
 from tests import SearxTestCase
 
 
@@ -61,7 +59,7 @@ class TestParser(SearxTestCase):
             ),
             (
                 "{a:1,b:1,c:1,d:1,e:1,f:1,g:1,h:1,i:1,j:1}",
-                {k: 1 for k in 'abcdefghij'},
+                dict.fromkeys('abcdefghij', 1),
             ),
             (
                 "{'a':[{'b':1},{'c':[{'d':{'f':{'g':[1,2]}}},{'e':1}]}]}",

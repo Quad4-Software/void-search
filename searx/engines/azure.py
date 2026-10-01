@@ -75,9 +75,13 @@ def setup(engine_settings: dict[str, t.Any]) -> bool:
     CACHE = EngineCache(engine_settings["name"])
 
     missing_opts: list[str] = []
-    for opt in ("azure_tenant_id", "azure_client_id", "azure_client_secret"):
-        if not engine_settings.get(opt, ""):
-            missing_opts.append(opt)
+    missing_opts.extend(
+        [
+            opt
+            for opt in ('azure_tenant_id', 'azure_client_id', 'azure_client_secret')
+            if not engine_settings.get(opt, '')
+        ]
+    )
     if missing_opts:
         logger.error("missing values for options: %s", ", ".join(missing_opts))
         return False

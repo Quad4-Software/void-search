@@ -2,16 +2,15 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring
 
 import typing as t
-
 import warnings
 from collections import defaultdict
 from threading import RLock
 
-from searx import logger as log
 import searx.engines
-from searx.metrics import histogram_observe, counter_add
+from searx import logger as log
+from searx.metrics import counter_add, histogram_observe
 from searx.ranking import calculate_score as void_calculate_score
-from searx.result_types import Result, LegacyResult, MainResult
+from searx.result_types import LegacyResult, MainResult, Result
 from searx.result_types.answer import AnswerSet, BaseAnswer
 
 
@@ -68,16 +67,13 @@ class ResultContainer:
         self._lock: RLock = RLock()
         self._main_results_sorted: list[MainResult | LegacyResult] = None  # type: ignore
 
-    def extend(
-        self, engine_name: str | None, results: list[Result | LegacyResult]
-    ):  # pylint: disable=too-many-branches
+    def extend(self, engine_name: str | None, results: list[Result | LegacyResult]):  # pylint: disable=too-many-branches
         if self._closed:
             log.debug("container is closed, ignoring results: %s", results)
             return
         main_count = 0
 
         for result in list(results):
-
             if isinstance(result, Result):
                 result.engine = result.engine or engine_name
                 result.normalize_result_fields()
@@ -109,6 +105,7 @@ class ResultContainer:
                             f"answer results from engine {result.engine}"
                             " are without typification / migrate to Answer class.",
                             DeprecationWarning,
+                            stacklevel=2,
                         )
                         self.answers.add(result)  # type: ignore
                     continue
@@ -124,9 +121,8 @@ class ResultContainer:
                     continue
 
                 if "engine_data" in result:
-                    if self.on_result(result):
-                        if result.engine:
-                            self.engine_data[result.engine][result["key"]] = result["engine_data"]
+                    if self.on_result(result) and result.engine:
+                        self.engine_data[result.engine][result["key"]] = result["engine_data"]
                     continue
 
                 if self.on_result(result):
@@ -157,7 +153,6 @@ class ResultContainer:
         result_hash = hash(result)
 
         with self._lock:
-
             merged = self.main_results_map.get(result_hash)
             if not merged:
                 # if there is no duplicate in the merged results, append result
@@ -251,11 +246,8 @@ def merge_two_infoboxes(origin: LegacyResult, other: LegacyResult):
 
         origin.urls = url_items
 
-    if other.img_src:
-        if not origin.img_src:
-            origin.img_src = other.img_src
-        elif weight2 > weight1:
-            origin.img_src = other.img_src
+    if other.img_src and (not origin.img_src or weight2 > weight1):
+        origin.img_src = other.img_src
 
     if other.attributes:
         if not origin.attributes:
@@ -275,11 +267,8 @@ def merge_two_infoboxes(origin: LegacyResult, other: LegacyResult):
                 if attr.get("label") not in attr_names_1 and attr.get('entity') not in attr_names_1:
                     origin.attributes.append(attr)
 
-    if other.content:
-        if not origin.content:
-            origin.content = other.content
-        elif len(other.content) > len(origin.content):
-            origin.content = other.content
+    if other.content and (not origin.content or len(other.content) > len(origin.content)):
+        origin.content = other.content
 
 
 def merge_two_main_results(origin: MainResult | LegacyResult, other: MainResult | LegacyResult):
@@ -294,16 +283,20 @@ def merge_two_main_results(origin: MainResult | LegacyResult, other: MainResult 
         origin.title = other.title
 
     # merge all result's parameters not found in origin
-    if isinstance(other, MainResult) and isinstance(origin, MainResult):
-        origin.defaults_from(other)
-    elif isinstance(other, LegacyResult) and isinstance(origin, LegacyResult):
+    if (isinstance(other, MainResult) and isinstance(origin, MainResult)) or (
+        isinstance(other, LegacyResult) and isinstance(origin, LegacyResult)
+    ):
         origin.defaults_from(other)
 
     # add engine to list of result-engines
     origin.engines.add(other.engine or "")
 
     # use https, ftps, .. if possible
-    if origin.parsed_url and not origin.parsed_url.scheme.endswith("s"):
-        if other.parsed_url and other.parsed_url.scheme.endswith("s"):
-            origin.parsed_url = origin.parsed_url._replace(scheme=other.parsed_url.scheme)
-            origin.url = origin.parsed_url.geturl()
+    if (
+        origin.parsed_url
+        and not origin.parsed_url.scheme.endswith("s")
+        and other.parsed_url
+        and other.parsed_url.scheme.endswith("s")
+    ):
+        origin.parsed_url = origin.parsed_url._replace(scheme=other.parsed_url.scheme)
+        origin.url = origin.parsed_url.geturl()

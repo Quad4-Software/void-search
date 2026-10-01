@@ -5,11 +5,10 @@ from parameterized.parameterized import parameterized
 
 import searx.plugins
 import searx.preferences
-
 from searx.extended_types import sxng_request
 from searx.result_types import Answer
-
 from tests import SearxTestCase
+
 from .test_plugins import do_post_search
 
 query_res = [
@@ -33,7 +32,6 @@ query_res = [
 
 
 class PluginHashTest(SearxTestCase):
-
     def setUp(self):
         super().setUp()
         engines = {}

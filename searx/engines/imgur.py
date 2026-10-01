@@ -2,7 +2,8 @@
 """Imgur (images)"""
 
 from urllib.parse import urlencode
-from searx.utils import extract_text, eval_xpath, eval_xpath_list
+
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 about = {
     "website": 'https://imgur.com/',

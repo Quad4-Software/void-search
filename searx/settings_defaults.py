@@ -3,26 +3,26 @@
 
 from __future__ import annotations
 
-import typing as t
-import numbers
 import errno
-import os
 import logging
+import numbers
+import os
+import typing as t
 from base64 import b64decode
-from os.path import dirname, abspath
+from pathlib import Path
 
 import msgspec
-
 from typing_extensions import override
+
+from ._settings import SettingsPref
 from .brand import SettingsBrand
 from .sxng_locales import sxng_locales
-from ._settings import SettingsPref
 
-searx_dir = abspath(dirname(__file__))
+searx_dir = str(Path(__file__).resolve().parent)
 
 logger = logging.getLogger('searx')
 OUTPUT_FORMATS = ['html', 'csv', 'json', 'rss']
-SXNG_LOCALE_TAGS = ['all', 'auto'] + list(l[0] for l in sxng_locales)
+SXNG_LOCALE_TAGS = ['all', 'auto', *[loc[0] for loc in sxng_locales]]
 SIMPLE_STYLE = ('auto', 'light', 'dark', 'black')
 CATEGORIES_AS_TABS: dict[str, dict[str, t.Any]] = {
     'general': {},
@@ -87,7 +87,7 @@ class SettingsValue:
             return
         type_list = tuple(t for t in self.type_definition if isinstance(t, type))
         if not isinstance(value, type_list):
-            raise ValueError('The value has to be one of these types/values: {}'.format(self.type_definition_repr))
+            raise ValueError(f'The value has to be one of these types/values: {self.type_definition_repr}')
 
     def __call__(self, value: t.Any) -> t.Any:
         if value == _UNDEFINED:
@@ -110,8 +110,8 @@ class SettingSublistValue(SettingsValue):
         if not isinstance(value, list):
             raise ValueError('The value has to a list')
         for item in value:
-            if not item in self.type_definition[0]:
-                raise ValueError('{} not in {}'.format(item, self.type_definition))
+            if item not in self.type_definition[0]:
+                raise ValueError(f'{item} not in {self.type_definition}')
 
 
 class SettingsDirectoryValue(SettingsValue):
@@ -120,7 +120,7 @@ class SettingsDirectoryValue(SettingsValue):
     @override
     def check_type_definition(self, value: t.Any) -> t.Any:
         super().check_type_definition(value)
-        if not os.path.isdir(value):
+        if not Path(value).is_dir():
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), value)
 
     @override
@@ -196,7 +196,7 @@ SCHEMA: dict[str, t.Any] = {
         'autocomplete': SettingsValue(str, 'duckduckgo'),
         'autocomplete_min': SettingsValue(int, 4),
         'favicon_resolver': SettingsValue(str, ''),
-        'default_lang': SettingsValue(tuple(SXNG_LOCALE_TAGS + ['']), ''),
+        'default_lang': SettingsValue((*SXNG_LOCALE_TAGS, ''), ''),
         'languages': SettingSublistValue(SXNG_LOCALE_TAGS, SXNG_LOCALE_TAGS),  # type: ignore
         'ban_time_on_fail': SettingsValue(numbers.Real, 5),
         'max_ban_time_on_fail': SettingsValue(numbers.Real, 120),
@@ -231,8 +231,8 @@ SCHEMA: dict[str, t.Any] = {
         'url': SettingsValue((None, False, str), False, 'SEARXNG_VALKEY_URL'),
     },
     'ui': {
-        'static_path': SettingsDirectoryValue(str, os.path.join(searx_dir, 'static')),
-        'templates_path': SettingsDirectoryValue(str, os.path.join(searx_dir, 'templates')),
+        'static_path': SettingsDirectoryValue(str, str(Path(searx_dir) / 'static')),
+        'templates_path': SettingsDirectoryValue(str, str(Path(searx_dir) / 'templates')),
         'default_theme': SettingsValue(str, 'simple'),
         'default_locale': SettingsValue(str, ''),
         'theme_args': {

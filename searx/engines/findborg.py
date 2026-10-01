@@ -33,7 +33,7 @@ base_url = "https://www.findborg.com"
 
 def setup(_: dict[str, t.Any]):
     if findborg_categ not in t.get_args(FindborgCategType):
-        raise ValueError("invalid category: %s" % findborg_categ)
+        raise ValueError(f"invalid category: {findborg_categ}")
 
 
 def request(query: str, params: "OnlineParams"):

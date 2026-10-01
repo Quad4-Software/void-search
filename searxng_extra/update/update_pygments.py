@@ -9,6 +9,7 @@ Call this script after each upgrade of pygments
 # pylint: disable=too-few-public-methods
 
 from pathlib import Path
+
 import pygments
 from pygments.formatters.html import HtmlFormatter
 
@@ -48,7 +49,6 @@ END_DARK_THEME = """
 
 
 class Formatter(HtmlFormatter):  # pylint: disable=missing-class-docstring
-
     def get_style_lines(self, arg=None):
         style_lines = []
         style_lines.extend(self.get_linenos_style_defs())
@@ -69,6 +69,6 @@ def generat_css(light_style, dark_style) -> str:
 
 
 if __name__ == '__main__':
-    print("update: %s" % LESS_FILE)
+    print(f"update: {LESS_FILE}")
     with LESS_FILE.open('w', encoding='utf8') as f:
         f.write(generat_css('default', 'monokai'))

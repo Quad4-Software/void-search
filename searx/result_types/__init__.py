@@ -12,35 +12,34 @@
 
 # pylint: disable=too-few-public-methods
 
-
 __all__ = [
-    "Result",
-    "MainResult",
-    "LegacyResult",
-    "KeyValue",
-    "EngineResults",
-    "AnswerSet",
     "Answer",
-    "Translations",
-    "WeatherAnswer",
+    "AnswerSet",
     "Code",
-    "Paper",
+    "EngineResults",
     "File",
     "Image",
     "ImageRef",
+    "KeyValue",
+    "LegacyResult",
+    "MainResult",
+    "Paper",
+    "Result",
+    "Translations",
     "Video",
+    "WeatherAnswer",
 ]
 
-import typing as t
 import abc
+import typing as t
 
-from ._base import Result, MainResult, LegacyResult
-from .answer import AnswerSet, Answer, Translations, WeatherAnswer
-from .keyvalue import KeyValue
+from ._base import LegacyResult, MainResult, Result
+from .answer import Answer, AnswerSet, Translations, WeatherAnswer
 from .code import Code
-from .paper import Paper
 from .file import File
 from .image import Image, ImageRef
+from .keyvalue import KeyValue
+from .paper import Paper
 from .video import Video
 
 

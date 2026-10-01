@@ -3,10 +3,11 @@
 Doku Wiki
 """
 
-from urllib.parse import urlencode
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
+
 from lxml.html import fromstring
-from searx.utils import extract_text, eval_xpath
+
+from searx.utils import eval_xpath, extract_text
 
 # about
 about = {
@@ -27,8 +28,7 @@ paging = False
 base_url = 'http://localhost:8090'
 search_url = (
     # fmt: off
-    '/?do=search'
-    '&{query}'
+    '/?do=search&{query}'
     # fmt: on
 )
 # '&startRecord={offset}'
@@ -54,7 +54,7 @@ def response(resp):
     for r in eval_xpath(doc, '//div[@class="search_quickresult"]/ul/li'):
         try:
             res_url = eval_xpath(r, './/a[@class="wikilink1"]/@href')[-1]
-        except:  # pylint: disable=bare-except
+        except Exception:  # noqa: S112
             continue
 
         if not res_url:
@@ -76,7 +76,7 @@ def response(resp):
 
                 # append result
                 results.append({'title': title, 'content': content, 'url': urljoin(base_url, res_url)})
-        except:  # pylint: disable=bare-except
+        except Exception:  # noqa: S112
             continue
 
         if not res_url:

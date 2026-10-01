@@ -2,8 +2,8 @@
 # pylint: disable=invalid-name
 """9GAG (social media)"""
 
+from datetime import UTC, datetime
 from json import loads
-from datetime import datetime
 from urllib.parse import urlencode
 
 about = {
@@ -51,7 +51,7 @@ def response(resp):
                     'url': result['url'],
                     'title': result['title'],
                     'content': result['description'],
-                    'publishedDate': datetime.fromtimestamp(result['creationTs']),
+                    'publishedDate': datetime.fromtimestamp(result['creationTs'], tz=UTC),
                     'img_src': result['images']['image700']['url'],
                     'thumbnail_src': thumbnail,
                 }
@@ -63,14 +63,13 @@ def response(resp):
                     'url': result['url'],
                     'title': result['title'],
                     'content': result['description'],
-                    'publishedDate': datetime.fromtimestamp(result['creationTs']),
+                    'publishedDate': datetime.fromtimestamp(result['creationTs'], tz=UTC),
                     'thumbnail': thumbnail,
                     'iframe_src': result['images'].get('image460sv', {}).get('url'),
                 }
             )
 
     if 'tags' in json_results:
-        for suggestion in json_results['tags']:
-            results.append({'suggestion': suggestion['key']})
+        results.extend([{'suggestion': suggestion['key']} for suggestion in json_results['tags']])
 
     return results

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Unsplash"""
 
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 from json import loads
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from searx.utils import searxng_useragent
 
@@ -48,8 +48,8 @@ def response(resp):
     json_data = loads(resp.text)
 
     if 'results' in json_data:
-        for result in json_data['results']:
-            results.append(
+        results.extend(
+            [
                 {
                     'template': 'images.html',
                     'url': clean_url(result['links']['html']),
@@ -58,6 +58,8 @@ def response(resp):
                     'title': result.get('alt_description') or 'unknown',
                     'content': result.get('description') or '',
                 }
-            )
+                for result in json_data['results']
+            ]
+        )
 
     return results

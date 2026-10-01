@@ -21,7 +21,6 @@ Implementations
 """
 
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 
@@ -128,7 +127,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
 def _get_authors(item: dict[str, t.Any]) -> list:
     """Extract the list of authors from the item."""
-    if authors := item.get("authorString", None):
+    if authors := item.get("authorString"):
         authors = [author.strip().rstrip(".") for author in authors.split(",") if author.strip()]
     else:
         authors = []

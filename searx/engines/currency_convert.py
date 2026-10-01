@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Currency convert (DuckDuckGo)"""
 
-import typing as t
 import json
+import typing as t
+
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineCurrenciesParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineCurrenciesParams
 
 # about
 about = {
@@ -44,13 +45,13 @@ def response(resp: "SXNG_Response") -> EngineResults:
         return res
 
     params: OnlineCurrenciesParams = resp.search_params  # pyright: ignore[reportAssignmentType]
-    answer = "{0} {1} = {2} {3} (1 {5} : {4} {6})".format(
+    answer = "{} {} = {} {} (1 {} : {} {})".format(
         params["amount"],
         params["from_iso4217"],
         params["amount"] * conversion_rate,
         params["to_iso4217"],
-        conversion_rate,
         params["from_name"],
+        conversion_rate,
         params["to_name"],
     )
     url = ddg_link_url % params

@@ -50,7 +50,6 @@ def response(resp):
     results = []
 
     for entry in suggestions.get('d', []):
-
         # https://developer.imdb.com/documentation/key-concepts#imdb-ids
         entry_id = entry['id']
         categ = search_categories.get(entry_id[:2])
@@ -60,11 +59,11 @@ def response(resp):
 
         title = entry['l']
         if 'q' in entry:
-            title += " (%s)" % entry['q']
+            title += f" ({entry['q']})"
 
         content = ''
         if 'rank' in entry:
-            content += "(%s) " % entry['rank']
+            content += f"({entry['rank']}) "
         if 'y' in entry:
             content += str(entry['y']) + " - "
         if 's' in entry:

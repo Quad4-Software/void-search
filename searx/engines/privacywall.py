@@ -8,17 +8,18 @@ user information with Microsoft and Amazon.
 """
 
 import typing as t
-from urllib.parse import urlencode, unquote_plus
+from urllib.parse import unquote_plus, urlencode
 
 import babel
 
 from searx.enginelib.traits import EngineTraits
-from searx.utils import eval_xpath_list, eval_xpath, extract_text, extr
 from searx.locales import region_tag
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_list, extr, extract_text
 
 if t.TYPE_CHECKING:
     from lxml.etree import ElementBase
+
     from searx.extended_types import SXNG_Response
     from searx.search.processors import OnlineParams
 
@@ -61,7 +62,7 @@ video_page_map = {
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if privacywall_category not in ("general", "images", "videos"):
-        raise ValueError("invalid category: %s" % privacywall_category)
+        raise ValueError(f"invalid category: {privacywall_category}")
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -110,8 +111,7 @@ def _extract_thumbnail_url(url: str) -> str:
     Get the URL from strings like "/videos/video.php?id=<urlencoded-urlhere>".
     """
     url_start = url.find("?id=") + len("?id=")
-    thumbnail = unquote_plus(url[url_start:])
-    return thumbnail
+    return unquote_plus(url[url_start:])
 
 
 def _image_results(doc: "ElementBase") -> EngineResults:
@@ -167,7 +167,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
         case "videos":
             return _video_results(doc)
         case _:
-            raise ValueError("invalid category: %s" % privacywall_category)
+            raise ValueError(f"invalid category: {privacywall_category}")
 
 
 def fetch_traits(engine_traits: EngineTraits) -> None:
@@ -207,7 +207,7 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
             conflict = engine_traits.regions.get(sxng_tag)
             if conflict:
                 if conflict != sxng_tag:
-                    print("CONFLICT: babel %s --> %s" % (sxng_tag, conflict))
+                    print(f"CONFLICT: babel {sxng_tag} --> {conflict}")
                 continue
 
             engine_traits.regions[sxng_tag] = country_tag

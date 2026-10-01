@@ -4,13 +4,14 @@ Ahmia (Onions)
 """
 
 import typing as t
+from urllib.parse import parse_qs, urlencode, urlparse
 
-from urllib.parse import urlencode, urlparse, parse_qs
 from lxml.html import fromstring
-from searx.utils import gen_useragent, ElementType
-from searx.engines.xpath import extract_url, extract_text, eval_xpath_list, eval_xpath
-from searx.network import get
+
 from searx.enginelib import EngineCache
+from searx.engines.xpath import eval_xpath, eval_xpath_list, extract_text, extract_url
+from searx.network import get
+from searx.utils import ElementType, gen_useragent
 
 # about
 about = {
@@ -39,8 +40,8 @@ url_xpath = './h4/a/@href'
 title_xpath = './h4/a[1]'
 content_xpath = './/p[1]'
 correction_xpath = '//*[@id="didYouMean"]//a'
-name_token_xpath = '//form[@id="searchForm"]/input[@type="hidden"]/@name'
-value_token_xpath = '//form[@id="searchForm"]/input[@type="hidden"]/@value'
+name_token_xpath = '//form[@id="searchForm"]/input[@type="hidden"]/@name'  # noqa: S105
+value_token_xpath = '//form[@id="searchForm"]/input[@type="hidden"]/@value'  # noqa: S105
 
 CACHE: EngineCache
 
@@ -103,8 +104,7 @@ def response(resp):
         results.append({'url': cleaned_url, 'title': title, 'content': content, 'is_onion': True})
 
     # get spelling corrections
-    for correction in eval_xpath_list(dom, correction_xpath):
-        results.append({'correction': extract_text(correction)})
+    results.extend([{'correction': extract_text(correction)} for correction in eval_xpath_list(dom, correction_xpath)])
 
     # Update the tokens to the newest ones
     token_str = _get_tokens(dom)

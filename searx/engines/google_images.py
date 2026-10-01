@@ -4,8 +4,10 @@
 import typing as t
 from urllib.parse import parse_qs, unquote, urlparse
 
-from searx.engines.google import fetch_traits  # pylint: disable=unused-import
-from searx.engines.google import google_request, wml_dom
+from searx.engines.google import (
+    google_request,
+    wml_dom,
+)
 from searx.result_types import EngineResults
 from searx.utils import eval_xpath_list
 

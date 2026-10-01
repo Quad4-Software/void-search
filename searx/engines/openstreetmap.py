@@ -3,16 +3,15 @@
 
 import re
 import urllib.parse
-
 from functools import partial
 
 from flask_babel import gettext
 
-from searx.data import OSM_KEYS_TAGS, CURRENCIES
+from searx.data import CURRENCIES, OSM_KEYS_TAGS
+from searx.engines.wikidata import get_thumbnail, sparql_string_escape
 from searx.external_urls import get_external_url
-from searx.wikidata import send_wikidata_query
-from searx.engines.wikidata import sparql_string_escape, get_thumbnail
 from searx.result_types import EngineResults
+from searx.wikidata import send_wikidata_query
 
 # about
 about = {
@@ -42,7 +41,8 @@ select ?item ?itemLabel ?image ?sign ?symbol ?website ?wikipediaName
 where {
   hint:Query hint:optimizer "None".
   values ?item { %WIKIDATA_IDS% }
-  OPTIONAL { ?item wdt:P18|wdt:P8517|wdt:P4291|wdt:P5252|wdt:P3451|wdt:P4640|wdt:P5775|wdt:P2716|wdt:P1801|wdt:P4896 ?image }
+  OPTIONAL { ?item wdt:P18|wdt:P8517|wdt:P4291|wdt:P5252|wdt:P3451
+             |wdt:P4640|wdt:P5775|wdt:P2716|wdt:P1801|wdt:P4896 ?image }
   OPTIONAL { ?item wdt:P1766|wdt:P8505|wdt:P8667 ?sign }
   OPTIONAL { ?item wdt:P41|wdt:P94|wdt:P154|wdt:P158|wdt:P2910|wdt:P4004|wdt:P5962|wdt:P8972 ?symbol }
   OPTIONAL { ?item wdt:P856 ?website }
@@ -79,7 +79,7 @@ def value_to_website_link(value):
 
 def value_wikipedia_link(value):
     value = value.split(':', 1)
-    return ('https://{0}.wikipedia.org/wiki/{1}'.format(*value), '{1} ({0})'.format(*value))
+    return ('https://{}.wikipedia.org/wiki/{}'.format(*value), '{1} ({0})'.format(*value))
 
 
 def value_with_prefix(prefix, value):
@@ -145,11 +145,11 @@ def response(resp) -> EngineResults:
     nominatim_json = resp.json()
     user_language = resp.search_params['language']
 
-    l = re.findall(r"from\s+(.*)\s+to\s+(.+)", resp.search_params["query"])
-    if not l:
-        l = re.findall(r"\s*(.*)\s+to\s+(.+)", resp.search_params["query"])
-    if l:
-        point1, point2 = [urllib.parse.quote_plus(p) for p in l[0]]
+    route = re.findall(r"from\s+(.*)\s+to\s+(.+)", resp.search_params["query"])
+    if not route:
+        route = re.findall(r"\s*(.*)\s+to\s+(.+)", resp.search_params["query"])
+    if route:
+        point1, point2 = [urllib.parse.quote_plus(p) for p in route[0]]
 
         results.add(
             results.types.Answer(
@@ -292,8 +292,8 @@ def get_title_address(result):
                 'road': address_raw.get('road'),
                 'locality': address_raw.get(
                     'city',
-                    address_raw.get('town', address_raw.get('village')),  # noqa
-                ),  # noqa
+                    address_raw.get('town', address_raw.get('village')),
+                ),
                 'postcode': address_raw.get('postcode'),
                 'country': address_raw.get('country'),
                 'country_code': address_raw.get('country_code'),
@@ -453,7 +453,7 @@ def get_key_label(key_name, lang):
             return currency[1]
 
     labels = OSM_KEYS_TAGS['keys']
-    for k in key_name.split(':') + ['*']:
+    for k in [*key_name.split(':'), '*']:
         labels = labels.get(k)
         if labels is None:
             return None

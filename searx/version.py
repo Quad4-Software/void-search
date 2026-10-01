@@ -6,6 +6,7 @@ import logging
 import os
 import shlex
 import subprocess
+from pathlib import Path
 
 # fallback values
 # if there is searx.version_frozen module, and it is not possible to get the git tag
@@ -38,7 +39,7 @@ def subprocess_run(args: str | list[str] | tuple[str], **kwargs) -> str:  # type
     # raise CalledProcessError if returncode is non-zero
     kwargs["check"] = True
     # pylint: disable=subprocess-run-check
-    proc = subprocess.run(args, **kwargs)  # type: ignore
+    proc = subprocess.run(args, **kwargs)  # type: ignore  # noqa: S603
     return proc.stdout.strip()  # type: ignore
 
 
@@ -136,8 +137,8 @@ DOCKER_TAG = "{DOCKER_TAG}"
 GIT_URL = "{GIT_URL}"
 GIT_BRANCH = "{GIT_BRANCH}"
 """
-        path = os.path.join(os.path.dirname(__file__), "version_frozen.py")
-        with open(path, "w", encoding="utf8") as f:
+        path = Path(__file__).parent / "version_frozen.py"
+        with path.open("w", encoding="utf8") as f:
             f.write(python_code)
             print(f"{f.name} created")
 

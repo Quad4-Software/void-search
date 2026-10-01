@@ -14,8 +14,9 @@ billion images `[tineye.com] <https://tineye.com/how>`_.
 
 """
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
+
 from flask_babel import gettext
 
 from searx.result_types import EngineResults
@@ -114,7 +115,6 @@ def parse_tineye_match(match_json):
 
     backlinks = []
     if "backlinks" in match_json:
-
         for backlink_json in match_json["backlinks"]:
             if not isinstance(backlink_json, dict):
                 continue
@@ -122,8 +122,10 @@ def parse_tineye_match(match_json):
             crawl_date = backlink_json.get("crawl_date")
             if crawl_date:
                 crawl_date = datetime.fromisoformat(crawl_date)
+                if crawl_date.tzinfo is None:
+                    crawl_date = crawl_date.replace(tzinfo=UTC)
             else:
-                crawl_date = datetime.min
+                crawl_date = datetime.min.replace(tzinfo=UTC)
 
             backlinks.append(
                 {
@@ -188,7 +190,6 @@ def response(resp) -> EngineResults:
     json_data = resp.json()
 
     for match_json in json_data['matches']:
-
         tineye_match = parse_tineye_match(match_json)
         if not tineye_match['backlinks']:
             continue

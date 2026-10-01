@@ -37,13 +37,12 @@ Implementations
 """
 
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 
-from searx.utils import html_to_text
 from searx.exceptions import SearxEngineAPIException
 from searx.result_types import EngineResults
+from searx.utils import html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -140,7 +139,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
         authors: list[str] = doc["author"]
         if len(authors) > 15:
             # There are articles with hundreds of authors
-            authors = authors[:15] + ["et al."]
+            authors = [*authors[:15], "et al."]
 
         paper = res.types.Paper(
             url=f"https://ui.adsabs.harvard.edu/abs/{doc.get('bibcode')}/",

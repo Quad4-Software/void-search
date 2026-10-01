@@ -2,18 +2,18 @@
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock
-from requests import HTTPError
-from parameterized import parameterized
 
-import searx.search
+from parameterized import parameterized
+from requests import HTTPError
+
 import searx.engines
+import searx.search
 from tests import SearxTestCase
 
 
 class TinEyeTests(SearxTestCase):
-
     TEST_SETTINGS = "test_tineye.yml"
 
     def setUp(self):
@@ -83,7 +83,7 @@ class TinEyeTests(SearxTestCase):
 
     def test_crawl_date_parses(self):
         date_str = '2020-05-25'
-        date = datetime.strptime(date_str, '%Y-%m-%d')
+        date = datetime.strptime(date_str, '%Y-%m-%d').replace(tzinfo=UTC)
         response = Mock()
         response.json.return_value = {
             'matches': [

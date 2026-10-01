@@ -5,17 +5,17 @@ import base64
 import json
 import random
 import typing as t
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
 
 import curl_cffi
 from dateutil.relativedelta import relativedelta
 
-from searx.exceptions import SearxEngineAPIException
 from searx.enginelib import EngineCache
+from searx.enginelib.traits import EngineTraits
+from searx.exceptions import SearxEngineAPIException
 from searx.network import get, post
 from searx.result_types import EngineResults
-from searx.enginelib.traits import EngineTraits
 from searx.utils import eval_xpath, eval_xpath_list, extract_text, solve_altcha
 
 if t.TYPE_CHECKING:
@@ -87,7 +87,7 @@ def _captcha_token() -> str:
 
     solution = {
         "challenge": challenge,
-        "solution": {"counter": counter, "derivedKey": key, "time": random.randint(100, 200)},
+        "solution": {"counter": counter, "derivedKey": key, "time": random.randint(100, 200)},  # noqa: S311
     }
     solution_encoded = base64.b64encode(json.dumps(solution).encode())
     mp = curl_cffi.CurlMime()
@@ -114,7 +114,7 @@ def request(query: str, params: "OnlineParams"):
 
     if params["time_range"] and search_type != "images":
         kwargs = {_delta_kwargs[params["time_range"]]: 1}
-        args["since"] = (datetime.now() - relativedelta(**kwargs)).strftime("%Y%m%d")  # type: ignore
+        args["since"] = (datetime.now(tz=UTC) - relativedelta(**kwargs)).strftime("%Y%m%d")  # type: ignore
         logger.debug(args["since"])
 
     params["url"] = f"{base_url}/search?{urlencode(args)}"

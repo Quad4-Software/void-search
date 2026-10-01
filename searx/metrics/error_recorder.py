@@ -1,20 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring, invalid-name
 
-import typing as t
-
 import inspect
+import typing as t
 from json import JSONDecodeError
 from urllib.parse import urlparse
+
 from curl_cffi.requests.exceptions import HTTPError, RequestException
-from searx.exceptions import (
-    SearxXPathSyntaxException,
-    SearxEngineXPathException,
-    SearxEngineAPIException,
-    SearxEngineAccessDeniedException,
-)
+
 from searx import searx_parent_dir, settings
 from searx.engines import engines
+from searx.exceptions import (
+    SearxEngineAccessDeniedException,
+    SearxEngineAPIException,
+    SearxEngineXPathException,
+    SearxXPathSyntaxException,
+)
 
 errors_per_engines: dict[str, t.Any] = {}
 
@@ -22,7 +23,6 @@ LogParametersType = tuple[str, ...]
 
 
 class ErrorContext:  # pylint: disable=missing-class-docstring
-
     def __init__(  # pylint: disable=too-many-arguments
         self,
         filename: str,
@@ -72,14 +72,9 @@ class ErrorContext:  # pylint: disable=missing-class-docstring
         )
 
     def __repr__(self):
-        return "ErrorContext({!r}, {!r}, {!r}, {!r}, {!r}, {!r}) {!r}".format(
-            self.filename,
-            self.line_no,
-            self.code,
-            self.exception_classname,
-            self.log_message,
-            self.log_parameters,
-            self.secondary,
+        return (
+            f"ErrorContext({self.filename!r}, {self.line_no!r}, {self.code!r}, {self.exception_classname!r},"
+            f" {self.log_message!r}, {self.log_parameters!r}) {self.secondary!r}"
         )
 
 

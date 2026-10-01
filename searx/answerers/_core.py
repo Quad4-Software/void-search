@@ -7,11 +7,10 @@ import importlib
 import logging
 import pathlib
 import warnings
-
 from dataclasses import dataclass
 
-from searx.utils import load_module
 from searx.result_types.answer import BaseAnswer
+from searx.utils import load_module
 
 _default = pathlib.Path(__file__).parent
 log: logging.Logger = logging.getLogger("searx.answerers")
@@ -112,7 +111,9 @@ class AnswerStorage(dict):  # type: ignore
 
             if f.is_dir() and (f / "answerer.py").exists():
                 warnings.warn(
-                    f"answerer module {f} is deprecated / migrate to searx.answerers.Answerer", DeprecationWarning
+                    f"answerer module {f} is deprecated / migrate to searx.answerers.Answerer",
+                    DeprecationWarning,
+                    stacklevel=2,
                 )
                 mod = load_module("answerer.py", str(f))
                 self.register(ModuleAnswerer(mod))

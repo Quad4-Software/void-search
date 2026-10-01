@@ -33,8 +33,8 @@ Implementations
 
 """
 
-from datetime import datetime
-from urllib.parse import urlencode, quote
+from datetime import UTC, datetime
+from urllib.parse import quote, urlencode
 
 from searx.utils import html_to_text
 
@@ -141,7 +141,6 @@ def response(resp):
         return []
 
     for result in search_results['query']['search']:
-
         if result.get('snippet', '').startswith('#REDIRECT'):
             continue
 
@@ -162,7 +161,7 @@ def response(resp):
         item = {'url': url, 'title': title, 'content': content, 'metadata': metadata}
 
         if timestamp:
-            item['publishedDate'] = datetime.strptime(timestamp, timestamp_format)
+            item['publishedDate'] = datetime.strptime(timestamp, timestamp_format).replace(tzinfo=UTC)
 
         results.append(item)
 

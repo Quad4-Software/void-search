@@ -2,32 +2,30 @@
 # pylint: disable=missing-module-docstring, invalid-name
 
 
-import os
-import pathlib
 import csv
 import hashlib
 import hmac
-import re
 import itertools
 import json
-from datetime import datetime, timedelta
-from typing import Iterable, List, Tuple, TYPE_CHECKING
-
-from io import StringIO
+import os
+import pathlib
+import re
 from codecs import getincrementalencoder
+from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
+from io import StringIO
+from typing import TYPE_CHECKING
 
 import msgspec
-from flask_babel import gettext, format_date  # type: ignore
+from flask_babel import format_date, gettext  # type: ignore
 
-from searx import logger, get_setting
-
+from searx import get_setting, logger
 from searx.engines import DEFAULT_CATEGORY
 
 if TYPE_CHECKING:
     from searx.enginelib import Engine
-    from searx.results import ResultContainer
+    from searx.results import ResultContainer, UnresponsiveEngine
     from searx.search import SearchQuery
-    from searx.results import UnresponsiveEngine
 
 VALID_LANGUAGE_CODE = re.compile(r'^[a-z]{2,3}(-[a-zA-Z]{2})?$')
 
@@ -172,13 +170,12 @@ def get_json_response(sq: "SearchQuery", rc: "ResultContainer") -> str:
         'suggestions': list(rc.suggestions),
         'unresponsive_engines': get_translated_errors(rc.unresponsive_engines),
     }
-    response = json.dumps(data, cls=JSONEncoder)
-    return response
+    return json.dumps(data, cls=JSONEncoder)
 
 
 def get_themes(templates_path):
     """Returns available themes list."""
-    return os.listdir(templates_path)
+    return [p.name for p in pathlib.Path(templates_path).iterdir()]
 
 
 def get_static_file_list() -> list[str]:
@@ -205,7 +202,7 @@ def get_result_templates(templates_path):
     for directory, _, files in os.walk(templates_path):
         if directory.endswith('result_templates'):
             for filename in files:
-                f = os.path.join(directory[templates_path_length:], filename)
+                f = str(pathlib.Path(directory[templates_path_length:]) / filename)
                 result_templates.add(f)
     return result_templates
 
@@ -222,7 +219,7 @@ def is_hmac_of(secret_key, value, hmac_to_check):
 def prettify_url(url, max_length=74):
     if len(url) > max_length:
         chunk_len = int(max_length / 2 + 1)
-        return '{0}[...]{1}'.format(url[:chunk_len], url[-chunk_len:])
+        return f'{url[:chunk_len]}[...]{url[-chunk_len:]}'
     return url
 
 
@@ -245,7 +242,7 @@ def contains_cjko(s: str) -> bool:
         '\uac00-\ud7af'  # Korean hangul syllables
         '\u1100-\u11ff'  # Korean hangul jamo
     )
-    return bool(re.search(fr'[{unicode_ranges}]', s))
+    return bool(re.search(rf'[{unicode_ranges}]', s))
 
 
 def regex_highlight_cjk(word: str) -> str:
@@ -264,8 +261,8 @@ def regex_highlight_cjk(word: str) -> str:
     """
     rword = re.escape(word)
     if contains_cjko(rword):
-        return fr'({rword})'
-    return fr'\b({rword})(?!\w)'
+        return rf'({rword})'
+    return rf'\b({rword})(?!\w)'
 
 
 def highlight_content(content, query):
@@ -301,8 +298,11 @@ def searxng_l10n_timespan(dt: datetime) -> str:  # pylint: disable=invalid-name
     t = dt.time()
     if d.month == 1 and d.day == 1 and t.hour == 0 and t.minute == 0 and t.second == 0:
         return str(d.year)
-    if dt.replace(tzinfo=None) >= datetime.now() - timedelta(days=1):
-        timedifference = datetime.now() - dt.replace(tzinfo=None)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    now = datetime.now(tz=UTC)
+    if dt >= now - timedelta(days=1):
+        timedifference = now - dt
         minutes = int((timedifference.seconds / 60) % 60)
         hours = int(timedifference.seconds / 60 / 60)
         if hours == 0:
@@ -314,11 +314,11 @@ def searxng_l10n_timespan(dt: datetime) -> str:  # pylint: disable=invalid-name
 NO_SUBGROUPING = 'without further subgrouping'
 
 
-def group_engines_in_tab(engines: "Iterable[Engine]") -> List[Tuple[str, "Iterable[Engine]"]]:
+def group_engines_in_tab(engines: "Iterable[Engine]") -> list[tuple[str, "Iterable[Engine]"]]:
     """Groups an Iterable of engines by their first non tab category (first subgroup)"""
 
     def get_subgroup(eng):
-        non_tab_categories = [c for c in eng.categories if c not in tabs + [DEFAULT_CATEGORY]]
+        non_tab_categories = [c for c in eng.categories if c not in [*tabs, DEFAULT_CATEGORY]]
         return non_tab_categories[0] if len(non_tab_categories) > 0 else NO_SUBGROUPING
 
     def group_sort_key(group):

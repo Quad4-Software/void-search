@@ -2,9 +2,10 @@
 """1x (Images)"""
 
 from urllib.parse import urlencode, urljoin
-from lxml import html, etree
 
-from searx.utils import extract_text, eval_xpath_list, eval_xpath_getindex
+from lxml import etree, html
+
+from searx.utils import eval_xpath_getindex, eval_xpath_list, extract_text
 
 # about
 about = {

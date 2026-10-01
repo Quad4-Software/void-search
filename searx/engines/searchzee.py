@@ -3,8 +3,8 @@
 independent search infrastructure."""
 
 import typing as t
-from urllib.parse import urlencode
 import uuid
+from urllib.parse import urlencode
 
 from searx.extended_types import SXNG_Response
 from searx.result_types import EngineResults
@@ -40,7 +40,7 @@ time_range_map = {"day": "pd", "week": "pw", "month": "pm", "year": "py"}
 
 def setup(_: dict[str, t.Any]):
     if searchzee_categ not in t.get_args(SearchzeeCategType):
-        raise ValueError("invalid category: %s" % searchzee_categ)
+        raise ValueError(f"invalid category: {searchzee_categ}")
 
 
 def request(query: str, params: "OnlineParams"):

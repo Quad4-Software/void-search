@@ -13,15 +13,14 @@ require an additional parameter `dp` which seems generated at server-side, so we
 can't build it ourselves and must scrape it from the HTML pages.
 """
 
-import typing as t
 import re
-
+import typing as t
 from urllib.parse import quote_plus, urljoin
 
-from searx.utils import html_to_text, extract_text, eval_xpath
-from searx.result_types import EngineResults
 from searx.enginelib import EngineCache
 from searx.network import get
+from searx.result_types import EngineResults
+from searx.utils import eval_xpath, extract_text, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response

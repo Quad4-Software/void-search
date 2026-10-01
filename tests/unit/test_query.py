@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
+from typing import ClassVar
+
 from parameterized.parameterized import parameterized
+
 from searx.query import RawTextQuery
 from tests import SearxTestCase
 
 
 class TestQuery(SearxTestCase):
-
     def test_simple_query(self):
         query_text = 'the query'
         query = RawTextQuery(query_text, [])
@@ -48,7 +50,6 @@ class TestQuery(SearxTestCase):
 
 
 class TestLanguageParser(SearxTestCase):
-
     def test_language_code(self):
         language = 'es-ES'
         query_text = 'the query'
@@ -133,7 +134,6 @@ class TestLanguageParser(SearxTestCase):
 
 
 class TestTimeoutParser(SearxTestCase):
-
     @parameterized.expand(
         [
             ('<3 the query', 3),
@@ -173,7 +173,6 @@ class TestTimeoutParser(SearxTestCase):
 
 
 class TestExternalBangParser(SearxTestCase):
-
     def test_external_bang(self):
         query_text = '!!ddg the query'
         query = RawTextQuery(query_text, [])
@@ -204,8 +203,7 @@ class TestExternalBangParser(SearxTestCase):
 
 
 class TestBang(SearxTestCase):
-
-    SPECIFIC_BANGS = ['!dummy_engine', '!gd', '!general']
+    SPECIFIC_BANGS: ClassVar = ['!dummy_engine', '!gd', '!general']
     THE_QUERY = 'the query'
 
     @parameterized.expand(SPECIFIC_BANGS)

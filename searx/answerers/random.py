@@ -6,6 +6,8 @@ import hashlib
 import random
 import string
 import uuid
+from typing import ClassVar
+
 from flask_babel import gettext
 
 from searx.result_types import Answer
@@ -16,7 +18,7 @@ from . import Answerer, AnswererInfo
 
 def random_characters():
     random_string_letters = string.ascii_lowercase + string.digits + string.ascii_uppercase
-    return random.choices(random_string_letters, k=random.randint(8, 32))
+    return random.choices(random_string_letters, k=random.randint(8, 32))  # noqa: S311
 
 
 def random_string():
@@ -24,12 +26,12 @@ def random_string():
 
 
 def random_float():
-    return str(random.random())
+    return str(random.random())  # noqa: S311
 
 
 def random_int():
     random_int_max = 2**31
-    return str(random.randint(-random_int_max, random_int_max))
+    return str(random.randint(-random_int_max, random_int_max))  # noqa: S311
 
 
 def random_sha256():
@@ -43,16 +45,16 @@ def random_uuid():
 
 
 def random_color():
-    color = "%06x" % random.randint(0, 0xFFFFFF)
+    color = f"{random.randint(0, 16777215):06x}"  # noqa: S311
     return f"#{color.upper()}"
 
 
 class SXNGAnswerer(Answerer):
     """Random value generator"""
 
-    keywords = ["random"]
+    keywords: ClassVar = ["random"]
 
-    random_types = {
+    random_types: ClassVar = {
         "string": random_string,
         "int": random_int,
         "float": random_float,

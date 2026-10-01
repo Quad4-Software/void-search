@@ -2,12 +2,13 @@
 """Google Play Apps & Google Play Movies"""
 
 from urllib.parse import urlencode
+
 from searx.utils import (
     eval_xpath,
-    extract_url,
-    extract_text,
-    eval_xpath_list,
     eval_xpath_getindex,
+    eval_xpath_list,
+    extract_text,
+    extract_url,
 )
 
 about = {
@@ -106,7 +107,11 @@ def response_apps(resp):
 
         results.append({"url": url, "title": title, "content": content, "img_src": img})
 
-    for suggestion in eval_xpath_list(dom, '//c-wiz[@jsrenderer="qyd4Kb"]//div[@class="ULeU3b neq64b"]'):
-        results.append({"suggestion": extract_text(eval_xpath(suggestion, './/div[@class="Epkrse "]'))})
+    results.extend(
+        [
+            {'suggestion': extract_text(eval_xpath(suggestion, './/div[@class="Epkrse "]'))}
+            for suggestion in eval_xpath_list(dom, '//c-wiz[@jsrenderer="qyd4Kb"]//div[@class="ULeU3b neq64b"]')
+        ]
+    )
 
     return results

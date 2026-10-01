@@ -5,9 +5,9 @@ import re
 import typing as t
 from json import dumps
 
-from searx.result_types import EngineResults
-from searx.network import post
 from searx.enginelib import EngineCache
+from searx.network import post
+from searx.result_types import EngineResults
 
 # Engine metadata
 about = {

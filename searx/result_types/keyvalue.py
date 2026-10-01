@@ -14,7 +14,6 @@ template.
 
 # pylint: disable=too-few-public-methods
 
-
 __all__ = ["KeyValue"]
 
 import typing

@@ -20,10 +20,10 @@ __all__ = ["Code"]
 import typing as t
 
 from pygments import highlight  # pyright: ignore[reportUnknownVariableType]
-from pygments.lexers._mapping import LEXERS  # pyright: ignore[reportMissingTypeStubs]
-from pygments.lexers import guess_lexer, get_lexer_by_name, guess_lexer_for_filename
-from pygments.util import ClassNotFound
 from pygments.formatters import HtmlFormatter  # pylint: disable=no-name-in-module
+from pygments.lexers import get_lexer_by_name, guess_lexer, guess_lexer_for_filename
+from pygments.lexers._mapping import LEXERS  # pyright: ignore[reportMissingTypeStubs]
+from pygments.util import ClassNotFound
 
 from ._base import MainResult
 
@@ -33,10 +33,9 @@ _pygments_languages: list[str] = []
 def is_valid_language(code_language: str) -> bool:
     """Checks if the specified ``code_language`` is known in Pygments."""
     if not _pygments_languages:
-        for l in LEXERS.values():
-            # l[2] is the tuple with the alias names
-            for alias_name in l[2]:
-                _pygments_languages.append(alias_name.lower())
+        for lexer in LEXERS.values():
+            # lexer[2] is the tuple with the alias names
+            _pygments_languages.extend([alias_name.lower() for alias_name in lexer[2]])
     return code_language.lower() in _pygments_languages
 
 
@@ -49,11 +48,11 @@ class Code(MainResult, kw_only=True):
     repository: str | None = None
     """A link related to a repository related to the *result*."""
 
-    codelines: list[tuple[int, str]] = []
+    codelines: list[tuple[int, str]] = []  # noqa: RUF012 msgspec field default
     """A list of two digit tuples where the first item is the line number and
     the second item is the code line."""
 
-    hl_lines: set[int] = set()
+    hl_lines: set[int] = set()  # noqa: RUF012 msgspec field default
     """A list of line numbers to highlight."""
 
     code_language: str = "<guess>"
@@ -109,7 +108,7 @@ class Code(MainResult, kw_only=True):
         if self.code_language != "<guess>":
             return get_lexer_by_name(self.code_language)
 
-        src_code = "\n".join([l[1] for l in self.codelines])
+        src_code = "\n".join([line[1] for line in self.codelines])
         if self.filename:
             try:
                 return guess_lexer_for_filename(self.filename, src_code)

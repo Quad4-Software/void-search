@@ -42,10 +42,11 @@ authentication configured to read from ``my-index`` index.
 """
 
 import typing as t
-from json import loads, dumps
+from json import dumps, loads
+
 from searx.exceptions import SearxEngineAPIException
-from searx.result_types import EngineResults
 from searx.extended_types import SXNG_Response
+from searx.result_types import EngineResults
 
 categories = ['general']
 paging = True

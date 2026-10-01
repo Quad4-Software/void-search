@@ -3,7 +3,8 @@
 ScanR Structures (Science)
 """
 
-from json import loads, dumps
+from json import dumps, loads
+
 from searx.utils import html_to_text
 
 # about

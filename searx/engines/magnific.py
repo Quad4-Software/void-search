@@ -5,9 +5,8 @@
 """
 
 import re
-from urllib.parse import urlencode
-
 import typing as t
+from urllib.parse import urlencode
 
 from searx.enginelib import EngineCache
 from searx.exceptions import SearxEngineAPIException

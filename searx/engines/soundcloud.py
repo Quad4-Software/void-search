@@ -1,17 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """SoundCloud is a German audio streaming service."""
 
-import typing as t
-import re
 import datetime
-
+import re
+import typing as t
 from urllib.parse import quote_plus, urlencode
 
 from dateutil import parser
 from lxml import html
 
-from searx.network import get as http_get
 from searx.enginelib import EngineCache
+from searx.network import get as http_get
 
 about = {
     "website": "https://soundcloud.com",
@@ -85,7 +84,6 @@ def response(resp):
     data = resp.json()
 
     for result in data.get("collection", []):
-
         if result["kind"] in ("track", "playlist"):
             url = result.get("permalink_url")
             if not url:
@@ -139,7 +137,6 @@ def get_client_id() -> str | None:
     # extracts valid app_js urls from soundcloud.com content
 
     for url in app_js_urls[::-1]:
-
         # gets app_js and search for the client_id
         resp = http_get(url)
 

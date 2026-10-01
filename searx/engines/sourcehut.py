@@ -23,11 +23,10 @@ Implementations
 """
 
 import typing as t
-
 from urllib.parse import urlencode
 
-from searx.utils import eval_xpath, eval_xpath_list, extract_text, searxng_useragent
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_list, extract_text, searxng_useragent
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response

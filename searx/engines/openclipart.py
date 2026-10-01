@@ -2,7 +2,8 @@
 """OpenClipArt (images)"""
 
 from urllib.parse import urlencode
-from searx.utils import extract_text, eval_xpath, eval_xpath_list
+
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 about = {
     "website": 'https://openclipart.org/',
@@ -33,14 +34,16 @@ def response(resp):
 
     dom = resp.html()
 
-    for result in eval_xpath_list(dom, "//div[contains(@class, 'gallery')]/div[contains(@class, 'artwork')]"):
-        results.append(
+    results.extend(
+        [
             {
                 'template': 'images.html',
-                'url': base_url + extract_text(eval_xpath(result, "./a/@href")),
-                'title': extract_text(eval_xpath(result, "./a/img/@alt")),
-                'img_src': base_url + extract_text(eval_xpath(result, "./a/img/@src")),
+                'url': base_url + extract_text(eval_xpath(result, './a/@href')),
+                'title': extract_text(eval_xpath(result, './a/img/@alt')),
+                'img_src': base_url + extract_text(eval_xpath(result, './a/img/@src')),
             }
-        )
+            for result in eval_xpath_list(dom, "//div[contains(@class, 'gallery')]/div[contains(@class, 'artwork')]")
+        ]
+    )
 
     return results

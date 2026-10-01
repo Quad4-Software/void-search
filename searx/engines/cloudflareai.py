@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Cloudflare AI engine"""
 
-from json import loads, dumps
+from json import dumps, loads
+
 from searx.exceptions import SearxEngineAPIException
 
 about = {

@@ -9,15 +9,15 @@ Some of the engines get their results from Google, others get them from Yahoo.
 """
 
 import typing as t
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse
 
-from searx.result_types import EngineResults
 from searx.enginelib import EngineCache
-from searx.utils import eval_xpath_list, eval_xpath, extract_text
+from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 about = {
     "website": "https://s1search.co",

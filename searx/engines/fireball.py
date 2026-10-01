@@ -8,16 +8,14 @@ from.
 """
 
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 
 from searx.enginelib import EngineCache
 from searx.exceptions import SearxEngineAPIException
 from searx.extended_types import SXNG_Response
-
-from searx.result_types import EngineResults
 from searx.network import post
+from searx.result_types import EngineResults
 from searx.utils import html_to_text
 
 if t.TYPE_CHECKING:

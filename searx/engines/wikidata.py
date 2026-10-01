@@ -7,20 +7,19 @@ Some implementations are shared from :ref:`wikipedia engine`.
 # pylint: disable=missing-class-docstring
 
 import typing as t
-
 from hashlib import md5
-from urllib.parse import urlencode, unquote
 from json import loads
+from urllib.parse import unquote, urlencode
 
-
-from searx.network import post, get
-from searx.utils import get_string_replaces_function
-from searx.external_urls import area_to_osm_zoom
+from searx.enginelib.traits import EngineTraits
 from searx.engines.wikipedia import (
     fetch_wikimedia_traits,
     get_wiki_params,
 )
-from searx.enginelib.traits import EngineTraits
+from searx.external_urls import area_to_osm_zoom
+from searx.network import get, post
+from searx.utils import get_string_replaces_function
+from searx.wikidata import SPARQL_ENDPOINT_URL, SPARQL_EXPLAIN_URL, get_wikidata_headers
 from searx.wikidata_properties import (
     QUERY_TEMPLATE,
     WDArticle,
@@ -30,7 +29,6 @@ from searx.wikidata_properties import (
     WDURLAttribute,
     get_attributes,
 )
-from searx.wikidata import SPARQL_ENDPOINT_URL, SPARQL_EXPLAIN_URL, get_wikidata_headers
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -55,17 +53,15 @@ info box.  Both values can be set, or one of the two can be set."""
 
 # see the property "dummy value" of https://www.wikidata.org/wiki/Q2013 (Wikidata)
 # hard coded here to avoid to an additional SPARQL request when the server starts
-DUMMY_ENTITY_URLS = set(
+DUMMY_ENTITY_URLS = {
     "http://www.wikidata.org/entity/" + wid for wid in ("Q4115189", "Q13406268", "Q15397819", "Q17339402")
-)
+}
 
 
 # https://www.w3.org/TR/sparql11-query/#rSTRING_LITERAL1
 # https://lists.w3.org/Archives/Public/public-rdf-dawg/2011OctDec/0175.html
 sparql_string_escape = get_string_replaces_function(
-    # fmt: off
     {"\t": "\\\t", "\n": "\\\n", "\r": "\\\r", "\b": "\\\b", "\f": "\\\f", "\"": "\\\"", "'": "\\'", "\\": "\\\\"}
-    # fmt: on
 )
 
 replace_http_by_https = get_string_replaces_function({"http:": "https:"})
@@ -127,7 +123,7 @@ def get_thumbnail(img_src: str | None) -> str | None:
 
     """
     logger.debug("get_thumbnail(): %s", img_src)
-    if not img_src is None and _IMG_SRC_DEFAULT_URL_PREFIX in img_src.split()[0]:
+    if img_src is not None and _IMG_SRC_DEFAULT_URL_PREFIX in img_src.split()[0]:
         img_src_name = unquote(img_src.replace(_IMG_SRC_DEFAULT_URL_PREFIX, "").split("?", 1)[0].replace("%20", "_"))
         img_src_name_first = img_src_name
         img_src_name_second = img_src_name
@@ -137,7 +133,7 @@ def get_thumbnail(img_src: str | None) -> str | None:
 
         img_src_size = img_src.replace(_IMG_SRC_DEFAULT_URL_PREFIX, "").split("?", 1)[1]
         img_src_size = img_src_size[img_src_size.index("=") + 1 : img_src_size.index("&")]
-        img_src_name_md5 = md5(img_src_name.encode("utf-8")).hexdigest()
+        img_src_name_md5 = md5(img_src_name.encode("utf-8"), usedforsecurity=False).hexdigest()
         img_src = (
             _IMG_SRC_NEW_URL_PREFIX
             + img_src_name_md5[0]

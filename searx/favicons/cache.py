@@ -17,22 +17,20 @@
 
 """
 
-import typing as t
-
-import os
 import abc
 import dataclasses
 import hashlib
 import logging
+import os
 import sqlite3
 import tempfile
 import time
-import typer
+import typing as t
 
 import msgspec
+import typer
 
-from searx import sqlitedb
-from searx import logger
+from searx import logger, sqlitedb
 from searx.utils import humanize_bytes, humanize_number
 
 CACHE: "FaviconCache"
@@ -172,10 +170,7 @@ class FaviconCacheStats:
         s: list[str] = []
         for field, descr, cast in self.field_descr:
             val: str | None = getattr(self, field)
-            if val is None:
-                val = "--"
-            else:
-                val = cast(val)  # type: ignore
+            val = "--" if val is None else cast(val)  # type: ignore
             s.append(fmt.format(descr=descr, val=val))  # pyright: ignore[reportUnknownArgumentType]
         return "".join(s)
 
@@ -188,7 +183,7 @@ class FaviconCache(abc.ABC):
         """An instance of the favicon cache is build up from the configuration."""
 
     @abc.abstractmethod
-    def __call__(self, resolver: str, authority: str) -> None | tuple[None | bytes, None | str]:
+    def __call__(self, resolver: str, authority: str) -> tuple[bytes | None, str | None] | None:
         """Returns ``None`` or the tuple of ``(data, mime)`` that has been
         registered in the cache.  The ``None`` indicates that there was no entry
         in the cache."""
@@ -219,7 +214,7 @@ class FaviconCacheNull(FaviconCache):
     def __init__(self, cfg: FaviconCacheConfig):
         return None
 
-    def __call__(self, resolver: str, authority: str) -> None | tuple[None | bytes, None | str]:
+    def __call__(self, resolver: str, authority: str) -> tuple[bytes | None, str | None] | None:
         return None
 
     def set(self, resolver: str, authority: str, mime: str | None, data: bytes | None) -> bool:
@@ -276,7 +271,7 @@ CREATE TABLE IF NOT EXISTS blob_map (
 
     """Table to map from (resolver, authority) to sha256 hash values."""
 
-    DDL_CREATE_TABLES = {
+    DDL_CREATE_TABLES: t.ClassVar = {
         "blobs": DDL_BLOBS,
         "blob_map": DDL_BLOB_MAP,
     }
@@ -292,10 +287,7 @@ CREATE TABLE IF NOT EXISTS blob_map (
     """Delete blobs.sha256 (BLOBs) no longer in blob_map.sha256."""
 
     SQL_ITER_BLOBS_SHA256_BYTES_C = (
-        "SELECT b.sha256, b.bytes_c FROM blobs b"
-        "  JOIN blob_map bm "
-        "    ON b.sha256 = bm.sha256"
-        " ORDER BY bm.m_time ASC"
+        "SELECT b.sha256, b.bytes_c FROM blobs b  JOIN blob_map bm     ON b.sha256 = bm.sha256 ORDER BY bm.m_time ASC"
     )
 
     SQL_INSERT_BLOBS = (
@@ -317,7 +309,7 @@ CREATE TABLE IF NOT EXISTS blob_map (
         super().__init__(cfg.db_url)
         self.cfg = cfg
 
-    def __call__(self, resolver: str, authority: str) -> None | tuple[None | bytes, None | str]:
+    def __call__(self, resolver: str, authority: str) -> tuple[bytes | None, str | None] | None:
 
         sql = "SELECT sha256 FROM blob_map WHERE resolver = ? AND authority = ?"
         res = self.DB.execute(sql, (resolver, authority)).fetchone()
@@ -351,15 +343,10 @@ CREATE TABLE IF NOT EXISTS blob_map (
 
         bytes_c = len(data or b"")
         if bytes_c > self.cfg.BLOB_MAX_BYTES:
-            logger.info(
-                "favicon of resolver: %s / authority: %s to big to cache (bytes: %s) " % (resolver, authority, bytes_c)
-            )
+            logger.info(f"favicon of resolver: {resolver} / authority: {authority} to big to cache (bytes: {bytes_c}) ")
             return False
 
-        if data is None:
-            sha256 = FALLBACK_ICON
-        else:
-            sha256 = hashlib.sha256(data).hexdigest()
+        sha256 = FALLBACK_ICON if data is None else hashlib.sha256(data).hexdigest()
 
         with self.connect() as conn:
             if sha256 != FALLBACK_ICON:
@@ -392,10 +379,9 @@ CREATE TABLE IF NOT EXISTS blob_map (
         # DB locks, establish a new DB connection.
 
         with self.connect() as conn:
-
             # drop items not in HOLD time
             res = conn.execute(
-                f"DELETE FROM blob_map"
+                f"DELETE FROM blob_map"  # noqa: S608
                 f" WHERE cast(m_time as integer) < cast(strftime('%s', 'now') as integer) - {self.cfg.HOLD_TIME}"
             )
             logger.debug("dropped %s obsolete blob_map items from db", res.rowcount)
@@ -405,7 +391,6 @@ CREATE TABLE IF NOT EXISTS blob_map (
             # drop old items to be in LIMIT_TOTAL_BYTES
             total_bytes = conn.execute("SELECT SUM(bytes_c) FROM blobs").fetchone()[0] or 0
             if total_bytes > self.cfg.LIMIT_TOTAL_BYTES:
-
                 x = total_bytes - self.cfg.LIMIT_TOTAL_BYTES
                 c = 0
                 sha_list: list[str] = []
@@ -416,8 +401,9 @@ CREATE TABLE IF NOT EXISTS blob_map (
                     if c > x:
                         break
                 if sha_list:
-                    conn.execute("DELETE FROM blobs WHERE sha256 IN ('%s')" % "','".join(sha_list))
-                    conn.execute("DELETE FROM blob_map WHERE sha256 IN ('%s')" % "','".join(sha_list))
+                    sha_list_str = "','".join(sha_list)
+                    conn.execute(f"DELETE FROM blobs WHERE sha256 IN ('{sha_list_str}')")  # noqa: S608
+                    conn.execute(f"DELETE FROM blob_map WHERE sha256 IN ('{sha_list_str}')")  # noqa: S608
                     logger.debug("dropped %s blobs with total size of %s bytes", len(sha_list), c)
 
         # Vacuuming the WALs
@@ -460,7 +446,7 @@ class FaviconCacheMEM(FaviconCache):
         self._data: dict[str, t.Any] = {}
         self._sha_mime: dict[str, tuple[str, str | None]] = {}
 
-    def __call__(self, resolver: str, authority: str) -> None | tuple[bytes | None, str | None]:
+    def __call__(self, resolver: str, authority: str) -> tuple[bytes | None, str | None] | None:
 
         sha, mime = self._sha_mime.get(f"{resolver}:{authority}", (None, None))
         if sha is None:

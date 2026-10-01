@@ -29,13 +29,13 @@ template.
 
 # pylint: disable=too-few-public-methods
 
+__all__ = ["Answer", "AnswerSet", "Translations", "WeatherAnswer"]
 
-__all__ = ["AnswerSet", "Answer", "Translations", "WeatherAnswer"]
-
-from flask_babel import gettext
 import msgspec
+from flask_babel import gettext
 
 from searx import weather
+
 from ._base import Result
 
 
@@ -70,10 +70,7 @@ class AnswerSet:
 
     def __contains__(self, answer: BaseAnswer) -> bool:
         a_hash = hash(answer)
-        for i in self._answerlist:
-            if hash(i) == a_hash:
-                return True
-        return False
+        return any(hash(i) == a_hash for i in self._answerlist)
 
 
 class Answer(BaseAnswer, kw_only=True):
@@ -161,7 +158,7 @@ class WeatherAnswer(BaseAnswer, kw_only=True):
     current: "WeatherAnswer.Item"
     """Current weather at ``location``."""
 
-    forecasts: "list[WeatherAnswer.Item]" = []
+    forecasts: "list[WeatherAnswer.Item]" = []  # noqa: RUF012 msgspec field default
     """Weather forecasts for ``location``."""
 
     service: str = ""

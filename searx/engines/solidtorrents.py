@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """SolidTorrents"""
 
-from datetime import datetime
-from urllib.parse import urlencode
+import contextlib
 import random
+from datetime import UTC, datetime
+from urllib.parse import urlencode
 
 from searx.utils import (
-    extract_text,
     eval_xpath,
     eval_xpath_getindex,
     eval_xpath_list,
+    extract_text,
 )
 
 about = {
@@ -30,7 +31,7 @@ base_url = 'https://solidtorrents.to'
 
 def request(query, params):
     if isinstance(base_url, list):
-        params['base_url'] = random.choice(base_url)
+        params['base_url'] = random.choice(base_url)  # noqa: S311
     else:
         params['base_url'] = base_url
     search_url = params['base_url'] + '/search?{query}'
@@ -65,10 +66,8 @@ def response(resp):
             'template': "torrent.html",
         }
 
-        try:
-            params['publishedDate'] = datetime.strptime(extract_text(stats[4]), '%b %d, %Y')
-        except ValueError:
-            pass
+        with contextlib.suppress(ValueError):
+            params['publishedDate'] = datetime.strptime(extract_text(stats[4]), '%b %d, %Y').replace(tzinfo=UTC)
 
         results.append(params)
 

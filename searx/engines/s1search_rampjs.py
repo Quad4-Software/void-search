@@ -12,8 +12,8 @@ from searx.result_types import EngineResults
 from searx.utils import extr, html_to_text
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 about = {
     "website": "https://s1search.co",
@@ -46,7 +46,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
     data_raw = extr(resp.text, "response: ", " };")
     data = json.loads(data_raw)
 
-    mainline = [s for s in data["search"]["regions"] if s["name"] == "mainline"][0]
+    mainline = next(s for s in data["search"]["regions"] if s["name"] == "mainline")
     for group in mainline["groups"]:
         for result in group["results"]:
             if not ("url" in result or "clickUrl" in result):

@@ -2,10 +2,9 @@
 """Giphy (images)"""
 
 import random
-from urllib.parse import urlencode
 import re
-
 import typing as t
+from urllib.parse import urlencode
 
 from searx.enginelib import EngineCache
 from searx.exceptions import SearxEngineAPIException
@@ -48,7 +47,7 @@ _GIPHY_API_KEY_RE = re.compile(r"[Aa]piKey\s*:\s*\"(\w+)\"")
 
 def setup(engine_settings: dict[str, str]) -> bool:
     if giphy_categ not in t.get_args(GiphyCategs):
-        raise ValueError("invalid category: %s" % giphy_categ)
+        raise ValueError(f"invalid category: {giphy_categ}")
 
     global CACHE  # pylint: disable=global-statement
     CACHE = EngineCache(engine_settings["name"])
@@ -71,7 +70,7 @@ def _get_api_key() -> str:
         script_resp = get(base_url + script_src)
         api_keys = _GIPHY_API_KEY_RE.findall(script_resp.text)
         if api_keys:
-            api_key = random.choice(api_keys)
+            api_key = random.choice(api_keys)  # noqa: S311
             CACHE.set("api_key", api_key, expire=60 * 60 * 6)  # 6 hours
             return api_key
 

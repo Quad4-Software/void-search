@@ -35,7 +35,7 @@ def blocked_hosts() -> frozenset[str]:
             extra = [extra]
         for item in extra:
             hosts.add(_norm_host(str(item)))
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     hosts.discard("")
     return frozenset(hosts)
@@ -57,10 +57,7 @@ def is_blocked_host(host: str) -> bool:
     blocked = blocked_hosts()
     if host in blocked:
         return True
-    for listed in blocked:
-        if host.endswith("." + listed):
-            return True
-    return False
+    return any(host.endswith("." + listed) for listed in blocked)
 
 
 def is_blocked_url(url: str, parsed=None) -> bool:

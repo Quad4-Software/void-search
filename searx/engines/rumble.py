@@ -2,7 +2,6 @@
 """Rumble (Videos)"""
 
 from datetime import datetime
-
 from urllib.parse import urlencode
 
 # about
@@ -63,10 +62,7 @@ def response(resp):
         rumbles = extract_text(result_dom.xpath(rumbles_xpath))
         author = extract_text(result_dom.xpath(author_xpath))
         length = extract_text(result_dom.xpath(length_xpath))
-        if earned:
-            content = f"{views} views - {rumbles} rumbles - ${earned}"
-        else:
-            content = f"{views} views - {rumbles} rumbles"
+        content = f'{views} views - {rumbles} rumbles - ${earned}' if earned else f'{views} views - {rumbles} rumbles'
 
         results.append(
             {

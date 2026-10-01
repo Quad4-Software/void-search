@@ -152,8 +152,7 @@ def incr_counter(client, name: str, limit: int = 0, expire: int = 0):
     """
     script = lua_script_storage(client, INCR_COUNTER)
     name = "SearXNG_counter_" + secret_hash(name)
-    c = script(args=[limit, expire], keys=[name])
-    return c
+    return script(args=[limit, expire], keys=[name])
 
 
 def drop_counter(client, name):
@@ -236,5 +235,4 @@ def incr_sliding_window(client, name: str, duration: int):
     """
     script = lua_script_storage(client, INCR_SLIDING_WINDOW)
     name = "SearXNG_counter_" + secret_hash(name)
-    c = script(args=[duration], keys=[name])
-    return c
+    return script(args=[duration], keys=[name])

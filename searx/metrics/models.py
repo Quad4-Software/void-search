@@ -1,20 +1,18 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring
 
-import typing as t
-
 import decimal
 import threading
+import typing as t
 
 from searx import logger
 
-__all__ = ["Histogram", "HistogramStorage", "CounterStorage"]
+__all__ = ["CounterStorage", "Histogram", "HistogramStorage"]
 
 logger = logger.getChild('searx.metrics')
 
 
 class Histogram:  # pylint: disable=missing-class-docstring
-
     _slots__ = '_lock', '_size', '_sum', '_quartiles', '_count', '_width'
 
     def __init__(self, width=10, size=200):
@@ -101,8 +99,7 @@ class Histogram:  # pylint: disable=missing-class-docstring
 
 
 class HistogramStorage:  # pylint: disable=missing-class-docstring
-
-    __slots__ = 'measures', 'histogram_class'
+    __slots__ = 'histogram_class', 'measures'
 
     def __init__(self, histogram_class=Histogram):
         self.clear()
@@ -127,7 +124,6 @@ class HistogramStorage:  # pylint: disable=missing-class-docstring
 
 
 class CounterStorage:  # pylint: disable=missing-class-docstring
-
     __slots__ = 'counters', 'lock'
 
     def __init__(self):

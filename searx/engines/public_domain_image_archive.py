@@ -2,13 +2,12 @@
 """Public domain image archive"""
 
 import re
-
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qsl
 from json import dumps
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from searx.exceptions import SearxEngineAccessDeniedException, SearxEngineException
 from searx.network import get
 from searx.utils import extr
-from searx.exceptions import SearxEngineAccessDeniedException, SearxEngineException
 
 THUMBNAIL_SUFFIX = "?fit=max&h=360&w=360"
 """

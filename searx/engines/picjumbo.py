@@ -4,8 +4,8 @@
 .. _Picjumbo: https://picjumbo.com
 """
 
-from urllib.parse import urlparse, urlunparse
 import typing as t
+from urllib.parse import urlparse, urlunparse
 
 from searx.result_types import EngineResults
 from searx.utils import eval_xpath, eval_xpath_list, extract_text

@@ -5,9 +5,9 @@ Dictzone
 
 import urllib.parse
 
-from searx.utils import eval_xpath, extract_text
-from searx.result_types import EngineResults
 from searx.network import get as http_get  # https://github.com/searxng/searxng/issues/762
+from searx.result_types import EngineResults
+from searx.utils import eval_xpath, extract_text
 
 # about
 about = {
@@ -52,7 +52,6 @@ def response(resp) -> EngineResults:
     dom = resp.html()
 
     for result in eval_xpath(dom, ".//table[@id='r']//tr"):
-
         # each row is an Translations.Item
 
         td_list = result.xpath("./td")
@@ -69,7 +68,6 @@ def response(resp) -> EngineResults:
         p_list = col_to.xpath(".//p")
 
         for i, p_item in enumerate(p_list):
-
             smpl: str = extract_text(p_list[i].xpath("./i[@class='smpl']"))  # type: ignore
             _clean_up_node(p_item)
             p_text: str = extract_text(p_item)  # type: ignore

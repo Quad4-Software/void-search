@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring, global-statement
 
-import typing as t
-
 import asyncio
+import contextlib
 import logging
 import os
 import threading
+import typing as t
 
 from curl_cffi import AsyncSession, CurlHttpVersion, CurlOpt
 from curl_cffi.requests.exceptions import RequestException
@@ -35,10 +35,8 @@ class AsyncClient(AsyncSession):
         if self._closed:
             return
         self._closed = True
-        try:
+        with contextlib.suppress(RequestException):
             await self.close()
-        except RequestException:
-            pass
 
 
 def _proxy_kwargs(proxies: dict[str, str], enable_http: bool) -> dict[str, t.Any]:

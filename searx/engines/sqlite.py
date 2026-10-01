@@ -45,12 +45,11 @@ Implementations
 
 """
 
-import typing as t
-import sqlite3
 import contextlib
+import sqlite3
+import typing as t
 
-from searx.result_types import EngineResults
-from searx.result_types import MainResult, KeyValue
+from searx.result_types import EngineResults, KeyValue, MainResult
 
 engine_type = "offline"
 
@@ -105,16 +104,12 @@ def search(query, params) -> EngineResults:
     query_to_run = query_str + ' LIMIT :limit OFFSET :offset'
 
     with sqlite_cursor() as cur:
-
         cur.execute(query_to_run, query_params)
         col_names = [cn[0] for cn in cur.description]
 
         for row in cur.fetchall():
-            kvmap = dict(zip(col_names, map(str, row)))
-            if result_type == "MainResult":
-                item = MainResult(**kvmap)  # type: ignore
-            else:
-                item = KeyValue(kvmap=kvmap)
+            kvmap = dict(zip(col_names, map(str, row), strict=True))
+            item = MainResult(**kvmap) if result_type == "MainResult" else KeyValue(kvmap=kvmap)  # type: ignore
             res.add(item)
 
     return res

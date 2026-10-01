@@ -42,14 +42,12 @@ To enable Kagi, add the following to the ``engines`` seciton of
 .. _Api Portal: https://help.kagi.com/kagi/api/overview.html
 """
 
-from datetime import datetime, timedelta
-
 import typing as t
+from datetime import UTC, datetime, timedelta
 
-
-from searx.search.processors.abstract import TimeRangeType
 from searx.extended_types import SXNG_Response
 from searx.result_types import EngineResults
+from searx.search.processors.abstract import TimeRangeType
 from searx.utils import html_to_text, parse_duration_string
 
 if t.TYPE_CHECKING:
@@ -108,7 +106,7 @@ def request(query: str, params: "OnlineParams"):
     if time_range:
         # Kagi expects the minimum date to return results from as argument to `after`
         time_period = timedelta(days=time_range_to_days_map[time_range])
-        oldest_result_date = datetime.now() - time_period
+        oldest_result_date = datetime.now(tz=UTC) - time_period
         filters["after"] = oldest_result_date.strftime("%Y-%m-%d")
 
     # there doesn't seem to be a list of languages anywhere,

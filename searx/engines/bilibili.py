@@ -6,8 +6,8 @@
 
 import random
 import string
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
-from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from searx import utils
@@ -32,7 +32,7 @@ base_url = "https://api.bilibili.com/x/web-interface/search/type"
 
 cookie = {
     "innersign": "0",
-    "buvid3": "".join(random.choices(string.hexdigits, k=16)) + "infoc",
+    "buvid3": "".join(random.choices(string.hexdigits, k=16)) + "infoc",  # noqa: S311
     "i-wanna-go-back": "-1",
     "b_ut": "7",
     "FEED_LIVE_VERSION": "V8",
@@ -102,7 +102,7 @@ def response(resp):
         video_id = item["aid"]
         unix_date = item["pubdate"]
 
-        formatted_date = datetime.fromtimestamp(unix_date)
+        formatted_date = datetime.fromtimestamp(unix_date, tz=UTC)
 
         # the duration only seems to be valid if the video is less than 60 mins
         duration = utils.parse_duration_string(item["duration"])

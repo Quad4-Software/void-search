@@ -1,16 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Yandex (Web, images)"""
 
-from datetime import datetime, timedelta
 import typing as t
+from datetime import UTC, datetime, timedelta
 from json import JSONDecodeError, loads
 from urllib.parse import urlencode
+
 from lxml import html
 
-from searx.search.processors.abstract import TimeRangeType
 from searx.exceptions import SearxEngineCaptchaException, SearxEngineResponseException
 from searx.result_types import EngineResults
-from searx.utils import humanize_bytes, eval_xpath, eval_xpath_list, extract_text, html_to_text
+from searx.search.processors.abstract import TimeRangeType
+from searx.utils import eval_xpath, eval_xpath_list, extract_text, html_to_text, humanize_bytes
 
 if t.TYPE_CHECKING:
     from searx import logger  # logger is injected by searx.engines.set_loggers()
@@ -75,7 +76,7 @@ time_range_to_days_map: dict[TimeRangeType, int] = {
 
 def _time_range_to_start_date(time_range: TimeRangeType) -> datetime:
     diff = timedelta(days=time_range_to_days_map[time_range])
-    return datetime.now() - diff
+    return datetime.now(tz=UTC) - diff
 
 
 def request(query: str, params: "OnlineParams") -> None:
@@ -92,7 +93,7 @@ def request(query: str, params: "OnlineParams") -> None:
 
         if time_range := params["time_range"]:
             start_date = _time_range_to_start_date(time_range)
-            end_date = datetime.now()
+            end_date = datetime.now(tz=UTC)
             args.update(
                 {
                     "within": 777,  # must be set for time range search, meaning unclear
@@ -147,7 +148,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
                 # published date is only shown if time range search is used
                 publishedDate = None
                 if publishedDateMillis := extract_text(eval_xpath(result, date_xpath)):
-                    publishedDate = datetime.utcfromtimestamp(int(publishedDateMillis))
+                    publishedDate = datetime.fromtimestamp(int(publishedDateMillis), tz=UTC)
                 results.add(
                     results.types.MainResult(
                         url=url, title=str(title), content=str(content), publishedDate=publishedDate

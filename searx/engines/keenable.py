@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Keenable is a fast web search with keyless mode support"""
 
+import contextlib
 import typing as t
-
 from datetime import datetime
+
 from searx.extended_types import SXNG_Response
 from searx.result_types import EngineResults
 from searx.utils import searxng_useragent
@@ -49,10 +50,8 @@ def response(resp: "SXNG_Response") -> EngineResults:
         published = None
         pub = result.get("published_at")
         if pub:
-            try:
+            with contextlib.suppress(ValueError):
                 published = datetime.fromisoformat(pub.rstrip("Z"))
-            except ValueError:
-                pass
 
         res.add(
             res.types.MainResult(

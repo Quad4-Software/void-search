@@ -56,10 +56,10 @@ Implementations
 import typing as t
 from urllib.parse import urlencode
 
-from searx.network import get
-from searx.utils import searxng_useragent
-from searx.result_types import EngineResults
 from searx.extended_types import SXNG_Response
+from searx.network import get
+from searx.result_types import EngineResults
+from searx.utils import searxng_useragent
 
 about = {
     "website": "https://marginalia.nu",
@@ -123,10 +123,7 @@ def _marginalia_headers() -> dict[str, t.Any]:
 def _get_filter_names() -> list[str]:
 
     resp = get(f"{base_url}/filter", headers=_marginalia_headers())
-    if resp.ok:
-        filter_names = resp.json()
-    else:
-        filter_names = []
+    filter_names = resp.json() if resp.ok else []
     if not isinstance(filter_names, list):
         raise TypeError("marginalia api returned invalid filter list format")
     return filter_names

@@ -22,10 +22,10 @@ Implementations
 """
 
 import typing as t
-
 from urllib.parse import urlencode
-from searx.result_types import EngineResults
+
 from searx.enginelib import EngineAbout
+from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -105,16 +105,15 @@ def response(resp: "SXNG_Response") -> EngineResults:
     )
 
     for result in json_data["data"]:
-
         if not result["image_id"]:
             continue
 
         kwargs: dict[str, t.Any] = {
-            "url": "https://artic.edu/artworks/%(id)s" % result,
-            "title": result["title"] + " (%(date_display)s) // %(artist_display)s" % result,
-            "content": "%(medium_display)s // %(dimensions)s" % result,
+            "url": f"https://artic.edu/artworks/{result['id']}",
+            "title": result["title"] + f" ({result['date_display']}) // {result['artist_display']}",
+            "content": f"{result['medium_display']} // {result['dimensions']}",
             "author": ", ".join(result["artist_titles"]),
-            "img_src": image_api + "/%(image_id)s/full/843,/0/default.jpg" % result,
+            "img_src": image_api + f"/{result['image_id']}/full/843,/0/default.jpg",
             "template": "images.html",
         }
 

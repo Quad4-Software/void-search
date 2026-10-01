@@ -38,10 +38,10 @@ area:
 
 """
 
-__all__ = ["AnswererInfo", "Answerer", "AnswerStorage"]
+__all__ = ["AnswerStorage", "Answerer", "AnswererInfo"]
 
 
-from ._core import AnswererInfo, Answerer, AnswerStorage
+from ._core import Answerer, AnswererInfo, AnswerStorage
 
 STORAGE: AnswerStorage = AnswerStorage()
 STORAGE.load_builtins()

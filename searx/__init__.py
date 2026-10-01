@@ -2,14 +2,14 @@
 # pylint: disable=missing-module-docstring, cyclic-import
 from __future__ import annotations
 
-import typing as t
-import sys
-import os
-from os.path import dirname, abspath
-
 import logging
+import os
+import sys
+import typing as t
+from pathlib import Path
 
 import msgspec
+
 from ._settings import SettingsPref
 
 # Debug
@@ -19,8 +19,8 @@ LOG_FORMAT_DEBUG: str = '%(levelname)-7s %(name)-30.30s: %(message)s'
 LOG_FORMAT_PROD: str = '%(asctime)-15s %(levelname)s:%(name)s: %(message)s'
 LOG_LEVEL_PROD = logging.WARNING
 
-searx_dir: str = abspath(dirname(__file__))
-searx_parent_dir: str = abspath(dirname(dirname(__file__)))
+searx_dir: str = str(Path(__file__).resolve().parent)
+searx_parent_dir: str = str(Path(__file__).resolve().parent.parent)
 
 settings: dict[str, t.Any] = {}
 
@@ -41,7 +41,7 @@ def init_settings():
 
     global settings, sxng_debug  # pylint: disable=global-variable-not-assigned
 
-    cfg, msg = settings_loader.load_settings(load_user_settings=True)
+    cfg, _msg = settings_loader.load_settings(load_user_settings=True)
     cfg = cfg or {}
     apply_schema(cfg, SCHEMA, [])
 

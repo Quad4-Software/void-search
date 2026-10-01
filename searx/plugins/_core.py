@@ -1,25 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=too-few-public-methods,missing-module-docstring
 
-__all__ = ["PluginInfo", "Plugin", "PluginCfg", "PluginStorage"]
+__all__ = ["Plugin", "PluginCfg", "PluginInfo", "PluginStorage"]
 
 import abc
 import importlib
 import inspect
 import logging
 import re
-
 import typing as t
 from collections.abc import Generator
-
 from dataclasses import dataclass, field
 
 from searx.extended_types import SXNG_Request
 
 if t.TYPE_CHECKING:
-    from searx.search import SearchWithPlugins
-    from searx.result_types import Result, EngineResults, LegacyResult  # pyright: ignore[reportPrivateLocalImportUsage]
     import flask
+
+    from searx.result_types import EngineResults, LegacyResult, Result  # pyright: ignore[reportPrivateLocalImportUsage]
+    from searx.search import SearchWithPlugins
 
 log: logging.Logger = logging.getLogger("searx.plugins")
 
@@ -74,7 +73,7 @@ class Plugin(abc.ABC):
     active: t.ClassVar[bool]
     """Plugin is enabled/disabled by default (:py:obj:`PluginCfg.active`)."""
 
-    keywords: list[str] = []
+    keywords: t.ClassVar[list[str]] = []
     """Keywords in the search query that activate the plugin.  The *keyword* is
     the first word in a search query.  If a plugin should be executed regardless
     of the search query, the list of keywords should be empty (which is also the
@@ -168,7 +167,7 @@ class Plugin(abc.ABC):
 
     def post_search(
         self, request: SXNG_Request, search: "SearchWithPlugins"
-    ) -> "None | list[Result | LegacyResult] | EngineResults":
+    ) -> "list[Result | LegacyResult] | EngineResults | None":
         """Runs AFTER the search request.  Can return a list of
         :py:obj:`Result <searx.result_types._base.Result>` objects to be added to the
         final result list."""
@@ -291,11 +290,9 @@ class PluginStorage:
                 break
 
         for plugin in [p for p in self.plugin_list if p.id in search.user_plugins]:
-
-            if plugin.keywords:
-                # plugin with keywords: skip plugin if no keyword match
-                if keyword and keyword not in plugin.keywords:
-                    continue
+            # plugin with keywords: skip plugin if no keyword match
+            if plugin.keywords and keyword and keyword not in plugin.keywords:
+                continue
             try:
                 results = plugin.post_search(request=request, search=search) or []
             except Exception:  # pylint: disable=broad-except

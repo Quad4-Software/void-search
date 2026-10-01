@@ -345,7 +345,7 @@ def parse_video_result(result: dict[str, t.Any]) -> Video:
 
 def _get_response_data(json_data: dict[str, t.Any], category: str | None = None) -> dict[str, t.Any]:
     """Navigate the Brave embedded JSON to the category-specific response object."""
-    # Brave’s structure is mostly consistent but has a couple of quirks:
+    # Brave's structure is mostly consistent but has a couple of quirks:
     # - most categories live under data[1].data.body.response.<category>
     # - news omits the intermediate "body" key
     try:
@@ -420,11 +420,8 @@ def fetch_traits(engine_traits: EngineTraits):
     for option in dom.xpath("//section//option[@value='en-us']/../option"):
         ui_lang = option.get("value")
         try:
-            l = babel.Locale.parse(ui_lang, sep="-")
-            if l.territory:
-                sxng_tag = region_tag(babel.Locale.parse(ui_lang, sep="-"))
-            else:
-                sxng_tag = language_tag(babel.Locale.parse(ui_lang, sep="-"))
+            locale = babel.Locale.parse(ui_lang, sep="-")
+            sxng_tag = region_tag(locale) if locale.territory else language_tag(locale)
         except babel.UnknownLocaleError:
             # silently ignore unknown languages
             continue

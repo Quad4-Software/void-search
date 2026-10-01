@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Pinterest (images)"""
 
-from json import dumps
 import typing as t
+from json import dumps
+
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
@@ -56,7 +57,6 @@ def response(resp: "SXNG_Response") -> EngineResults:
     )
 
     for result in json_resp["resource_response"]["data"]["results"]:
-
         if result["type"] == "story":
             continue
 

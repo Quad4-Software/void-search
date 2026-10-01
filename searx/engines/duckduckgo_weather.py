@@ -10,12 +10,12 @@ from urllib.parse import quote
 
 from dateutil import parser as date_parser
 
-from searx.engines.duckduckgo import fetch_traits  # pylint: disable=unused-import
-from searx.engines.duckduckgo import get_ddg_lang
-
-from searx.result_types import EngineResults
-from searx.extended_types import SXNG_Response
 from searx import weather
+from searx.engines.duckduckgo import (
+    get_ddg_lang,
+)
+from searx.extended_types import SXNG_Response
+from searx.result_types import EngineResults
 
 about = {
     "website": 'https://duckduckgo.com/',

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """CORE_ (COnnecting REpositories) provides a comprehensive bibliographic
-database of the world’s scholarly literature, collecting and indexing
+database of the world's scholarly literature, collecting and indexing
 research from repositories and journals.
 
 .. _CORE: https://core.ac.uk/about
@@ -29,8 +29,8 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 
@@ -121,10 +121,8 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
         raw_date = result.get("publishedDate") or result.get("depositedDate")
         if raw_date:
-            try:
+            with contextlib.suppress(ValueError, AttributeError):
                 published_date = datetime.fromisoformat(result["publishedDate"].replace("Z", "+00:00"))
-            except (ValueError, AttributeError):
-                pass
 
         # Handle journals
         journals = []

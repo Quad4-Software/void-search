@@ -4,15 +4,15 @@
 .. _System1: https://system1.com/
 """
 
-import typing as t
-from datetime import datetime, timezone, timedelta
 import html
+import typing as t
+from datetime import UTC, datetime, timedelta
 
 from searx.enginelib import EngineCache
 from searx.exceptions import SearxEngineAPIException
 from searx.network import post
-from searx.utils import html_to_text, humanize_number
 from searx.result_types import EngineResults
+from searx.utils import html_to_text, humanize_number
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -44,7 +44,7 @@ CACHE: EngineCache
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if dogpile_categ not in ("search", "images", "videos", "news"):
-        raise ValueError("invalid search type: %s" % dogpile_categ)
+        raise ValueError(f"invalid search type: {dogpile_categ}")
     global CACHE  # pylint: disable=global-statement
     CACHE = EngineCache("dogpile")  # one token for images/videos/news
     return True
@@ -65,7 +65,7 @@ def _obtain_token() -> str:
 def request(query: str, params: "OnlineParams"):
     params["url"] = f"{base_url}/api/{dogpile_categ}"
     params["headers"]["Origin"] = base_url
-    params["cookies"]["dp_api_token"] = "1"
+    params["cookies"]["dp_api_token"] = "1"  # noqa: S105
     params["headers"]["x-dogpile-token"] = _obtain_token()
 
     params["method"] = "POST"
@@ -93,7 +93,7 @@ def response(resp: "SXNG_Response"):
                     title=html_to_text(html.unescape(result["title"])),
                     content=html_to_text(html.unescape(result["description"])),
                     thumbnail=result["thumbnailUrl"],
-                    publishedDate=datetime.fromtimestamp(result["date"], tz=timezone.utc),
+                    publishedDate=datetime.fromtimestamp(result["date"], tz=UTC),
                 )
             )
         elif dogpile_categ == "videos":

@@ -2,12 +2,13 @@
 """Seznam"""
 
 from urllib.parse import urlencode
-from searx.network import get
+
 from searx.exceptions import SearxEngineAccessDeniedException
+from searx.network import get
 from searx.utils import (
-    extract_text,
-    eval_xpath_list,
     eval_xpath_getindex,
+    eval_xpath_list,
+    extract_text,
 )
 
 # about

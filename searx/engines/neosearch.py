@@ -4,8 +4,8 @@
 .. _Neosearch: https://neosearch.org/About
 """
 
-from json import loads
 import typing as t
+from json import loads
 
 from searx.exceptions import SearxEngineAPIException
 from searx.extended_types import SXNG_Response
@@ -84,8 +84,9 @@ def response(resp: "SXNG_Response") -> EngineResults:
 
 def fetch_traits(engine_traits: "EngineTraits") -> None:
     # pylint: disable=import-outside-toplevel
-    from searx.utils import extr, js_obj_str_to_python
     from babel.core import get_global
+
+    from searx.utils import extr, js_obj_str_to_python
 
     resp = get(base_url)
 

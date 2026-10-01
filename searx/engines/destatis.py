@@ -2,6 +2,7 @@
 """DeStatis"""
 
 from urllib.parse import urlencode
+
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 about = {
@@ -20,7 +21,10 @@ base_url = "https://www.destatis.de"
 search_url = f"{base_url}/SiteGlobals/Forms/Suche/Expertensuche_Formular.html"
 
 # pylint: disable-next=line-too-long
-results_xpath = '//div[contains(@class, "l-content-wrapper")]/div[contains(@class, "row")]/div[contains(@class, "column")]/div[contains(@class, "c-result"){extra}]'
+results_xpath = (
+    '//div[contains(@class, "l-content-wrapper")]/div[contains(@class, "row")]'
+    '/div[contains(@class, "column")]/div[contains(@class, "c-result"){extra}]'
+)
 results_xpath_filter_recommended = " and not(contains(@class, 'c-result--recommended'))"
 url_xpath = './/a/@href'
 title_xpath = './/a/text()'

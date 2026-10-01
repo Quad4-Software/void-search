@@ -7,15 +7,13 @@ structured dictionaries.  The configuration schema is defined in a dictionary
 structure and the configuration data is given in a dictionary structure.
 """
 
-import typing
-
 import copy
 import logging
 import pathlib
-
 import tomllib
+import typing
 
-__all__ = ['Config', 'UNSET', 'SchemaIssue', 'set_global_cfg', 'get_global_cfg']
+__all__ = ['UNSET', 'Config', 'SchemaIssue', 'get_global_cfg', 'set_global_cfg']
 
 log = logging.getLogger(__name__)
 
@@ -189,7 +187,7 @@ class Config:
 
 def toml_load(file_name: str | pathlib.Path):
     try:
-        with open(file_name, "rb") as f:
+        with pathlib.Path(file_name).open("rb") as f:
             return tomllib.load(f)
     except tomllib.TOMLDecodeError as exc:
         msg = str(exc).replace('\t', '').replace('\n', ' ')
@@ -281,7 +279,6 @@ def _validate(
 
     data_value: dict[str, typing.Any]
     for key, data_value in data_dict.items():
-
         names.append(key)
         name = '.'.join(names)
 
@@ -297,11 +294,11 @@ def _validate(
                 issue_list.append(SchemaIssue('invalid', f"data_dict '{name}': key unknown in schema_dict"))
                 is_valid = False
 
-        elif type(schema_value) != type(data_value):  # pylint: disable=unidiomatic-typecheck
+        elif type(schema_value) != type(data_value):  # noqa: E721  # pylint: disable=unidiomatic-typecheck
             issue_list.append(
                 SchemaIssue(
                     'invalid',
-                    (f"data_dict: type mismatch '{name}':" f" expected {type(schema_value)}, is: {type(data_value)}"),
+                    (f"data_dict: type mismatch '{name}': expected {type(schema_value)}, is: {type(data_value)}"),
                 )
             )
             is_valid = False
@@ -346,7 +343,6 @@ def dict_deepupdate(base_dict: dict[str, typing.Any], upd_dict: dict[str, typing
         # For each upd_key & upd_val pair in upd_dict:
 
         if isinstance(upd_val, dict):
-
             if upd_key in base_dict:
                 # if base_dict[upd_key] exists, recursively deep-update it
                 if not isinstance(base_dict[upd_key], dict):
@@ -354,10 +350,7 @@ def dict_deepupdate(base_dict: dict[str, typing.Any], upd_dict: dict[str, typing
                 dict_deepupdate(
                     base_dict[upd_key],
                     upd_val,  # pyright: ignore[reportUnknownArgumentType]
-                    names
-                    + [
-                        upd_key,
-                    ],
+                    [*names, upd_key],
                 )
 
             else:
@@ -365,7 +358,6 @@ def dict_deepupdate(base_dict: dict[str, typing.Any], upd_dict: dict[str, typing
                 base_dict[upd_key] = copy.deepcopy(upd_val)  # pyright: ignore[reportUnknownArgumentType]
 
         elif isinstance(upd_val, list):
-
             if upd_key in base_dict:
                 # if base_dict[upd_key] exists, base_dict[up_key] is extended by
                 # the list from upd_val
@@ -379,7 +371,6 @@ def dict_deepupdate(base_dict: dict[str, typing.Any], upd_dict: dict[str, typing
                 base_dict[upd_key] = copy.deepcopy(upd_val)  # pyright: ignore[reportUnknownArgumentType]
 
         elif isinstance(upd_val, set):
-
             if upd_key in base_dict:
                 # if base_dict[upd_key] exists, base_dict[up_key] is updated by the set in upd_val
                 if not isinstance(base_dict[upd_key], set):

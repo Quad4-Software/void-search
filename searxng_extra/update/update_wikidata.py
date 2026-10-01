@@ -9,8 +9,8 @@ Output files: (:origin:`CI Update data <.github/workflows/data-update.yml>`).
 
 import json
 
-from searx.engines import wikidata, set_loggers
 from searx.data import data_dir
+from searx.engines import set_loggers, wikidata
 from searx.wikidata_properties import fetch_properties
 from searx.wikidata_units import fetch_units
 

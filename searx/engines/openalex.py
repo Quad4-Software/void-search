@@ -90,9 +90,9 @@ Implementation
 """
 
 import typing as t
-
-from datetime import datetime
+from datetime import UTC, datetime
 from urllib.parse import urlencode
+
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
@@ -116,7 +116,7 @@ paging = True
 search_url = "https://api.openalex.org/works"
 
 # Optional: include your email for OpenAlex polite pool. Can be set from settings.yml
-# engines: - name: openalex; engine: openalex; mailto: "[email protected]"
+# engines: - name: openalex; engine: openalex; mailto: "[email protected]"
 mailto = ""
 
 
@@ -205,7 +205,7 @@ def _parse_date(value: str | None) -> datetime | None:
     # OpenAlex may return YYYY, YYYY-MM or YYYY-MM-DD
     for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
         try:
-            return datetime.strptime(value, fmt)
+            return datetime.strptime(value, fmt).replace(tzinfo=UTC)
         except ValueError:
             continue
     return None
@@ -233,7 +233,7 @@ def _reconstruct_abstract(
             max_index = max(max_index, pos)
     if max_index < 0:
         return None
-    ordered_tokens = [position_to_token.get(i, "") for i in range(0, max_index + 1)]
+    ordered_tokens = [position_to_token.get(i, "") for i in range(max_index + 1)]
     # collapse multiple empty tokens
     text = " ".join(t for t in ordered_tokens if t != "")
     return text if text != "" else None

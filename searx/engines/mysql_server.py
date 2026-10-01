@@ -25,16 +25,15 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
 
 from searx.result_types import EngineResults
 
-try:
+# import error is ignored because the admin has to install mysql manually to use
+# the engine
+with contextlib.suppress(ImportError):
     import mysql.connector  # type: ignore
-except ImportError:
-    # import error is ignored because the admin has to install mysql manually to use
-    # the engine
-    pass
 
 engine_type = 'offline'
 auth_plugin = 'caching_sha2_password'
@@ -86,12 +85,12 @@ def init(_):
 def search(query, params) -> EngineResults:
     res = EngineResults()
     query_params = {'query': query}
-    query_to_run = query_str + ' LIMIT {0} OFFSET {1}'.format(limit, (params['pageno'] - 1) * limit)
+    query_to_run = query_str + f" LIMIT {limit} OFFSET {(params['pageno'] - 1) * limit}"
 
     with _connection.cursor() as cur:
         cur.execute(query_to_run, query_params)
         for row in cur:
-            kvmap = dict(zip(cur.column_names, map(str, row)))
+            kvmap = dict(zip(cur.column_names, map(str, row), strict=True))
             res.add(res.types.KeyValue(kvmap=kvmap))
 
     return res

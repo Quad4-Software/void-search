@@ -88,11 +88,12 @@ Startpage's category (for Web-search, News, Videos, ..) is set by
 
 # pylint: disable=too-many-statements
 
+import contextlib
 import hashlib
 import re
 import typing as t
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from json import loads
 from unicodedata import combining, normalize
 
@@ -263,7 +264,7 @@ def get_sc_code(params):
     except IndexError as exc:
         logger.debug("suspend startpage API --> https://github.com/searxng/searxng/pull/695")
         raise SearxEngineCaptchaException(
-            message="get_sc_code: [PR-695] querying new sc timestamp failed! (%s)" % resp.url,
+            message=f"get_sc_code: [PR-695] querying new sc timestamp failed! ({resp.url})",
         ) from exc
 
     sc_code = str(sc_code)
@@ -322,7 +323,7 @@ def request(query, params):
     cookie["enable_proxy_safety_suggest"] = "1"
     cookie["enable_stay_control"] = "1"
     cookie["instant_answers"] = "1"
-    cookie["lang_homepage"] = "s/device/%s/" % lang_homepage
+    cookie["lang_homepage"] = f"s/device/{lang_homepage}/"
     cookie["num_of_results"] = "10"
     cookie["suggestions"] = "1"
     cookie["wt_unit"] = "celsius"
@@ -334,7 +335,7 @@ def request(query, params):
     if engine_region:
         cookie["search_results_region"] = engine_region
 
-    params["cookies"]["preferences"] = "N1N".join(["%sEEE%s" % x for x in cookie.items()])
+    params["cookies"]["preferences"] = "N1N".join([f"{k}EEE{v}" for k, v in cookie.items()])
     if auth := CACHE.get("SPCHAL_AUTH"):
         params["cookies"]["spchal-auth"] = auth
     logger.debug("cookie preferences: %s", params["cookies"]["preferences"])
@@ -357,10 +358,8 @@ def _parse_published_date(content: str) -> tuple[str, datetime | None]:
         # fix content string
         content = content[date_pos:]
 
-        try:
+        with contextlib.suppress(ValueError):
             published_date = dateutil.parser.parse(date_string, dayfirst=True)
-        except ValueError:
-            pass
 
     # check if search result starts with something like: "5 days ago ... "
     elif re.match(r"^[0-9]+ days? ago \.\.\. ", content):
@@ -368,7 +367,7 @@ def _parse_published_date(content: str) -> tuple[str, datetime | None]:
         date_string = content[0 : date_pos - 5]
 
         # calculate datetime
-        published_date = datetime.now() - timedelta(days=int(re.match(r"\d+", date_string).group()))  # type: ignore
+        published_date = datetime.now(tz=UTC) - timedelta(days=int(re.match(r"\d+", date_string).group()))  # type: ignore
 
         # fix content string
         content = content[date_pos:]
@@ -395,10 +394,8 @@ def _get_news_result(result):
 
     publishedDate = None
     if result.get("date"):
-        try:
-            publishedDate = datetime.fromtimestamp(int(result["date"]) / 1000)
-        except (TypeError, ValueError):
-            pass
+        with contextlib.suppress(TypeError, ValueError):
+            publishedDate = datetime.fromtimestamp(int(result["date"]) / 1000, tz=UTC)
 
     thumbnailUrl = None
     if result.get("thumbnailUrl"):
@@ -507,8 +504,12 @@ def fetch_traits(engine_traits: EngineTraits):
     # regions
 
     sp_region_names = []
-    for option in dom.xpath('//form[@name="settings"]//select[@name="search_results_region"]/option'):
-        sp_region_names.append(option.get("value"))
+    sp_region_names.extend(
+        [
+            option.get('value')
+            for option in dom.xpath('//form[@name="settings"]//select[@name="search_results_region"]/option')
+        ]
+    )
 
     for eng_tag in sp_region_names:
         if eng_tag == "all":
@@ -516,22 +517,22 @@ def fetch_traits(engine_traits: EngineTraits):
         babel_region_tag = {"no_NO": "nb_NO"}.get(eng_tag, eng_tag)  # norway
 
         if "-" in babel_region_tag:  # pyright: ignore[reportOperatorIssue]
-            l, r = babel_region_tag.split("-")
-            r = r.split("_")[-1]
-            sxng_tag = region_tag(babel.Locale.parse(l + "_" + r, sep="_"))
+            lang, reg = babel_region_tag.split("-")
+            reg = reg.split("_")[-1]
+            sxng_tag = region_tag(babel.Locale.parse(lang + "_" + reg, sep="_"))
 
         else:
             try:
                 sxng_tag = region_tag(babel.Locale.parse(babel_region_tag, sep="_"))
 
             except babel.UnknownLocaleError:
-                print("IGNORE: can't determine babel locale of startpage's locale %s" % eng_tag)
+                print(f"IGNORE: can't determine babel locale of startpage's locale {eng_tag}")
                 continue
 
         conflict = engine_traits.regions.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.regions[sxng_tag] = eng_tag
 
@@ -596,6 +597,6 @@ def fetch_traits(engine_traits: EngineTraits):
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != eng_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, eng_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {eng_tag}")
             continue
         engine_traits.languages[sxng_tag] = eng_tag

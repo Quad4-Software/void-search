@@ -3,7 +3,9 @@
 
 from datetime import timedelta
 from urllib.parse import quote_plus, urlencode
+
 from dateutil import parser
+
 from searx.utils import gen_useragent
 
 # about
@@ -53,7 +55,7 @@ def _image_result(result):
         'template': 'images.html',
         'url': base_url + result["href"],
         # images are sorted in ascending quality
-        'thumbnail_src': list(result['sources'].values())[0],
+        'thumbnail_src': next(iter(result['sources'].values())),
         'img_src': list(result['sources'].values())[-1],
         'title': result.get('name'),
         'content': result.get('description', ''),

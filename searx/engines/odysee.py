@@ -5,7 +5,7 @@
 """
 
 import typing as t
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import babel
@@ -77,7 +77,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
         release_time = item["release_time"]
 
         release_date = datetime.fromisoformat(release_time.split("T")[0])
-        formatted_date = datetime.fromtimestamp(release_date.timestamp())
+        formatted_date = datetime.fromtimestamp(release_date.timestamp(), tz=UTC)
 
         url = f"https://odysee.com/{name}:{claim_id}"
         iframe_url = f"https://odysee.com/$/embed/{name}:{claim_id}"
@@ -120,13 +120,13 @@ def fetch_traits(engine_traits: EngineTraits):
         try:
             sxng_tag = language_tag(babel.Locale.parse(lang_tag, sep="-"))
         except babel.UnknownLocaleError:
-            print("ERROR: %s is unknown by babel" % lang_tag)
+            print(f"ERROR: {lang_tag} is unknown by babel")
             continue
 
         conflict = engine_traits.languages.get(sxng_tag)
         if conflict:
             if conflict != lang_tag:
-                print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, lang_tag))
+                print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {lang_tag}")
             continue
 
         engine_traits.languages[sxng_tag] = lang_tag

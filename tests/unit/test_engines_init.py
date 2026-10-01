@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
-from searx import settings, engines
+from searx import engines, settings
 from tests import SearxTestCase
 
 
 class TestEnginesInit(SearxTestCase):
-
     def test_initialize_engines_default(self):
         engine_list = [
             {'engine': 'dummy', 'name': 'engine1', 'shortcut': 'e1'},

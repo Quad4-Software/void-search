@@ -1,24 +1,25 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
-import flask
-from mock import Mock
+from unittest.mock import Mock
 
+import flask
+
+import searx.plugins
 from searx import favicons
 from searx.locales import locales_initialize
 from searx.preferences import (
-    Setting,
     EnumStringSetting,
     MapSetting,
-    SearchLanguageSetting,
     MultipleChoiceSetting,
     PluginsSetting,
+    Preferences,
+    SearchLanguageSetting,
+    Setting,
     ValidationException,
 )
-import searx.plugins
-from searx.preferences import Preferences
-
 from tests import SearxTestCase
+
 from .test_plugins import PluginMock
 
 locales_initialize()
@@ -26,7 +27,6 @@ favicons.init()
 
 
 class TestSettings(SearxTestCase):
-
     # map settings
 
     def test_map_setting_invalid_default_value(self):
@@ -127,11 +127,10 @@ class TestSettings(SearxTestCase):
         storage.register(PluginMock("plg002", "second plugin", False))
         storage.register(PluginMock("plg003", "third plugin", True))
         plgs_settings = PluginsSetting(False, storage)
-        self.assertEqual(set(plgs_settings.get_enabled()), set(['plg001', 'plg003']))
+        self.assertEqual(set(plgs_settings.get_enabled()), {'plg001', 'plg003'})
 
 
 class TestPreferences(SearxTestCase):
-
     def setUp(self):
         super().setUp()
 

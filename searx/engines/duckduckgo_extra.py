@@ -5,17 +5,17 @@ DuckDuckGo Extra (images, videos, news)
 """
 
 import typing as t
+from datetime import UTC, datetime
+from urllib.parse import quote_plus, urlencode
 
-from datetime import datetime
-from urllib.parse import urlencode
-from urllib.parse import quote_plus
-
-from searx.result_types import EngineResults, MainResult, Image, Video
-from searx.utils import html_to_text, gen_useragent, extr
+from searx.engines.duckduckgo import (
+    get_ddg_lang,
+    get_vqd,
+    set_vqd,
+)
 from searx.network import get  # see https://github.com/searxng/searxng/issues/762
-
-from searx.engines.duckduckgo import fetch_traits  # pylint: disable=unused-import
-from searx.engines.duckduckgo import get_ddg_lang, get_vqd, set_vqd
+from searx.result_types import EngineResults, Image, MainResult, Video
+from searx.utils import extr, gen_useragent, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -156,7 +156,7 @@ def _image_result(result):
         content='',
         thumbnail_src=result['thumbnail'],
         img_src=result['image'],
-        resolution='%s x %s' % (result['width'], result['height']),
+        resolution=f"{result['width']} x {result['height']}",
         source=result['source'],
     )
 
@@ -177,7 +177,7 @@ def _news_result(result):
         url=result['url'],
         title=result['title'],
         content=html_to_text(result['excerpt']),
-        publishedDate=datetime.fromtimestamp(result['date']),
+        publishedDate=datetime.fromtimestamp(result['date'], tz=UTC),
     )
 
 

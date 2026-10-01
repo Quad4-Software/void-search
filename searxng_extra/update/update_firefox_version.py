@@ -11,11 +11,12 @@ Output file: :origin:`searx/data/useragents.json` (:origin:`CI Update data ...
 
 import json
 import re
-from urllib.parse import urlparse, urljoin
-from packaging.version import parse
+from urllib.parse import urljoin, urlparse
 
 import requests
 from lxml import html
+from packaging.version import parse
+
 from searx.data import data_dir
 
 DATA_FILE = data_dir / 'useragents.json'
@@ -29,12 +30,9 @@ NORMAL_REGEX = re.compile(r'^[0-9]+\.[0-9](\.[0-9])?$')
 
 #
 useragents = {
-    # fmt: off
     "versions": (),
-    "os": ('Windows NT 10.0; Win64; x64',
-           'X11; Linux x86_64'),
+    "os": ('Windows NT 10.0; Win64; x64', 'X11; Linux x86_64'),
     "ua": "Mozilla/5.0 ({os}; rv:{version}) Gecko/20100101 Firefox/{version}",
-    # fmt: on
 }
 
 

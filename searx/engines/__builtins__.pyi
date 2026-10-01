@@ -12,6 +12,7 @@ intended monkey patching of the engine modules.
 """
 
 import logging
+
 from searx.enginelib import traits as _traits
 
 logger: logging.Logger
@@ -21,7 +22,7 @@ region: str
 traits: _traits.EngineTraits
 
 # from searx.engines.ENGINE_DEFAULT_ARGS
-about: dict[str, dict[str, str | None | bool]]
+about: dict[str, dict[str, str | bool | None]]
 categories: list[str]
 disabled: bool
 display_error_messages: bool

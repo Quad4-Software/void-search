@@ -2,8 +2,8 @@
 # pylint: disable=invalid-name
 """360Search-Videos: A search engine for retrieving videos from 360Search."""
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
 from searx.exceptions import SearxEngineAPIException
 from searx.result_types import EngineResults
@@ -47,7 +47,7 @@ def response(resp) -> EngineResults:
         published_date = None
         if entry.get("publish_time"):
             try:
-                published_date = datetime.fromtimestamp(int(entry["publish_time"]))
+                published_date = datetime.fromtimestamp(int(entry["publish_time"]), tz=UTC)
             except (ValueError, TypeError):
                 published_date = None
 

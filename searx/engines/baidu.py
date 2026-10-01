@@ -7,16 +7,15 @@
 # There exits a https://github.com/ohblue/baidu-serp-api/
 # but we don't use it here (may we can learn from).
 
-import typing as t
-
-from urllib.parse import urlencode
-from datetime import datetime
-from html import unescape
-import time
 import json
+import time
+import typing as t
+from datetime import UTC, datetime
+from html import unescape
+from urllib.parse import urlencode
 
-from searx.exceptions import SearxEngineAPIException, SearxEngineCaptchaException, SearxEngineAccessDeniedException
 from searx.enginelib import EngineCache
+from searx.exceptions import SearxEngineAccessDeniedException, SearxEngineAPIException, SearxEngineCaptchaException
 from searx.network import get as http_get
 from searx.utils import html_to_text
 
@@ -152,7 +151,7 @@ def parse_general(data):
         published_date = None
         if entry.get("time"):
             try:
-                published_date = datetime.fromtimestamp(entry["time"])
+                published_date = datetime.fromtimestamp(entry["time"], tz=UTC)
             except (ValueError, TypeError):
                 published_date = None
 
@@ -207,12 +206,14 @@ def parse_it(data):
     if not data.get("data", {}).get("documents", {}).get("data"):
         raise SearxEngineAPIException("Invalid response")
 
-    for entry in data["data"]["documents"]["data"]:
-        results.append(
+    results.extend(
+        [
             {
-                'title': entry["techDocDigest"]["title"],
-                'url': entry["techDocDigest"]["url"],
-                'content': entry["techDocDigest"]["summary"],
+                'title': entry['techDocDigest']['title'],
+                'url': entry['techDocDigest']['url'],
+                'content': entry['techDocDigest']['summary'],
             }
-        )
+            for entry in data['data']['documents']['data']
+        ]
+    )
     return results

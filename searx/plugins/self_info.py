@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring, missing-class-docstring
-import typing
-
 import re
+import typing
 from ipaddress import ip_address
 
 from flask_babel import gettext
@@ -12,8 +11,9 @@ from searx.result_types import EngineResults
 from . import Plugin, PluginInfo
 
 if typing.TYPE_CHECKING:
-    from searx.search import SearchWithPlugins
     from searx.extended_types import SXNG_Request
+    from searx.search import SearchWithPlugins
+
     from . import PluginCfg
 
 
@@ -24,7 +24,7 @@ class SXNGPlugin(Plugin):
     """
 
     id = "self_info"
-    keywords = ["ip", "user-agent"]
+    keywords: typing.ClassVar[list[str]] = ["ip", "user-agent"]
 
     def __init__(self, plg_cfg: "PluginCfg"):
         super().__init__(plg_cfg)

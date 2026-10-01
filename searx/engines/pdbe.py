@@ -4,6 +4,7 @@ PDBe (Protein Data Bank in Europe)
 """
 
 from json import loads
+
 from flask_babel import gettext
 
 # about
@@ -96,14 +97,12 @@ def response(resp):
             title = gettext('{title} (OBSOLETE)').format(title=result['title'])
             try:
                 superseded_url = pdbe_entry_url.format(pdb_id=result['superseded_by'])
-            except:  # pylint: disable=bare-except
+            except Exception:  # noqa: S112
                 continue
 
             # since we can't construct a proper body from the response, we'll make up our own
             msg_superseded = gettext("This entry has been superseded by")
-            content = '{msg_superseded}: {url} ({pdb_id})'.format(
-                msg_superseded=msg_superseded, url=superseded_url, pdb_id=result['superseded_by']
-            )
+            content = f"{msg_superseded}: {superseded_url} ({result['superseded_by']})"
 
             # obsoleted entries don't have preview images
             thumbnail = None

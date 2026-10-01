@@ -5,21 +5,21 @@ user searches for ``tor-check``.  It fetches the tor exit node list from
 user's IP address is in it.
 """
 
-from ipaddress import ip_address
-import typing
-
 import re
-from flask_babel import gettext
+import typing
+from ipaddress import ip_address
+
 from curl_cffi.requests.exceptions import RequestException
+from flask_babel import gettext
 
 from searx.network import get
 from searx.plugins import Plugin, PluginInfo
 from searx.result_types import EngineResults
 
 if typing.TYPE_CHECKING:
-    from searx.search import SearchWithPlugins
     from searx.extended_types import SXNG_Request
     from searx.plugins import PluginCfg
+    from searx.search import SearchWithPlugins
 
 
 # Regex for exit node addresses in the list.
@@ -33,7 +33,7 @@ class SXNGPlugin(Plugin):
     """Rewrite hostnames, remove results or prioritize them."""
 
     id = "tor_check"
-    keywords = ["tor-check", "tor_check", "torcheck", "tor", "tor check"]
+    keywords: typing.ClassVar[list[str]] = ["tor-check", "tor_check", "torcheck", "tor", "tor check"]
 
     def __init__(self, plg_cfg: "PluginCfg") -> None:
         super().__init__(plg_cfg)
@@ -54,7 +54,6 @@ class SXNGPlugin(Plugin):
             return results
 
         if search.search_query.query.lower() in self.keywords:
-
             # Request the list of tor exit nodes.
             try:
                 resp = get(url_exit_list)

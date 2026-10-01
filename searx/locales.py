@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-SearXNG’s locale data
+SearXNG's locale data
 =====================
 
 The variables :py:obj:`RTL_LOCALES` and :py:obj:`LOCALE_NAMES` are loaded from
@@ -22,7 +22,7 @@ SearXNG's locale codes
    :members:
 
 
-SearXNG’s locale implementations
+SearXNG's locale implementations
 ================================
 """
 
@@ -30,10 +30,10 @@ import typing as t
 from pathlib import Path
 
 import babel
-from babel.support import Translations
-import babel.languages
 import babel.core
+import babel.languages
 import flask_babel  # pyright: ignore[reportMissingTypeStubs]
+from babel.support import Translations
 from flask.ctx import has_request_context
 
 from searx import (
@@ -102,8 +102,7 @@ def localeselector():
         locale = 'en'
 
     # babel uses underscore instead of hyphen.
-    locale = locale.replace('-', '_')
-    return locale
+    return locale.replace('-', '_')
 
 
 def get_translations():
@@ -152,7 +151,7 @@ def locales_initialize():
 def region_tag(locale: babel.Locale) -> str:
     """Returns SearXNG's region tag from the locale (e.g. zh-TW , en-US)."""
     if not locale.territory:
-        raise ValueError('babel.Locale %s: missed a territory' % locale)
+        raise ValueError(f'babel.Locale {locale}: missed a territory')
     return locale.language + '-' + locale.territory
 
 
@@ -170,8 +169,7 @@ def get_locale(locale_tag: str) -> babel.Locale | None:
     """Returns a :py:obj:`babel.Locale` object parsed from argument
     ``locale_tag``"""
     try:
-        locale = babel.Locale.parse(locale_tag, sep='-')
-        return locale
+        return babel.Locale.parse(locale_tag, sep='-')
 
     except babel.core.UnknownLocaleError:
         return None
@@ -201,8 +199,8 @@ def get_official_locales(
     o_languages = babel.languages.get_official_languages(territory, regional=regional, de_facto=de_facto)
 
     if languages:
-        languages = [l.lower() for l in languages]
-        o_languages = set(l for l in o_languages if l.lower() in languages)
+        languages = [lang.lower() for lang in languages]
+        o_languages = {lang for lang in o_languages if lang.lower() in languages}
 
     for lang in o_languages:
         try:
@@ -310,7 +308,6 @@ def get_engine_locale(searxng_locale: str, engine_locales: dict[str, str], defau
     # engine does support the searxng_lang in this other territory.
 
     if locale.language:
-
         terr_lang_dict: dict[str, dict[str, t.Any]] = {}
         territory: str
         langs: dict[str, dict[str, t.Any]]

@@ -3,8 +3,11 @@
 
 import typing as t
 
-from searx.engines.google import fetch_traits  # pylint: disable=unused-import
-from searx.engines.google import google_request, unwrap_google_url, wml_dom
+from searx.engines.google import (
+    google_request,
+    unwrap_google_url,
+    wml_dom,
+)
 from searx.result_types import EngineResults
 from searx.utils import (
     eval_xpath_getindex,

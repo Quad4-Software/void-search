@@ -8,9 +8,9 @@ timeout``) and returns a tuple ``(data, mime)``.
 
 __all__ = ["DEFAULT_RESOLVER_MAP", "allesedv", "duckduckgo", "google", "kagi", "yandex"]
 
-from typing import Callable
-from searx import network
-from searx import logger
+from collections.abc import Callable
+
+from searx import logger, network
 
 DEFAULT_RESOLVER_MAP: dict[str, Callable]
 logger = logger.getChild('favicons.resolvers')
@@ -23,7 +23,7 @@ def _req_args(**kwargs):
     return d
 
 
-def allesedv(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
+def allesedv(domain: str, timeout: int) -> tuple[bytes | None, str | None]:
     """Favicon Resolver from allesedv.com / https://favicon.allesedv.com/"""
     data, mime = (None, None)
     url = f"https://f1.allesedv.com/32/{domain}"
@@ -39,7 +39,7 @@ def allesedv(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
     return data, mime
 
 
-def duckduckgo(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
+def duckduckgo(domain: str, timeout: int) -> tuple[bytes | None, str | None]:
     """Favicon Resolver from duckduckgo.com / https://blog.jim-nielsen.com/2021/displaying-favicons-for-any-domain/"""
     data, mime = (None, None)
     url = f"https://icons.duckduckgo.com/ip2/{domain}.ico"
@@ -54,7 +54,7 @@ def duckduckgo(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
     return data, mime
 
 
-def google(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
+def google(domain: str, timeout: int) -> tuple[bytes | None, str | None]:
     """Favicon Resolver from google.com"""
     data, mime = (None, None)
 
@@ -75,7 +75,7 @@ def google(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
     return data, mime
 
 
-def kagi(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
+def kagi(domain: str, timeout: int) -> tuple[bytes | None, str | None]:
     """Favicon Resolver from kagi.com / https://news.kagi.com/api/favicon-proxy"""
     data, mime = (None, None)
     # quality can be either 'fast' or 'best', best is slower and can return svgs (e.g. github.com)
@@ -90,7 +90,7 @@ def kagi(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
     return data, mime
 
 
-def yandex(domain: str, timeout: int) -> tuple[None | bytes, None | str]:
+def yandex(domain: str, timeout: int) -> tuple[bytes | None, str | None]:
     """Favicon Resolver from yandex.com"""
     data, mime = (None, None)
     url = f"https://favicon.yandex.net/favicon/{domain}"

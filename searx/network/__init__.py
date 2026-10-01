@@ -1,24 +1,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring, global-statement
 
-__all__ = ["get_network", "initialize", "check_network_configuration", "raise_for_httperror"]
-
-import typing as t
+__all__ = ["check_network_configuration", "get_network", "initialize", "raise_for_httperror"]
 
 import asyncio
-import threading
 import concurrent.futures
-from queue import SimpleQueue
-from types import MethodType
-from timeit import default_timer
+import threading
+import typing as t
 from collections.abc import Iterable
 from contextlib import contextmanager
+from queue import SimpleQueue
+from timeit import default_timer
+from types import MethodType
 
 from curl_cffi.requests.exceptions import StreamConsumedError, Timeout
 
 from searx.extended_types import SXNG_Response
-from .network import get_network, initialize, check_network_configuration  # pylint:disable=cyclic-import
+
 from .client import get_loop
+from .network import check_network_configuration, get_network, initialize  # pylint:disable=cyclic-import
 from .raise_for_httperror import raise_for_httperror
 
 if t.TYPE_CHECKING:
@@ -137,7 +137,7 @@ class Request(t.NamedTuple):
 
     method: str
     url: str
-    kwargs: dict[str, str] = {}
+    kwargs: dict[str, str] = {}  # noqa: RUF012 NamedTuple field default
 
     @staticmethod
     def get(url: str, **kwargs: t.Any):

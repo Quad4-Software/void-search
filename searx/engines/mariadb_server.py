@@ -26,14 +26,13 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
 
-try:
+# import error is ignored because the admin has to install mysql manually to use
+# the engine
+with contextlib.suppress(ImportError):
     import mariadb  # pyright: ignore [reportMissingImports]
-except ImportError:
-    # import error is ignored because the admin has to install mysql manually to use
-    # the engine
-    pass
 
 from searx.result_types import EngineResults
 
@@ -78,7 +77,7 @@ def init(_):
 
 def search(query, params) -> EngineResults:
     query_params = {'query': query}
-    query_to_run = query_str + ' LIMIT {0} OFFSET {1}'.format(limit, (params['pageno'] - 1) * limit)
+    query_to_run = query_str + f" LIMIT {limit} OFFSET {(params['pageno'] - 1) * limit}"
     logger.debug("SQL Query: %s", query_to_run)
     res = EngineResults()
 
@@ -86,6 +85,6 @@ def search(query, params) -> EngineResults:
         cur.execute(query_to_run, query_params)
         col_names = [i[0] for i in cur.description]
         for row in cur:
-            kvmap = dict(zip(col_names, map(str, row)))
+            kvmap = dict(zip(col_names, map(str, row), strict=True))
             res.add(res.types.KeyValue(kvmap=kvmap))
     return res

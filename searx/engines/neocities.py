@@ -4,11 +4,11 @@
 .. _Neocities : https://github.com/neocities/neocities
 """
 
-from urllib.parse import urlencode
 import typing as t
+from urllib.parse import urlencode
 
-from searx.utils import eval_xpath, eval_xpath_list, extract_text
 from searx.result_types import EngineResults
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from extended_types import SXNG_Response

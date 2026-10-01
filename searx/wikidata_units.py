@@ -9,6 +9,7 @@ Coordinates`_
 __all__ = ["convert_from_si", "convert_to_si", "symbol_to_si"]
 
 import collections
+from typing import ClassVar
 
 from searx import data
 from searx.wikidata import send_wikidata_query
@@ -27,21 +28,32 @@ class Beaufort:
     _Beaufort: https://en.wikipedia.org/wiki/Beaufort_scale
     """
 
-    # fmt: off
-    scale: list[float] = [
-         0.2,  1.5,  3.3,  5.4,  7.9,
-        10.7, 13.8, 17.1, 20.7, 24.4,
-        28.4, 32.6, 32.7, 41.1, 45.8,
-        50.8, 55.6
+    scale: ClassVar[list[float]] = [
+        0.2,
+        1.5,
+        3.3,
+        5.4,
+        7.9,
+        10.7,
+        13.8,
+        17.1,
+        20.7,
+        24.4,
+        28.4,
+        32.6,
+        32.7,
+        41.1,
+        45.8,
+        50.8,
+        55.6,
     ]
-    # fmt: on
 
     @classmethod
     def from_si(cls, value) -> float:
         if value < 0 or value > 55.6:
             raise ValueError(f"invalid value {value} / the Beaufort scales from 0 to 16 (55.6 m/s)")
         bft = 0
-        for bft, mps in enumerate(cls.scale):
+        for bft, mps in enumerate(cls.scale):  # noqa: B007 bft is read after the loop
             if mps >= value:
                 break
         return bft
@@ -118,20 +130,12 @@ UNITS_BY_SI_NAME: dict = {}
 
 def convert_from_si(si_name: str, symbol: str, value: float | int) -> float:
     from_si = units_by_si_name(si_name)[symbol][pos_from_si]
-    if isinstance(from_si, (float, int)):
-        value = float(value) * from_si
-    else:
-        value = from_si(float(value))
-    return value
+    return float(value) * from_si if isinstance(from_si, (float, int)) else from_si(float(value))
 
 
 def convert_to_si(si_name: str, symbol: str, value: float | int) -> float:
     to_si = units_by_si_name(si_name)[symbol][pos_to_si]
-    if isinstance(to_si, (float, int)):
-        value = float(value) * to_si
-    else:
-        value = to_si(float(value))
-    return value
+    return float(value) * to_si if isinstance(to_si, (float, int)) else to_si(float(value))
 
 
 def units_by_si_name(si_name):
@@ -194,41 +198,21 @@ def symbol_to_si():
     # units without a symbol / arcsecond does not have a symbol
     # https://www.wikidata.org/wiki/Q829073
 
-    for item in data.WIKIDATA_UNITS.values():
-        if item['to_si_factor'] and item['symbol']:
-            SYMBOL_TO_SI.append(
-                (
-                    item['symbol'],
-                    item['si_name'],
-                    1 / item['to_si_factor'],  # from_si
-                    item['to_si_factor'],  # to_si
-                    item['symbol'],
-                )
-            )
+    SYMBOL_TO_SI.extend(
+        [
+            (item['symbol'], item['si_name'], 1 / item['to_si_factor'], item['to_si_factor'], item['symbol'])
+            for item in data.WIKIDATA_UNITS.values()
+            if item['to_si_factor'] and item['symbol']
+        ]
+    )
 
-    for item in ADDITIONAL_UNITS:
-        SYMBOL_TO_SI.append(
-            (
-                item['symbol'],
-                item['si_name'],
-                item['from_si'],
-                item['to_si'],
-                item['symbol'],
-            )
-        )
+    SYMBOL_TO_SI.extend(
+        [(item['symbol'], item['si_name'], item['from_si'], item['to_si'], item['symbol']) for item in ADDITIONAL_UNITS]
+    )
 
     alias_items = []
     for item in SYMBOL_TO_SI:
-        for alias in ALIAS_SYMBOLS.get(item[0], ()):
-            alias_items.append(
-                (
-                    alias,
-                    item[1],
-                    item[2],  # from_si
-                    item[3],  # to_si
-                    item[0],  # origin unit
-                )
-            )
+        alias_items.extend([(alias, item[1], item[2], item[3], item[0]) for alias in ALIAS_SYMBOLS.get(item[0], ())])
     SYMBOL_TO_SI = SYMBOL_TO_SI + alias_items
     return SYMBOL_TO_SI
 

@@ -3,6 +3,7 @@
 
 from json import loads
 from urllib.parse import urlencode
+
 from dateutil.parser import parse
 
 about = {
@@ -39,8 +40,8 @@ def response(resp):
 
     json_result = loads(resp.text)
 
-    for result in json_result['results']:
-        results.append(
+    results.extend(
+        [
             {
                 'url': result['trackViewUrl'],
                 'title': result['trackName'],
@@ -49,6 +50,8 @@ def response(resp):
                 'publishedDate': parse(result['currentVersionReleaseDate']),
                 'author': result['sellerName'],
             }
-        )
+            for result in json_result['results']
+        ]
+    )
 
     return results

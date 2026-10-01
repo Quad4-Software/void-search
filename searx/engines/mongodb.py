@@ -38,14 +38,13 @@ Implementations
 
 """
 
+import contextlib
 import re
 
-try:
+# import error is ignored because the admin has to install pymongo manually
+# to use the engine
+with contextlib.suppress(ImportError):
     from pymongo import MongoClient  # type: ignore
-except ImportError:
-    # import error is ignored because the admin has to install pymongo manually
-    # to use the engine
-    pass
 
 from searx.result_types import EngineResults
 
@@ -87,7 +86,7 @@ def search(query, params) -> EngineResults:
     if exact_match_only:
         q = {'$eq': query}
     else:
-        _re = re.compile('.*{0}.*'.format(re.escape(query)), re.I | re.M)
+        _re = re.compile(f'.*{re.escape(query)}.*', re.I | re.M)
         q = {'$regex': _re}
 
     query = _client.find({key: q}).skip((params['pageno'] - 1) * results_per_page).limit(results_per_page)

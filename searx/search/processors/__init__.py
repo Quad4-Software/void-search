@@ -2,30 +2,29 @@
 """Implement request processors used by engine-types."""
 
 __all__ = [
+    "PROCESSORS",
     "OfflineParamTypes",
     "OnlineCurrenciesParams",
     "OnlineDictParams",
     "OnlineParamTypes",
     "OnlineParams",
     "OnlineUrlSearchParams",
-    "PROCESSORS",
     "ParamTypes",
-    "RequestParams",
     "ProcessorType",
+    "RequestParams",
 ]
 
+import os
 import typing as t
 
-import os
-from searx import logger
-from searx import engines
+from searx import engines, logger
 
 from .abstract import EngineProcessor, RequestParams
 from .offline import OfflineProcessor
-from .online import OnlineProcessor, OnlineParams
+from .online import OnlineParams, OnlineProcessor
+from .online_currency import OnlineCurrenciesParams, OnlineCurrencyProcessor
 from .online_dictionary import OnlineDictionaryProcessor, OnlineDictParams
-from .online_currency import OnlineCurrencyProcessor, OnlineCurrenciesParams
-from .online_url_search import OnlineUrlSearchProcessor, OnlineUrlSearchParams
+from .online_url_search import OnlineUrlSearchParams, OnlineUrlSearchProcessor
 
 logger = logger.getChild("search.processors")
 
@@ -46,7 +45,7 @@ class ProcessorMap(dict[str, EngineProcessor]):
     """Class to manage :py:obj:`EngineProcessor` instances in a key/value map
     (instances stored by *engine-name*)."""
 
-    processor_types: dict[str, type[EngineProcessor]] = {
+    processor_types: t.ClassVar[dict[str, type[EngineProcessor]]] = {
         OnlineProcessor.engine_type: OnlineProcessor,
         OfflineProcessor.engine_type: OfflineProcessor,
         OnlineDictionaryProcessor.engine_type: OnlineDictionaryProcessor,

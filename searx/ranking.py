@@ -149,7 +149,6 @@ _AUTHORITY_HOSTS = frozenset(
         "git.quad4.io",
         "reticulum.network",
         "python.org",
-        "docs.python.org",
         "rust-lang.org",
         "typescriptlang.org",
         "react.dev",
@@ -296,19 +295,13 @@ def _is_authority(host: str) -> bool:
     for suffix in _AUTHORITY_SUFFIXES:
         if host.endswith(suffix):
             return True
-    for parent in _AUTHORITY_HOSTS:
-        if host.endswith("." + parent):
-            return True
-    return False
+    return any(host.endswith("." + parent) for parent in _AUTHORITY_HOSTS)
 
 
 def _is_seo_farm(host: str) -> bool:
     if host in _SEO_HOSTS:
         return True
-    for parent in _SEO_HOSTS:
-        if host.endswith("." + parent):
-            return True
-    return False
+    return any(host.endswith("." + parent) for parent in _SEO_HOSTS)
 
 
 def _token_present(text: str, token: str) -> bool:
@@ -370,8 +363,8 @@ def _freshness(result: t.Any) -> float:
     if not isinstance(published, datetime.datetime):
         return 0.0
     if published.tzinfo is None:
-        published = published.replace(tzinfo=datetime.timezone.utc)
-    age = datetime.datetime.now(datetime.timezone.utc) - published
+        published = published.replace(tzinfo=datetime.UTC)
+    age = datetime.datetime.now(datetime.UTC) - published
     days = max(age.total_seconds() / 86400.0, 0.0)
     if days <= 2:
         return 0.18
@@ -400,7 +393,12 @@ def _url_quality(parsed: ParseResult | None, url: str) -> float:
         score -= 0.06
     if len(url) > 180:
         score -= 0.05
-    query_keys = {key.lower() for key, _ in [pair.split("=", 1) if "=" in pair else (pair, "") for pair in (parsed.query or "").split("&") if pair]}
+    query_keys = {
+        key.lower()
+        for key, _ in [
+            pair.split("=", 1) if "=" in pair else (pair, "") for pair in (parsed.query or "").split("&") if pair
+        ]
+    }
     tracking = len(query_keys & _TRACKING_KEYS)
     if tracking:
         score -= 0.03 * tracking
@@ -429,7 +427,7 @@ def is_foreign_language(result: t.Any, lang: str) -> bool:
 
         if not get_setting("void.drop_foreign_script"):
             return False
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     blob = f"{_field(result, 'title')} {_field(result, 'content')}"
     return foreign_script_ratio(blob) >= 0.18
@@ -511,7 +509,7 @@ def engine_weight_score(
 
 
 def calculate_score(
-    result: "MainResult | LegacyResult | t.Any",
+    result: MainResult | LegacyResult | t.Any,
     priority: str | None,
     query: str = "",
     engines: dict[str, t.Any] | None = None,
@@ -527,10 +525,7 @@ def calculate_score(
     score = refined * (1.0 + math.log1p(len(result["engines"])))
     url = ""
     parsed = getattr(result, "parsed_url", None)
-    if hasattr(result, "get"):
-        url = str(result.get("url") or "")
-    else:
-        url = str(getattr(result, "url", "") or "")
+    url = str(result.get('url') or '') if hasattr(result, 'get') else str(getattr(result, 'url', '') or '')
     host = _host(parsed if isinstance(parsed, ParseResult) else None, url)
     nav = _nav_bonus(host, query, parsed if isinstance(parsed, ParseResult) else None)
     if nav >= 1.0:

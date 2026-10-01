@@ -4,6 +4,7 @@
 
 from functools import reduce
 from operator import mul
+from typing import ClassVar
 
 import babel
 import babel.numbers
@@ -28,13 +29,13 @@ kw2func = [
 class SXNGAnswerer(Answerer):
     """Statistics functions"""
 
-    keywords = [kw for kw, _ in kw2func]
+    keywords: ClassVar = [kw for kw, _ in kw2func]
 
     def info(self):
 
         return AnswererInfo(
             name=gettext(self.__doc__),
-            description=gettext("Compute {func} of the arguments".format(func='/'.join(self.keywords))),
+            description=gettext(f"Compute {'/'.join(self.keywords)} of the arguments"),
             keywords=self.keywords,
             examples=["avg 123 548 2.04 24.2"],
         )
@@ -50,7 +51,7 @@ class SXNGAnswerer(Answerer):
 
         try:
             args = [babel.numbers.parse_decimal(num, ui_locale, numbering_system="latn") for num in parts[1:]]
-        except:  # pylint: disable=bare-except
+        except Exception:
             # seems one of the args is not a float type, can't be converted to float
             return results
 

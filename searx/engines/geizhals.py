@@ -14,7 +14,6 @@ to the search term:
 """
 
 import re
-
 from urllib.parse import urlencode
 
 from searx.utils import eval_xpath, eval_xpath_list, extract_text
@@ -69,8 +68,12 @@ def response(resp):
     dom = resp.html()
     for result in eval_xpath_list(dom, "//article[contains(@class, 'listview__item')]"):
         content = []
-        for spec in eval_xpath_list(result, ".//div[contains(@class, 'specs-grid__item')]"):
-            content.append(f"{extract_text(eval_xpath(spec, './dt'))}: {extract_text(eval_xpath(spec, './dd'))}")
+        content.extend(
+            [
+                f"{extract_text(eval_xpath(spec, './dt'))}: {extract_text(eval_xpath(spec, './dd'))}"
+                for spec in eval_xpath_list(result, ".//div[contains(@class, 'specs-grid__item')]")
+            ]
+        )
 
         metadata = [
             extract_text(eval_xpath(result, ".//div[contains(@class, 'stars-rating-label')]")),

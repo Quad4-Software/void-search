@@ -2,6 +2,7 @@
 """Mixcloud (Music)"""
 
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 # about
@@ -35,7 +36,6 @@ def response(resp):
     search_res = resp.json()
 
     for result in search_res.get('data', []):
-
         r_url = result['url']
         publishedDate = parser.parse(result['created_time'])
         res = {

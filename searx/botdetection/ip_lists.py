@@ -26,12 +26,10 @@ The ``ip_lists`` method implements :py:obj:`block-list <block_ip>` and
 
 # pylint: disable=unused-argument
 
-
-from typing import Tuple
 from ipaddress import (
-    ip_network,
     IPv4Address,
     IPv6Address,
+    ip_network,
 )
 
 from . import config
@@ -47,7 +45,7 @@ SEARXNG_ORG = [
 """Passlist of IPs from the SearXNG organization, e.g. `check.searx.space`."""
 
 
-def pass_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> Tuple[bool, str]:
+def pass_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> tuple[bool, str]:
     """Checks if the IP on the subnet is in one of the members of the
     ``botdetection.ip_lists.pass_ip`` list.
     """
@@ -60,7 +58,7 @@ def pass_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> Tuple[boo
     return ip_is_subnet_of_member_in_list(real_ip, 'botdetection.ip_lists.pass_ip', cfg)
 
 
-def block_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> Tuple[bool, str]:
+def block_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> tuple[bool, str]:
     """Checks if the IP on the subnet is in one of the members of the
     ``botdetection.ip_lists.block_ip`` list.
     """
@@ -73,7 +71,7 @@ def block_ip(real_ip: IPv4Address | IPv6Address, cfg: config.Config) -> Tuple[bo
 
 def ip_is_subnet_of_member_in_list(
     real_ip: IPv4Address | IPv6Address, list_name: str, cfg: config.Config
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     for net in cfg.get(list_name, default=[]):
         try:
             net = ip_network(net, strict=False)

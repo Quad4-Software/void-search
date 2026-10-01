@@ -2,14 +2,13 @@
 # pylint: disable=invalid-name
 """Swisscows news"""
 
+import typing as t
 from datetime import datetime
 from urllib.parse import urlencode
 
-import typing as t
-
-from searx.utils import html_to_text
-from searx.result_types import EngineResults
 from searx.engines.swisscows import appropriate_locale
+from searx.result_types import EngineResults
+from searx.utils import html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response

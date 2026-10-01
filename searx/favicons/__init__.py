@@ -8,12 +8,13 @@ an example in which the command line is called in the development environment::
   (py3) python -m searx.favicons --help
 """
 
-__all__ = ["init", "favicon_url", "favicon_proxy"]
+__all__ = ["favicon_proxy", "favicon_url", "init"]
 
 import pathlib
-from searx import logger
-from searx import get_setting
-from .proxy import favicon_url, favicon_proxy
+
+from searx import get_setting, logger
+
+from .proxy import favicon_proxy, favicon_url
 
 logger = logger.getChild('favicons')
 
@@ -26,8 +27,9 @@ def init():
 
     # pylint: disable=import-outside-toplevel
 
-    from . import config, cache, proxy
-    from .. import settings_loader
+    from searx import settings_loader
+
+    from . import cache, config, proxy
 
     cfg_file = (settings_loader.get_user_cfg_folder() or pathlib.Path("/etc/searxng")) / "favicons.toml"
     if not cfg_file.exists():

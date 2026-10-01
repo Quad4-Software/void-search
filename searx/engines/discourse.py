@@ -49,12 +49,11 @@ Implementations
 
 """
 
-from urllib.parse import urlencode
-from datetime import datetime, timedelta
 import html
+from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode
 
 from dateutil import parser
-
 from flask_babel import gettext
 
 about = {
@@ -106,7 +105,7 @@ def request(query, params):
     q = [query, f'order:{api_order}']
     time_range = params.get('time_range')
     if time_range:
-        after_date = datetime.now() - AGO_TIMEDELTA[time_range]
+        after_date = datetime.now(tz=UTC) - AGO_TIMEDELTA[time_range]
         q.append('after:' + after_date.strftime('%Y-%m-%d'))
 
     args = {
@@ -134,7 +133,7 @@ def response(resp):
     results = []
     json_data = resp.json()
 
-    if ('topics' or 'posts') not in json_data.keys():
+    if 'topics' not in json_data:
         return []
 
     topics = {}

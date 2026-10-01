@@ -3,14 +3,13 @@
 
 import re
 import typing as t
-
 from urllib.parse import urlencode
 
+from searx.enginelib import EngineCache
+from searx.exceptions import SearxEngineAccessDeniedException, SearxEngineAPIException
+from searx.network import get
 from searx.result_types import EngineResults
 from searx.utils import eval_xpath_list
-from searx.enginelib import EngineCache
-from searx.exceptions import SearxEngineAPIException, SearxEngineAccessDeniedException
-from searx.network import get
 
 if t.TYPE_CHECKING:
     from extended_types import SXNG_Response
@@ -39,7 +38,7 @@ time_range_support = True
 time_range_map = {"day": "last_24_hours", "week": "last_week", "month": "last_month", "year": "last_year"}
 
 SECRET_KEY_RE = re.compile('"secret-key":\b*"(.*?)"')
-SECRET_KEY_DB_KEY = "secret-key"
+SECRET_KEY_DB_KEY = "secret-key"  # noqa: S105
 
 
 CACHE: EngineCache
@@ -93,7 +92,7 @@ def request(query: str, params: "OnlineParams"):
             secret_key = _get_secret_key()
             CACHE.set(SECRET_KEY_DB_KEY, secret_key)
         except (SearxEngineAPIException, SearxEngineAccessDeniedException) as e:
-            logger.debug("failed to extract API key %s" % e)
+            logger.debug(f"failed to extract API key {e}")
             secret_key = api_key
 
     params["headers"]["secret-key"] = secret_key

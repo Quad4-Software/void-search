@@ -9,13 +9,12 @@
 
 # pylint: disable=invalid-name
 
-from typing import Set
 import json
 from pathlib import Path
 
 import babel
-import babel.languages
 import babel.core
+import babel.languages
 
 from searx import searx_dir
 from searx.locales import (
@@ -31,7 +30,7 @@ TRANSLATIONS_FOLDER = Path(searx_dir) / 'translations'
 def main():
 
     LOCALE_NAMES = {}
-    RTL_LOCALES: Set[str] = set()
+    RTL_LOCALES: set[str] = set()
 
     for tag, descr in ADDITIONAL_TRANSLATIONS.items():
         locale = babel.Locale.parse(LOCALE_BEST_MATCH[tag], sep='-')

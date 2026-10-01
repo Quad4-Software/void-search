@@ -7,15 +7,15 @@ Although it's an AI company, it doesn't include any AI stuff in its results.
 """
 
 import base64
-from hashlib import sha256
 import typing as t
+from hashlib import sha256
 from urllib.parse import urlencode
 
 from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
-    from searx.search.processors import OnlineParams
     from searx.extended_types import SXNG_Response
+    from searx.search.processors import OnlineParams
 
 
 about = {

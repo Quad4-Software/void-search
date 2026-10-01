@@ -5,15 +5,15 @@ Its search results are (at least partially) from Brave.
 .. _Tusksearch: https://tusksearch.com/about
 """
 
-from json import loads
 import random
 import typing as t
+from json import loads
 from urllib.parse import urlencode
 
-from searx.result_types import EngineResults
 from searx.engines.brave import parse_image_result, parse_news_result, parse_search_result, parse_video_result
 from searx.exceptions import SearxEngineAPIException
 from searx.network import get
+from searx.result_types import EngineResults
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -41,7 +41,7 @@ api_url = "https://api.tusksearch.com"
 
 def setup(_: dict[str, t.Any]) -> bool | None:
     if tusk_categ not in t.get_args(TuskCategType):
-        raise ValueError("invalid search type: %s" % tusk_categ)
+        raise ValueError(f"invalid search type: {tusk_categ}")
 
 
 def _obtain_x_sid() -> tuple[str, str]:
@@ -73,7 +73,7 @@ def _obtain_x_sid() -> tuple[str, str]:
 
 def request(query: str, params: "OnlineParams") -> None:
     # images don't support pagination, news and videos only support two pages
-    if tusk_categ == "images" and params["pageno"] > 1 or tusk_categ in ("news", "videos") and params["pageno"] > 2:
+    if (tusk_categ == "images" and params["pageno"] > 1) or (tusk_categ in ("news", "videos") and params["pageno"] > 2):
         params["url"] = None
         return
 
@@ -93,8 +93,8 @@ def request(query: str, params: "OnlineParams") -> None:
         {
             x_sid_header: x_sid_value,
             # required - we send a random longitude and latitude instead of the actual user location
-            "x-lon": str(round(random.random() * 90, 4)),
-            "x-lat": str(round(random.random() * 90, 4)),
+            "x-lon": str(round(random.random() * 90, 4)),  # noqa: S311
+            "x-lat": str(round(random.random() * 90, 4)),  # noqa: S311
             "Referer": "https://tusksearch.com/",
             "Origin": "https://tusksearch.com",
             "Sec-Fetch-Site": "same-site",

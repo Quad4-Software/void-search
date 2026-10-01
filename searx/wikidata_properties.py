@@ -4,11 +4,11 @@
 
 import typing as t
 
+from babel.dates import format_date, format_datetime, format_time, get_datetime_format
 from dateutil.parser import isoparse
-from babel.dates import format_datetime, format_date, format_time, get_datetime_format
 
-from searx.external_urls import get_earth_coordinates_url, get_external_url
 from searx.data import WikiDataPropertiesType, WikiDataUnitType
+from searx.external_urls import get_earth_coordinates_url, get_external_url
 from searx.wikidata import send_wikidata_query
 
 # SERVICE wikibase:mwapi : https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual/MWAPI
@@ -295,7 +295,7 @@ class WDDateAttribute(WDAttribute):
         # precision: second.
         return format_datetime(isoparse(value), format="full", locale=locale)
 
-    DATE_FORMAT: dict[str, tuple[str, int]] = {
+    DATE_FORMAT: t.ClassVar[dict[str, tuple[str, int]]] = {
         "0": ("format_8", 1000000000),
         "1": ("format_8", 100000000),
         "2": ("format_8", 10000000),
@@ -325,10 +325,7 @@ class WDDateAttribute(WDAttribute):
             try:
                 if precision >= 1:
                     _t = value.split("-")
-                    if value.startswith("-"):
-                        value = "-" + _t[1]
-                    else:
-                        value = _t[0]
+                    value = '-' + _t[1] if value.startswith('-') else _t[0]
                 return format_method(value, language)
             except Exception:  # pylint: disable=broad-except
                 return value
@@ -376,9 +373,11 @@ def fetch_properties(units: dict[str, WikiDataUnitType]) -> WikiDataPropertiesTy
     # WIKIDATA_PROPERTIES : add property labels
     wikidata_property_names: list[str] = []
     for attribute in get_attributes("en"):
-        if type(attribute) in (WDAttribute, WDAmountAttribute, WDURLAttribute, WDDateAttribute, WDLabelAttribute):
-            if attribute.name not in properties:
-                wikidata_property_names.append("wd:" + attribute.name)
+        if (
+            type(attribute) in (WDAttribute, WDAmountAttribute, WDURLAttribute, WDDateAttribute, WDLabelAttribute)
+            and attribute.name not in properties
+        ):
+            wikidata_property_names.append("wd:" + attribute.name)
 
         query = QUERY_PROPERTY_NAMES.replace("%ATTRIBUTES%", " ".join(wikidata_property_names))
         kwargs: dict[str, t.Any] = {"timeout": 60}

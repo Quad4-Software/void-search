@@ -5,10 +5,9 @@
 ----
 """
 
-__all__ = ["ExpireCacheCfg", "ExpireCacheStats", "ExpireCache", "ExpireCacheSQLite"]
+__all__ = ["ExpireCache", "ExpireCacheCfg", "ExpireCacheSQLite", "ExpireCacheStats"]
 
 import abc
-from collections.abc import Iterator
 import dataclasses
 import datetime
 import hashlib
@@ -20,12 +19,11 @@ import string
 import tempfile
 import time
 import typing
+from collections.abc import Iterator
 
 import msgspec
 
-from searx import sqlitedb
-from searx import logger
-from searx import get_setting
+from searx import get_setting, logger, sqlitedb
 
 log = logger.getChild("cache")
 
@@ -112,14 +110,13 @@ class ExpireCacheStats:
             for key, value, expire in kv_list:
                 valid_until = ""
                 if expire:
-                    valid_until = datetime.datetime.fromtimestamp(expire).strftime("%Y-%m-%d %H:%M:%S")
+                    valid_until = datetime.datetime.fromtimestamp(expire, tz=datetime.UTC).strftime("%Y-%m-%d %H:%M:%S")
                 c_kv += 1
                 value_str = str(value)
                 if len(value_str) > 120:
                     value_str = f"{value_str[:120]} ..."
                 lines.append(
-                    f"[{ctx_name:20s}] {valid_until} {key:12}"
-                    f" --> ({type(value).__name__}:{len(value)}) {value_str} "
+                    f"[{ctx_name:20s}] {valid_until} {key:12} --> ({type(value).__name__}:{len(value)}) {value_str} "
                 )
 
         lines.append(f"Number of contexts: {c_ctx}")
@@ -133,7 +130,7 @@ class ExpireCache(abc.ABC):
 
     cfg: ExpireCacheCfg
 
-    hash_token: str = "hash_token"
+    hash_token: str = "hash_token"  # noqa: S105
 
     @abc.abstractmethod
     def set(self, key: str, value: typing.Any, expire: int | None, ctx: str | None = None) -> bool:
@@ -202,8 +199,7 @@ class ExpireCache(abc.ABC):
         return dump
 
     def deserialize(self, value: bytes) -> typing.Any:
-        obj = pickle.loads(value)
-        return obj
+        return pickle.loads(value)  # noqa: S301
 
     def secret_hash(self, name: str | bytes) -> str:
         """Creates a hash of the argument ``name``.  The hash value is formed
@@ -233,7 +229,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
     DB_SCHEMA: int = 1
 
     # The key/value tables will be created on demand by self.create_table
-    DDL_CREATE_TABLES: dict[str, str] = {}
+    DDL_CREATE_TABLES: typing.ClassVar[dict[str, str]] = {}
 
     CACHE_TABLE_PREFIX: str = "CACHE-TABLE"
 
@@ -280,7 +276,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
 
         with self.connect() as conn:
             for table in self.table_names:
-                res = conn.execute(f"DELETE FROM {table} WHERE expire < ?", (expire,))
+                res = conn.execute(f"DELETE FROM {table} WHERE expire < ?", (expire,))  # noqa: S608
                 log.debug("deleted %s keys from table %s (expire date reached)", res.rowcount, table)
 
         # Vacuuming the WALs
@@ -321,7 +317,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
     @property
     def table_names(self) -> list[str]:
         """List of key/value tables already created in the DB."""
-        sql = f"SELECT value FROM properties WHERE name LIKE '{self.CACHE_TABLE_PREFIX}%%'"
+        sql = f"SELECT value FROM properties WHERE name LIKE '{self.CACHE_TABLE_PREFIX}%%'"  # noqa: S608
         rows = self.DB.execute(sql).fetchall() or []
         return [r[0] for r in rows]
 
@@ -329,7 +325,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
         log.debug("truncate table: %s", ",".join(table_names))
         with self.connect() as conn:
             for table in table_names:
-                conn.execute(f"DELETE FROM {table}")
+                conn.execute(f"DELETE FROM {table}")  # noqa: S608
         conn.close()
         return True
 
@@ -397,7 +393,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
         self.create_table(table_name)
 
         sql_str = (
-            f"INSERT INTO {table_name} (key, value, expire) VALUES (?, ?, ?)"
+            f"INSERT INTO {table_name} (key, value, expire) VALUES (?, ?, ?)"  # noqa: S608
             f"    ON CONFLICT DO "
             f"UPDATE SET value=?, expire=?"
         )
@@ -414,7 +410,6 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
 
         err_msg_list: list[str] = []
         for key, _val, expire in opt_list:
-
             value: bytes = self.serialize(value=_val)
             if len(value) > self.cfg.MAX_VALUE_LEN:
                 err_msg_list.append(f"{table}.key='{key}' - serialized value too big to cache (len: {len(value)}) ")
@@ -458,7 +453,7 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
         # Before values are taken from the table, a maintenance interval may
         # need to be carried out.
         self.maintenance()
-        sql = f"SELECT value, expire FROM {table} WHERE key = ?"
+        sql = f"SELECT value, expire FROM {table} WHERE key = ?"  # noqa: S608
         row = self.DB.execute(sql, (key,)).fetchone()
         if row is None:
             return default
@@ -488,13 +483,13 @@ class ExpireCacheSQLite(sqlitedb.SQLiteAppl, ExpireCache):
             # Before values are taken from the table, a maintenance interval may
             # need to be carried out.
             self.maintenance()
-            for row in self.DB.execute(f"SELECT key, value FROM {table}"):
+            for row in self.DB.execute(f"SELECT key, value FROM {table}"):  # noqa: S608
                 yield row[0], self.deserialize(row[1])
 
     def state(self) -> ExpireCacheStats:
         cached_items: dict[str, list[CacheRowType]] = {}
         for table in self.table_names:
             cached_items[table] = []
-            for row in self.DB.execute(f"SELECT key, value, expire FROM {table}"):
+            for row in self.DB.execute(f"SELECT key, value, expire FROM {table}"):  # noqa: S608
                 cached_items[table].append((row[0], self.deserialize(row[1]), row[2]))
         return ExpireCacheStats(cached_items=cached_items)

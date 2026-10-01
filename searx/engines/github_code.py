@@ -68,9 +68,9 @@ code blocks in a single file might be returned from the API).
 import typing as t
 from urllib.parse import urlencode
 
-from searx.result_types import EngineResults
 from searx.extended_types import SXNG_Response
 from searx.network import raise_for_httperror
+from searx.result_types import EngineResults
 
 # about
 about = {

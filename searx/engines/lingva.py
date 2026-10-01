@@ -41,7 +41,7 @@ def response(resp: "SXNG_Response") -> EngineResults:
     res = EngineResults()
     json_resp = resp.json()
 
-    params: "OnlineDictParams" = resp.search_params  # type: ignore[assignment]
+    params: OnlineDictParams = resp.search_params  # type: ignore[assignment]
     from_lang = params["from_lang"][1]
     to_lang = params["to_lang"][1]
     query = params["query"]
@@ -75,13 +75,12 @@ def response(resp: "SXNG_Response") -> EngineResults:
                 )
 
         for extra_translation in info.get("extraTranslations", []):
-            for word in extra_translation.get("list", []):
-                translations.append(
-                    EngineResults.types.Translations.Item(
-                        text=word["word"],
-                        definitions=word.get("meanings", []),
-                    )
-                )
+            translations.extend(
+                [
+                    EngineResults.types.Translations.Item(text=word['word'], definitions=word.get('meanings', []))
+                    for word in extra_translation.get('list', [])
+                ]
+            )
 
     if not translations:
         translations.append(EngineResults.types.Translations.Item(text=translation))

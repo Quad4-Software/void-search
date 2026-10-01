@@ -174,7 +174,7 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
             market_code = map_market_codes.get(market_code, market_code)
 
             try:
-                sxng_tag = region_tag(babel.Locale.parse("%s_%s" % (lang_tag, cc_tag.upper())))
+                sxng_tag = region_tag(babel.Locale.parse(f"{lang_tag}_{cc_tag.upper()}"))
             except babel.UnknownLocaleError:
                 # silently ignore unknown languages
                 continue
@@ -182,7 +182,7 @@ def fetch_traits(engine_traits: EngineTraits) -> None:
             conflict = engine_traits.regions.get(sxng_tag)
             if conflict:
                 if conflict != market_code:
-                    print("CONFLICT: babel %s --> %s, %s" % (sxng_tag, conflict, market_code))
+                    print(f"CONFLICT: babel {sxng_tag} --> {conflict}, {market_code}")
                 continue
 
             engine_traits.regions[sxng_tag] = market_code

@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring, missing-class-docstring
-import typing
-
-import re
 import hashlib
+import re
+import typing
 
 from flask_babel import gettext
 
@@ -11,9 +10,9 @@ from searx.plugins import Plugin, PluginInfo
 from searx.result_types import EngineResults
 
 if typing.TYPE_CHECKING:
-    from searx.search import SearchWithPlugins
     from searx.extended_types import SXNG_Request
     from searx.plugins import PluginCfg
+    from searx.search import SearchWithPlugins
 
 
 class SXNGPlugin(Plugin):
@@ -22,7 +21,7 @@ class SXNGPlugin(Plugin):
     """
 
     id = "hash_plugin"
-    keywords = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
+    keywords: typing.ClassVar[list[str]] = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512"]
 
     def __init__(self, plg_cfg: "PluginCfg") -> None:
         super().__init__(plg_cfg)
@@ -32,7 +31,8 @@ class SXNGPlugin(Plugin):
             id=self.id,
             name=gettext("Hash plugin"),
             description=gettext(
-                "Converts strings to different hash digests. Available functions: md5, sha1, sha224, sha256, sha384, sha512."  # pylint:disable=line-too-long
+                "Converts strings to different hash digests."
+                " Available functions: md5, sha1, sha224, sha256, sha384, sha512."
             ),
             examples=["sha512 The quick brown fox jumps over the lazy dog"],
             preference_section="query",

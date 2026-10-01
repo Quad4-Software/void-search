@@ -1,15 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name
 
-from pathlib import Path
-
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 from parameterized import parameterized
 
-from searx.exceptions import SearxSettingsException
 from searx import settings_loader
+from searx.exceptions import SearxSettingsException
 from tests import SearxTestCase
 
 
@@ -18,7 +17,6 @@ def _settings(f_name):
 
 
 class TestLoad(SearxTestCase):
-
     def test_load_zero(self):
         with self.assertRaises(SearxSettingsException):
             settings_loader.load_yaml('/dev/zero')
@@ -30,7 +28,6 @@ class TestLoad(SearxTestCase):
 
 
 class TestDefaultSettings(SearxTestCase):
-
     def test_load(self):
         settings, msg = settings_loader.load_settings(load_user_settings=False)
         self.assertTrue(msg.startswith('load the default settings from'))
@@ -45,7 +42,6 @@ class TestDefaultSettings(SearxTestCase):
 
 
 class TestUserSettings(SearxTestCase):
-
     def test_is_use_default_settings(self):
         self.assertFalse(settings_loader.is_use_default_settings({}))
         self.assertTrue(settings_loader.is_use_default_settings({'use_default_settings': True}))
@@ -62,9 +58,8 @@ class TestUserSettings(SearxTestCase):
         ]
     )
     def test_user_settings_not_found(self, path: str):
-        with patch.dict(os.environ, {'SEARXNG_SETTINGS_PATH': path}):
-            with self.assertRaises(EnvironmentError):
-                _s, _m = settings_loader.load_settings()
+        with patch.dict(os.environ, {'SEARXNG_SETTINGS_PATH': path}), self.assertRaises(EnvironmentError):
+            _s, _m = settings_loader.load_settings()
 
     def test_user_settings(self):
         with patch.dict(os.environ, {'SEARXNG_SETTINGS_PATH': _settings("user_settings_simple.yml")}):

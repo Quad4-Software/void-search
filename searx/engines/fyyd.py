@@ -2,7 +2,6 @@
 """Fyyd (podcasts)"""
 
 import typing as t
-
 from datetime import datetime
 from urllib.parse import urlencode
 

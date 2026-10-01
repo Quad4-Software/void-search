@@ -50,8 +50,7 @@ PYOBJECTS="searx"
 PY_SETUP_EXTRAS='[test]'
 GECKODRIVER_VERSION="v0.37.0"
 # SPHINXOPTS=
-BLACK_OPTIONS=("--target-version" "py311" "--line-length" "120" "--skip-string-normalization")
-BLACK_TARGETS=("--exclude" "(searx/static|searx/languages.py)" "--include" 'searxng.msg|\.pyi?$' "searx" "searxng_extra" "tests")
+RUFF_TARGETS=("searx" "searxng_extra" "tests" "searx/searxng.msg" "searxng_extra/docs_prebuild")
 
 YAMLLINT_FILES=()
 while IFS= read -r line; do
@@ -95,7 +94,7 @@ pyenv.:
   cmd ...   : run command ... in virtualenv
   OK        : test if virtualenv is OK
 format.:
-  python    : format Python code source using black
+  python    : format Python code source using ruff
   shell     : format Shell scripts using shfmt
 EOF
     go.help
@@ -257,8 +256,9 @@ pyenv.uninstall() {
 }
 
 format.python() {
-    build_msg TEST "[format.python] black ${BLACK_TARGETS[*]}"
-    pyenv.cmd black "${BLACK_OPTIONS[@]}" "${BLACK_TARGETS[@]}"
+    build_msg TEST "[format.python] ruff ${RUFF_TARGETS[*]}"
+    pyenv.cmd ruff check --fix "${RUFF_TARGETS[@]}"
+    pyenv.cmd ruff format "${RUFF_TARGETS[@]}"
     dump_return $?
 }
 

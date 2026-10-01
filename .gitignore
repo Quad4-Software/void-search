@@ -32,5 +32,5 @@ searx/version_frozen.py
 venv/
 agent-tools/
 config/
-data/
+/data/
 *.local.yml

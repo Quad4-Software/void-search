@@ -5,15 +5,14 @@ peertube engines.
 
 """
 
+from datetime import UTC, datetime
 from urllib.parse import urlencode
-from datetime import datetime
 
-from searx.engines.peertube import fetch_traits  # pylint: disable=unused-import
 from searx.engines.peertube import (
-    # pylint: disable=unused-import
-    video_response,
     safesearch_table,
     time_range_table,
+    # pylint: disable=unused-import
+    video_response,
 )
 
 about = {
@@ -66,7 +65,7 @@ def request(query, params):
         params['url'] += '&boostLanguages[]=' + eng_lang
 
     if params['time_range'] in time_range_table:
-        time = datetime.now().date() + time_range_table[params['time_range']]
+        time = datetime.now(tz=UTC).date() + time_range_table[params['time_range']]
         params['url'] += '&startDate=' + time.isoformat()
 
     return params

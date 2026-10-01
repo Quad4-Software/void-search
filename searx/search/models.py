@@ -1,21 +1,23 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring
 
+import contextlib
 import typing
+
 import babel
 
 
 class EngineRef:
     """Reference by names to an engine and category"""
 
-    __slots__ = 'name', 'category'
+    __slots__ = 'category', 'name'
 
     def __init__(self, name: str, category: str):
         self.name = name
         self.category = category
 
     def __repr__(self):
-        return "EngineRef({!r}, {!r})".format(self.name, self.category)
+        return f"EngineRef({self.name!r}, {self.category!r})"
 
     def __eq__(self, other):
         return self.name == other.name and self.category == other.category
@@ -54,26 +56,18 @@ class SearchQuery:
 
         self.locale = None
         if self.lang:
-            try:
+            with contextlib.suppress(babel.core.UnknownLocaleError):
                 self.locale = babel.Locale.parse(self.lang, sep='-')
-            except babel.core.UnknownLocaleError:
-                pass
 
     @property
     def categories(self):
-        return list(set(map(lambda engineref: engineref.category, self.engineref_list)))
+        return list({engineref.category for engineref in self.engineref_list})
 
     def __repr__(self):
-        return "SearchQuery({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
-            self.query,
-            self.engineref_list,
-            self.lang,
-            self.safesearch,
-            self.pageno,
-            self.time_range,
-            self.timeout_limit,
-            self.external_bang,
-            self.redirect_to_first_result,
+        return (
+            f"SearchQuery({self.query!r}, {self.engineref_list!r}, {self.lang!r}, {self.safesearch!r},"
+            f" {self.pageno!r}, {self.time_range!r}, {self.timeout_limit!r}, {self.external_bang!r},"
+            f" {self.redirect_to_first_result!r})"
         )
 
     def __eq__(self, other):

@@ -4,15 +4,15 @@
 import logging
 from unittest.mock import Mock
 from urllib.parse import urlparse
+
 from parameterized import parameterized
 
 import searx.engines
-from tests import SearxTestCase
 from searx.result_types import EngineResults
+from tests import SearxTestCase
 
 
 class GithubCodeTests(SearxTestCase):
-
     TEST_SETTINGS = "test_github_code.yml"
 
     def setUp(self):

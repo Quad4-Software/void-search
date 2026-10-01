@@ -3,17 +3,14 @@
 
 from parameterized import parameterized
 
-import searx.plugins
 import searx.answerers
+import searx.plugins
 import searx.preferences
-
 from searx.extended_types import sxng_request
-
 from tests import SearxTestCase
 
 
 class AnswererTest(SearxTestCase):
-
     def setUp(self):
         super().setUp()
 

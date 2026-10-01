@@ -2,11 +2,10 @@
 """Deviantart (Images)"""
 
 import typing as t
-
 import urllib.parse
 
 from searx.result_types import EngineResults
-from searx.utils import extract_text, eval_xpath, eval_xpath_list
+from searx.utils import eval_xpath, eval_xpath_list, extract_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response

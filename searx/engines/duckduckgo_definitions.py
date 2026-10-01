@@ -14,18 +14,18 @@ most of the features are based on English terms.
 """
 
 import typing as t
+from urllib.parse import urlencode, urljoin, urlparse
 
-from urllib.parse import urlencode, urlparse, urljoin
 from lxml import html
 
 from searx.data import WIKIDATA_UNITS
-from searx.utils import extract_text, html_to_text, get_string_replaces_function
 from searx.external_urls import (
-    get_external_url,
-    get_earth_coordinates_url,
     area_to_osm_zoom,
+    get_earth_coordinates_url,
+    get_external_url,
 )
 from searx.result_types import EngineResults
+from searx.utils import extract_text, get_string_replaces_function, html_to_text
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
@@ -63,10 +63,7 @@ def result_to_text(text: str, htmlResult: str) -> str | None:
     result = ""
     dom = html.fromstring(htmlResult)
     a = dom.xpath("//a")
-    if len(a) >= 1:
-        result = extract_text(a[0])
-    else:
-        result = text
+    result = extract_text(a[0]) if len(a) >= 1 else text
     if result and not is_broken_text(result):
         return result
     return None
@@ -262,7 +259,7 @@ def area_to_str(area: dict[str, str]) -> str:
     if unit:
         try:
             amount = float(area.get("amount", ""))
-            return "{} {}".format(amount, unit)
+            return f"{amount} {unit}"
         except ValueError:
             pass
-    return "{} {}".format(area.get("amount", ""), area.get("unit", ""))
+    return f"{area.get('amount', '')} {area.get('unit', '')}"

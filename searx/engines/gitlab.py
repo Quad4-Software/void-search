@@ -40,6 +40,7 @@ Implementations
 """
 
 from urllib.parse import urlencode
+
 from dateutil import parser
 
 about = {
@@ -74,8 +75,8 @@ def request(query, params):
 def response(resp):
     results = []
 
-    for item in resp.json():
-        results.append(
+    results.extend(
+        [
             {
                 'template': 'packages.html',
                 'url': item.get('web_url'),
@@ -84,12 +85,14 @@ def response(resp):
                 'thumbnail': item.get('avatar_url'),
                 'package_name': item.get('name'),
                 'maintainer': item.get('namespace', {}).get('name'),
-                'publishedDate': parser.parse(item.get('last_activity_at') or item.get("created_at")),
+                'publishedDate': parser.parse(item.get('last_activity_at') or item.get('created_at')),
                 'tags': item.get('tag_list', []),
                 'popularity': item.get('star_count'),
                 'homepage': item.get('readme_url'),
                 'source_code_url': item.get('http_url_to_repo'),
             }
-        )
+            for item in resp.json()
+        ]
+    )
 
     return results

@@ -2,7 +2,7 @@
 """Youtube (Videos)"""
 
 from functools import reduce
-from json import loads, dumps
+from json import dumps, loads
 from urllib.parse import quote_plus
 
 from searx.utils import extr
@@ -102,7 +102,7 @@ def parse_next_page_response(response_text):
                 "key": "next_page_token",
             }
         )
-    except:  # pylint: disable=bare-except
+    except Exception:  # noqa: S110
         pass
 
     return results

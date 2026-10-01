@@ -5,7 +5,6 @@ import json
 from urllib.parse import urlencode
 
 from searx.engines.bing import (  # pylint: disable=unused-import
-    fetch_traits,
     get_locale_params,
 )
 from searx.engines.bing_images import time_map
@@ -54,7 +53,7 @@ def request(query, params):
     # - example: one week (10080 minutes) '&qft= filterui:videoage-lt10080'  '&form=VRFLTR'
     if params["time_range"]:
         query_params["form"] = "VRFLTR"
-        query_params["qft"] = " filterui:videoage-lt%s" % time_map[params["time_range"]]
+        query_params["qft"] = f" filterui:videoage-lt{time_map[params['time_range']]}"
 
     params["url"] = base_url + "/videos/asyncv2?" + urlencode(query_params)
 

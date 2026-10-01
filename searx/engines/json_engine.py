@@ -77,9 +77,10 @@ Implementations
 from collections.abc import Iterable
 from json import loads
 from urllib.parse import urlencode
-from searx.utils import to_string, html_to_text
-from searx.network import raise_for_httperror
+
 from searx.enginelib import EngineAbout
+from searx.network import raise_for_httperror
+from searx.utils import html_to_text, to_string
 
 about = EngineAbout()
 
@@ -262,11 +263,7 @@ safe_search_map = {0: '&filter=none', 1: '&filter=moderate', 2: '&filter=strict'
 
 
 def iterate(iterable):
-    if isinstance(iterable, dict):
-        items = iterable.items()
-
-    else:
-        items = enumerate(iterable)
+    items = iterable.items() if isinstance(iterable, dict) else enumerate(iterable)
     for index, value in items:
         yield str(index), value
 
@@ -374,20 +371,20 @@ def extract_response_info(result):
 
         title = query(result, title_query)[0]
         tmp_result['title'] = title_filter(to_string(title))
-    except:  # pylint: disable=bare-except
+    except Exception:
         return None
 
     try:
         content = query(result, content_query)[0]
         tmp_result['content'] = content_filter(to_string(content))
-    except:  # pylint: disable=bare-except
+    except Exception:
         tmp_result['content'] = ""
 
     try:
         if thumbnail_query:
             thumbnail_query_result = query(result, thumbnail_query)[0]
             tmp_result['thumbnail'] = thumbnail_prefix + to_string(thumbnail_query_result)
-    except:  # pylint: disable=bare-except
+    except Exception:  # noqa: S110
         pass
 
     return tmp_result
@@ -428,6 +425,5 @@ def response(resp):
 
     if not suggestion_query:
         return results
-    for suggestion in query(json, suggestion_query):
-        results.append({'suggestion': suggestion})
+    results.extend([{'suggestion': suggestion} for suggestion in query(json, suggestion_query)])
     return results

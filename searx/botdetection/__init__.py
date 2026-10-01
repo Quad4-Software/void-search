@@ -5,16 +5,13 @@ Implementations used for bot detection.
 
 """
 
-__all__ = ["init", "dump_request", "get_network", "too_many_requests", "ProxyFix"]
+__all__ = ["ProxyFix", "dump_request", "get_network", "init", "too_many_requests"]
 
 
 import valkey
 
-from ._helpers import dump_request
-from ._helpers import get_network
-from ._helpers import too_many_requests
-from . import config
-from . import valkeydb
+from . import config, valkeydb
+from ._helpers import dump_request, get_network, too_many_requests
 from .trusted_proxies import ProxyFix
 
 

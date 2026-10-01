@@ -7,7 +7,7 @@ test.:
   yamllint  : lint YAML files (YAMLLINT_FILES)
   pylint    : lint ./searx, ./searxng_extra and ./tests
   pyright   : check Python types
-  black     : check Python code format
+  ruff      : lint and check Python code format
   shfmt     : check Shell script code format
   unit      : run unit tests
   coverage  : run unit tests with coverage
@@ -80,9 +80,10 @@ test.pyright_modified() {
     return 0
 }
 
-test.black() {
-    build_msg TEST "[black] $BLACK_TARGETS"
-    pyenv.cmd black --check --diff "${BLACK_OPTIONS[@]}" "${BLACK_TARGETS[@]}"
+test.ruff() {
+    build_msg TEST "[ruff] ${RUFF_TARGETS[*]}"
+    pyenv.cmd ruff check "${RUFF_TARGETS[@]}"
+    pyenv.cmd ruff format --check --diff "${RUFF_TARGETS[@]}"
     dump_return $?
 }
 

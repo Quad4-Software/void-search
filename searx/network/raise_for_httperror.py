@@ -2,28 +2,29 @@
 """Raise exception for an HTTP response is an error."""
 
 import typing as t
+
+from searx import get_setting
 from searx.exceptions import (
+    SearxEngineAccessDeniedException,
     SearxEngineCaptchaException,
     SearxEngineTooManyRequestsException,
-    SearxEngineAccessDeniedException,
 )
-from searx import get_setting
 
 if t.TYPE_CHECKING:
     from searx.extended_types import SXNG_Response
 
 
 def is_cloudflare_challenge(resp: "SXNG_Response"):
-    if resp.status_code in [429, 503]:
-        if ('__cf_chl_jschl_tk__=' in resp.text) or (
+    if resp.status_code in [429, 503] and (
+        ('__cf_chl_jschl_tk__=' in resp.text)
+        or (
             '/cdn-cgi/challenge-platform/' in resp.text
             and 'orchestrate/jsch/v1' in resp.text
             and 'window._cf_chl_enter(' in resp.text
-        ):
-            return True
-    if resp.status_code == 403 and '__cf_chl_captcha_tk__=' in resp.text:
+        )
+    ):
         return True
-    return False
+    return bool(resp.status_code == 403 and '__cf_chl_captcha_tk__=' in resp.text)
 
 
 def is_cloudflare_firewall(resp: "SXNG_Response"):

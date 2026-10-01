@@ -33,13 +33,14 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
-from urllib.parse import urlencode
 from datetime import datetime
+from urllib.parse import urlencode
 
 from searx.exceptions import SearxEngineAPIException
-from searx.utils import html_to_text
 from searx.result_types import EngineResults, MainResult
+from searx.utils import html_to_text
 
 about = {
     "website": "https://huggingface.co/",
@@ -91,10 +92,8 @@ def response(resp) -> EngineResults:
             url = f"{base_url}/{entry['id']}"
 
         published_date = None
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             published_date = datetime.fromisoformat(entry["createdAt"].rstrip("Z"))
-        except (ValueError, TypeError):
-            pass
 
         contents = []
         if entry.get("likes"):

@@ -48,15 +48,15 @@ def setup(_: dict[str, t.Any]) -> bool | None:
 
 
 def request(query, params):
-    params['url'] = f"{base_url}/search/{quote_plus(query)}/{page_size}/{(params['pageno']-1)*page_size}"
+    params['url'] = f"{base_url}/search/{quote_plus(query)}/{page_size}/{(params['pageno'] - 1) * page_size}"
     return params
 
 
 def response(resp):
     results = []
 
-    for result in resp.json():
-        results.append(
+    results.extend(
+        [
             {
                 'url': matrix_url + '/#/' + result['alias'],
                 'title': result['name'],
@@ -66,6 +66,8 @@ def response(resp):
                 + f" // {result['server']}",
                 'thumbnail': result['avatar_url'],
             }
-        )
+            for result in resp.json()
+        ]
+    )
 
     return results

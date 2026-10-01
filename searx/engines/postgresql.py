@@ -21,14 +21,13 @@ Implementations
 
 """
 
+import contextlib
 import typing as t
 
-try:
+# import error is ignored because the admin has to install postgresql
+# manually to use the engine.
+with contextlib.suppress(ImportError):
     import psycopg2  # type: ignore
-except ImportError:
-    # import error is ignored because the admin has to install postgresql
-    # manually to use the engine.
-    pass
 
 from searx.result_types import EngineResults
 
@@ -79,12 +78,11 @@ def init(_):
 
 def search(query, params) -> EngineResults:
     query_params = {'query': query}
-    query_to_run = query_str + ' LIMIT {0} OFFSET {1}'.format(limit, (params['pageno'] - 1) * limit)
+    query_to_run = query_str + f" LIMIT {limit} OFFSET {(params['pageno'] - 1) * limit}"
 
-    with _connection:
-        with _connection.cursor() as cur:
-            cur.execute(query_to_run, query_params)
-            return _fetch_results(cur)
+    with _connection, _connection.cursor() as cur:
+        cur.execute(query_to_run, query_params)
+        return _fetch_results(cur)
 
 
 def _fetch_results(cur) -> EngineResults:
@@ -92,7 +90,7 @@ def _fetch_results(cur) -> EngineResults:
     try:
         titles = [column_desc.name for column_desc in cur.description]
         for row in cur:
-            kvmap = dict(zip(titles, map(str, row)))
+            kvmap = dict(zip(titles, map(str, row), strict=True))
             res.add(res.types.KeyValue(kvmap=kvmap))
 
     # no results to fetch
