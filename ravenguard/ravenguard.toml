@@ -1,0 +1,186 @@
+# RavenGuard in front of Void.
+# Client -> RavenGuard (:8080) -> void:8080
+# Official schema: https://github.com/Quad4-Software/ravenguard
+
+[listen]
+http = ":8080"
+
+[tls]
+mode = "off"
+
+[upstream]
+url = "http://void:8080"
+connect_timeout = "3s"
+response_header_timeout = "20s"
+idle_conn_timeout = "90s"
+max_idle_conns = 2048
+max_idle_conns_per_host = 512
+allow_http1 = true
+
+[upstream.health]
+enabled = true
+path = "/healthz"
+interval = "10s"
+timeout = "3s"
+
+# edge trusts the connecting socket. If Caddy or nginx sits in front,
+# switch mode to behind_proxy and keep the CIDR list below.
+[trust]
+mode = "edge"
+trusted_proxies = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8", "fc00::/7", "::1/128"]
+real_ip_header = "X-Real-IP"
+proto_header = "X-Forwarded-Proto"
+proxy_protocol = false
+
+[blocklists]
+ip_files = ["/blocklists/ips.txt"]
+dns_files = ["/blocklists/domains.txt"]
+ua_files = ["/blocklists/ua.txt"]
+reload_interval = "30s"
+
+[allowlists]
+reload_interval = "30s"
+
+[qfeeds]
+enabled = false
+
+[ratelimit]
+enabled = true
+requests = 80
+window = "1m"
+burst = 40
+per_path = true
+challenge_over = true
+subnet_requests = 800
+subnet_burst = 160
+subnet_window = "1m"
+subnet_v4_prefix = 24
+subnet_v6_prefix = 64
+global_requests = 4000
+global_burst = 800
+global_window = "1m"
+
+[protect]
+enabled = true
+max_body_bytes = 32768
+max_header_bytes = 16384
+max_url_bytes = 4096
+max_concurrent_global = 4096
+max_concurrent_per_client = 16
+ban_after_strikes = 4
+ban_ttl = "15m"
+ban_escalation = 2
+attack_block = true
+attack_score = 85
+write_method_cost = 2
+
+[detect]
+enabled = true
+challenge_score = 35
+block_score = 85
+missing_ua_score = 30
+scanner_ua_score = 60
+ai_ua_score = 50
+probe_path_score = 50
+odd_method_score = 35
+missing_accept_score = 12
+missing_accept_lang_score = 15
+missing_sec_fetch_score = 20
+high_404_threshold = 12
+high_404_window = "1m"
+high_404_action = "challenge"
+penalty_threshold = 60
+penalty_window = "1m"
+penalty_action = "challenge"
+cache_miss_ttl = "5s"
+behavior_window = "1m"
+behavior_burst_limit = 40
+behavior_burst_score = 40
+behavior_path_fanout = 20
+behavior_path_fanout_score = 35
+behavior_strike_limit = 3
+behavior_strike_score = 30
+
+[detect.crawler_verify]
+enabled = true
+timeout = "250ms"
+spoof_score = 40
+
+[honeypot]
+enabled = true
+paths = [
+  "/.env",
+  "/.git/config",
+  "/wp-login.php",
+  "/xmlrpc.php",
+  "/phpmyadmin",
+  "/actuator/health",
+  "/server-status",
+  "/console",
+  "/debug/pprof/",
+]
+prefixes = ["/.git/", "/wp-admin/", "/phpmyadmin/"]
+action = "ban"
+ban_ttl = "1h"
+
+[challenge]
+enabled = true
+mode = "detect"
+algorithm = "adaptive"
+difficulty = 16
+env_probe = "on"
+cookie_name = "rg_clear"
+cookie_ttl = "12h"
+secret = "rg-void-change-me!!"
+path_prefix = "/_rg"
+
+[challenge.captcha]
+enabled = false
+
+[privacy]
+hash_client_ip = true
+log_ip = "none"
+retention = "1m"
+
+[ui]
+brand = "Void Search"
+status_text = "Checking your browser."
+test_mode = false
+background = "#0a0a0b"
+foreground = "#fafafa"
+accent = "#a1a1aa"
+
+[site]
+description = "Private metasearch"
+theme_color = "#0a0a0b"
+robots = "noindex, nofollow"
+lang = "en"
+
+[stealth]
+ray_header = ""
+generic_copy = true
+hide_brand_mark = true
+serve_manifest = false
+serve_root_icons = false
+
+[logging]
+level = "warn"
+format = "text"
+stats = true
+stats_interval = "60s"
+
+[sandbox]
+mode = "best_effort"
+
+[sandbox.landlock]
+restrict_net = true
+restrict_scoped = true
+ignore_missing = true
+ro_dirs = ["/config", "/blocklists", "/etc/ssl/certs"]
+rw_dirs = ["/tmp"]
+
+[sandbox.seccomp]
+deny_action = "errno"
+
+[admin]
+enabled = false

@@ -1,0 +1,26 @@
+# Hosts dropped from result lists. One hostname per line.
+pinterest.com
+pinterest.co.uk
+quora.com
+wikihow.com
+fandom.com
+facebook.com
+instagram.com
+tiktok.com
+taboola.com
+outbrain.com
+msn.com
+answers.com
+ehow.com
+livestrong.com
+hubpages.com
+w3schools.com
+geeksforgeeks.org
+tutorialspoint.com
+javatpoint.com
+programiz.com
+clickbait.com
+popads.net
+doubleclick.net
+googlesyndication.com
+content-recommendation.com

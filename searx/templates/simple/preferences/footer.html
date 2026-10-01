@@ -1,0 +1,8 @@
+<p class="void-prefs-note">
+  {{- _('These settings stay in this browser. Nothing here is sent to search engines.') -}}
+</p>{{- '' -}}
+<div class="void-prefs-actions">
+  <input type="submit" value="{{ _('Save') }}">{{- '' -}}
+  <a class="void-prefs-secondary" href="{{ url_for('index') }}">{{ _('Back') }}</a>{{- '' -}}
+  <a class="void-prefs-secondary" href="{{ url_for('clear_cookies') }}">{{ _('Reset defaults') }}</a>{{- '' -}}
+</div>

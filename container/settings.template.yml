@@ -1,0 +1,59 @@
+use_default_settings: true
+
+general:
+  instance_name: "Void Search"
+  enable_metrics: false
+
+server:
+  secret_key: "ultrasecretkey"
+  limiter: true
+  public_instance: true
+  image_proxy: true
+  http_protocol_version: "1.1"
+  bind_address: "0.0.0.0"
+  port: 8080
+  method: POST
+  default_http_headers:
+    X-Content-Type-Options: nosniff
+    X-Download-Options: noopen
+    X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+    Referrer-Policy: no-referrer
+    X-Frame-Options: DENY
+    X-Permitted-Cross-Domain-Policies: none
+    Cross-Origin-Opener-Policy: same-origin
+    Cross-Origin-Resource-Policy: same-origin
+    Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+
+search:
+  autocomplete: wikipedia
+  autocomplete_min: 3
+  favicon_resolver: ""
+  default_lang: en
+  formats:
+    - html
+
+ui:
+  default_theme: simple
+  center_alignment: true
+  query_in_title: false
+  theme_args:
+    simple_style: dark
+
+outgoing:
+  request_timeout: 2.0
+  max_request_timeout: 4.0
+  enable_http2: true
+  pool_connections: 256
+  max_redirects: 8
+  retries: 0
+
+void:
+  result_cache_ttl: 180
+  result_cache_max: 1024
+  anonymize_outgoing: true
+  hide_timings: true
+  hide_downloads: true
+  hide_version: true
+  landlock: true
+  drop_foreign_script: true
+  no_logs: true

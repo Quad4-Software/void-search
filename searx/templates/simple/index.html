@@ -1,0 +1,12 @@
+{% extends "simple/base.html" %}
+{% from 'simple/icons.html' import icon_big %}
+{% block content %}
+<div class="index">
+    <div class="title void-lockup">
+        {% include 'simple/void-mark.svg' %}
+        <h1>Void Search</h1>
+        <p class="void-tag">Search from the far edge</p>
+    </div>
+    {% include 'simple/simple_search.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+name: void
+
+services:
+  ravenguard:
+    image: ghcr.io/quad4-software/ravenguard:edge
+    container_name: void-edge
+    restart: unless-stopped
+    depends_on:
+      void:
+        condition: service_started
+    ports:
+      - "${VOID_HOST:-127.0.0.1}:${VOID_PORT:-48731}:8080"
+    environment:
+      RG_CHALLENGE_SECRET: "${RG_CHALLENGE_SECRET:-rg-void-change-me-please!!}"
+      RG_SANDBOX_MODE: best_effort
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 384m
+    volumes:
+      - ./ravenguard/ravenguard.toml:/config/ravenguard.toml:ro
+      - ./ravenguard/blocklists:/blocklists:ro
+    command: ["-config", "/config/ravenguard.toml"]
+
+  void:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: void:local
+    container_name: void
+    restart: unless-stopped
+    depends_on:
+      valkey:
+        condition: service_started
+    expose:
+      - "8080"
+    environment:
+      SEARXNG_BASE_URL: "${SEARXNG_BASE_URL:-http://127.0.0.1:48731/}"
+      SEARXNG_LIMITER: "true"
+      SEARXNG_PUBLIC_INSTANCE: "true"
+      SEARXNG_VALKEY_URL: "valkey://valkey:6379/0"
+      SEARXNG_IMAGE_PROXY: "true"
+      GRANIAN_WORKERS: "${GRANIAN_WORKERS:-4}"
+      GRANIAN_BLOCKING_THREADS: "8"
+      GRANIAN_BACKPRESSURE: "128"
+      GRANIAN_RUNTIME_THREADS: "2"
+      GRANIAN_ACCESS_LOG: "false"
+      GRANIAN_LOG_LEVEL: "error"
+      MALLOC_ARENA_MAX: "2"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    mem_limit: 1536m
+    user: "65532:65532"
+    volumes:
+      - ./config:/etc/searxng:Z
+      - void-data:/var/cache/searxng
+
+  valkey:
+    image: docker.io/valkey/valkey:8-alpine
+    container_name: void-valkey
+    restart: unless-stopped
+    command: valkey-server --save "" --appendonly no --protected-mode yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 160m
+    user: "65532:65532"
+    volumes:
+      - valkey-data:/data
+
+volumes:
+  void-data:
+  valkey-data:
