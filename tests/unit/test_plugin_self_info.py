@@ -29,6 +29,14 @@ class PluginIPSelfInfo(SearxTestCase):
         cfg = searx.limiter.get_cfg()
         searx.botdetection.init(cfg, None)
 
+        import sys  # noqa: E402
+
+        print(  # noqa: T201
+            "DEBUG storage:", [(p.id, p.active) for p in searx.plugins.STORAGE],
+            "settings plugins:", searx.settings.get("plugins"),
+            file=sys.stderr,
+        )
+
     def test_plugin_store_init(self):
         self.assertEqual(1, len(self.storage))
 
