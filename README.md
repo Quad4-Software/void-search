@@ -66,6 +66,22 @@ Void itself is not published on the host. Change `RG_CHALLENGE_SECRET` before
 binding anything publicly. Raise `GRANIAN_WORKERS` if the box has RAM to
 spare.
 
+## Coolify
+
+`container/docker-compose.yml` is a Coolify-ready definition that runs the
+published image plus a Valkey sidecar for the limiter and result cache.
+
+In Coolify create an Application from this repository, select the Docker
+Compose build pack and set the Compose location to
+`container/docker-compose.yml`. Put the public domain on the `void`
+service's Domains field with the internal port, for example
+`https://search.example.com:8080`. Variables like `SEARXNG_BASE_URL` show up
+in Coolify's environment editor; the secret key is generated on first boot
+and kept in the `void-config` volume.
+
+The image lives at `ghcr.io/quad4-software/void-search`. If the package is
+private, add a registry credential in Coolify or mark the package public.
+
 ## Wiby and YaCy
 
 Both ship disabled. In `/etc/searxng/settings.yml`:

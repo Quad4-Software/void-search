@@ -1,28 +1,68 @@
-# Read the documentation before using the `docker-compose.yml` file:
-# https://docs.searxng.org/admin/installation-docker.html
+# Docker Compose definition for Void Search.
+#
+# Coolify: create an Application in the target project and environment, pick
+# this repository as the source, select the Docker Compose build pack, set the
+# Docker Compose Location to container/docker-compose.yml, then set the public
+# domain on the "void" service's Domains field, including the container port:
+#
+#   https://search.example.com:8080
+#
+# Variables written as ${NAME:-default} become editable environment variables
+# in Coolify. The secret key does not need a variable: the entrypoint
+# generates one on first boot and stores it in the void-config volume.
+#
+# Plain docker compose works too: docker compose -f container/docker-compose.yml up -d
 
-name: searxng
+name: void-search
 
 services:
-  core:
-    container_name: searxng-core
-    image: docker.io/searxng/searxng:${SEARXNG_VERSION:-latest}
-    restart: always
-    ports:
-      - ${SEARXNG_HOST:+${SEARXNG_HOST}:}${SEARXNG_PORT:-8080}:${SEARXNG_PORT:-8080}
-    env_file: ./.env
+  void:
+    image: ghcr.io/quad4-software/void-search:${SEARXNG_VERSION:-latest}
+    container_name: void-search
+    restart: unless-stopped
+    # the proxy routes to the internal port; do not publish it on the host
+    expose:
+      - "8080"
+    environment:
+      SEARXNG_VALKEY_URL: ${SEARXNG_VALKEY_URL:-valkey://valkey:6379/0}
+      SEARXNG_LIMITER: ${SEARXNG_LIMITER:-true}
+      SEARXNG_PUBLIC_INSTANCE: ${SEARXNG_PUBLIC_INSTANCE:-false}
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-}
+      SEARXNG_IMAGE_PROXY: ${SEARXNG_IMAGE_PROXY:-true}
     volumes:
-      - ./core-config/:/etc/searxng/:Z
-      - core-data:/var/cache/searxng/
+      - void-config:/etc/searxng
+      - void-data:/var/cache/searxng
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   valkey:
-    container_name: searxng-valkey
     image: docker.io/valkey/valkey:9-alpine
+    container_name: void-search-valkey
     command: valkey-server --save 30 1 --loglevel warning
-    restart: always
+    restart: unless-stopped
     volumes:
-      - valkey-data:/data/
+      - valkey-data:/data
+    healthcheck:
+      test:
+        - CMD
+        - valkey-cli
+        - ping
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
-  core-data:
+  void-config:
+  void-data:
   valkey-data:
