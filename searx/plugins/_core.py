@@ -225,6 +225,10 @@ class PluginStorage:
                 msg = f"plugin {fqn} is not implemented"
                 raise ValueError(msg)
             plg = cls(PluginCfg(**plg_settings))
+            # drop a previous registration of the same plugin ID so that a
+            # repeated load_settings() call (e.g. tests re-initializing) does
+            # not leave stale duplicates behind
+            self.plugin_list = {p for p in self.plugin_list if p.id != plg.id}
             self.register(plg)
 
     def register(self, plugin: Plugin):
@@ -232,7 +236,7 @@ class PluginStorage:
         plugins have same ID) a :py:obj:`KeyError` exception is raised.
         """
 
-        if plugin in [p.id for p in self.plugin_list]:
+        if plugin.id in [p.id for p in self.plugin_list]:
             msg = f"name collision '{plugin.id}'"
             plugin.log.critical(msg)
             raise KeyError(msg)

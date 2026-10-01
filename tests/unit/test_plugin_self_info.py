@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # pylint: disable=missing-module-docstring,disable=missing-class-docstring,invalid-name,line-too-long
 
-import sys
 
 from flask_babel import gettext
 from parameterized.parameterized import parameterized
@@ -30,11 +29,6 @@ class PluginIPSelfInfo(SearxTestCase):
 
         cfg = searx.limiter.get_cfg()
         searx.botdetection.init(cfg, None)
-
-        sys.stderr.write(
-            f"DEBUG storage={[(p.id, p.active) for p in searx.plugins.STORAGE]}\n"
-            f"DEBUG settings.plugins={searx.settings.get('plugins')}\n"
-        )
 
     def test_plugin_store_init(self):
         self.assertEqual(1, len(self.storage))

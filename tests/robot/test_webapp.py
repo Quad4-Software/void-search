@@ -9,7 +9,7 @@ url = "http://localhost:11111/"
 def test_index(browser):
     # Visit URL
     browser.visit(url)
-    assert browser.is_text_present('SearXNG')
+    assert browser.is_text_present('Void Search')
 
 
 def test_404(browser):
@@ -20,8 +20,8 @@ def test_404(browser):
 
 def test_about(browser):
     browser.visit(url)
-    browser.links.find_by_text('SearXNG').click()
-    assert browser.is_text_present('Why use it?')
+    browser.links.find_by_href('/info/en/about').click()
+    assert browser.is_text_present('About Void Search')
 
 
 def test_preferences(browser):
