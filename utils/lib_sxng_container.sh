@@ -198,19 +198,25 @@ container.test() {
 
         # the image defaults to limiter + public_instance which require Valkey
         # that the smoke test does not provide - disable both
-        podman create --name="$name" --rm --timeout=60 --network="host" \
+        podman create --name="$name" --timeout=60 --network="host" \
             -e SEARXNG_LIMITER=false -e SEARXNG_PUBLIC_INSTANCE=false \
             "$image" >/dev/null
 
         podman start "$name" >/dev/null
-        podman logs -f "$name" &
-        pid_logs=$!
 
         # Wait until container is ready
-        curl -fsS --retry 30 --retry-delay 2 --retry-all-errors --max-time 5 "http://localhost:8080/healthz"
+        if ! curl -fsS --retry 30 --retry-delay 2 --retry-all-errors --max-time 5 "http://localhost:8080/healthz"; then
+            echo "container never became ready; state and logs follow"
+            podman inspect "$name" --format 'exited={{.State.Running}} code={{.State.ExitCode}} error={{.State.Error}}' || true
+            podman logs "$name" || true
+            podman stop "$name" &>/dev/null || true
+            podman rm -f "$name" &>/dev/null || true
+            die 7 "container smoke test failed"
+        fi
 
-        kill $pid_logs &>/dev/null || true
+        podman logs "$name" || true
         podman stop "$name" >/dev/null
+        podman rm -f "$name" >/dev/null || true
     )
     dump_return $?
 }
