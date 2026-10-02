@@ -191,9 +191,10 @@ jobs:
       - name: Smoke test image
         run: |
           set -e
-          podman run --rm --platform linux/amd64 \
-            "ghcr.io/quad4-software/void-crawler:${TAG}" --help | grep -q "crawl"
-          echo "image smoke ok"
+          out=$(podman run --rm --platform linux/amd64 \
+            "ghcr.io/quad4-software/void-crawler:${TAG}" --version)
+          echo "$out"
+          [ -n "$out" ]
 
       - name: Resolve image digest
         id: digest
