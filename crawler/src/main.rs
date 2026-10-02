@@ -8,6 +8,7 @@ use void_crawler::{crawl, extract, fetcher, server};
 #[derive(Parser)]
 #[command(
     name = "void-crawler",
+    version,
     about = "Independent crawler and index for Void Search"
 )]
 struct Cli {
