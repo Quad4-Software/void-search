@@ -129,13 +129,13 @@ configs:
       # RavenGuard in front of Void.
       # Client -> RavenGuard (:8080) -> void:8080
       # Official schema: https://github.com/Quad4-Software/ravenguard
-      
+
       [listen]
       http = ":8080"
-      
+
       [tls]
       mode = "off"
-      
+
       [upstream]
       url = "http://void:8080"
       connect_timeout = "3s"
@@ -144,13 +144,13 @@ configs:
       max_idle_conns = 2048
       max_idle_conns_per_host = 512
       allow_http1 = true
-      
+
       [upstream.health]
       enabled = true
       path = "/healthz"
       interval = "10s"
       timeout = "3s"
-      
+
       # edge trusts the connecting socket. If Caddy or nginx sits in front,
       # switch mode to behind_proxy and keep the CIDR list below.
       [trust]
@@ -159,19 +159,19 @@ configs:
       real_ip_header = "X-Real-IP"
       proto_header = "X-Forwarded-Proto"
       proxy_protocol = false
-      
+
       [blocklists]
       ip_files = ["/blocklists/ips.txt"]
       dns_files = ["/blocklists/domains.txt"]
       ua_files = ["/blocklists/ua.txt"]
       reload_interval = "30s"
-      
+
       [allowlists]
       reload_interval = "30s"
-      
+
       [qfeeds]
       enabled = false
-      
+
       [ratelimit]
       enabled = true
       requests = 80
@@ -187,7 +187,7 @@ configs:
       global_requests = 4000
       global_burst = 800
       global_window = "1m"
-      
+
       [protect]
       enabled = true
       max_body_bytes = 32768
@@ -201,7 +201,7 @@ configs:
       attack_block = true
       attack_score = 85
       write_method_cost = 2
-      
+
       [detect]
       enabled = true
       challenge_score = 30
@@ -228,12 +228,12 @@ configs:
       behavior_path_fanout_score = 35
       behavior_strike_limit = 6
       behavior_strike_score = 30
-      
+
       [detect.crawler_verify]
       enabled = true
       timeout = "250ms"
       spoof_score = 40
-      
+
       [honeypot]
       enabled = true
       paths = [
@@ -250,7 +250,7 @@ configs:
       prefixes = ["/.git/", "/wp-admin/", "/phpmyadmin/"]
       action = "block"
       ban_ttl = "10m"
-      
+
       [challenge]
       enabled = true
       mode = "detect"
@@ -261,15 +261,15 @@ configs:
       cookie_ttl = "12h"
       secret = "rg-void-change-me!!"
       path_prefix = "/_rg"
-      
+
       [challenge.captcha]
       enabled = false
-      
+
       [privacy]
       hash_client_ip = true
       log_ip = "off"
       retention = "1m"
-      
+
       [ui]
       brand = "Void Search"
       status_text = "Checking your browser."
@@ -277,39 +277,39 @@ configs:
       background = "#0a0a0b"
       foreground = "#fafafa"
       accent = "#a1a1aa"
-      
+
       [site]
       description = "Private metasearch"
       theme_color = "#0a0a0b"
       robots = "noindex, nofollow"
       lang = "en"
-      
+
       [stealth]
       ray_header = ""
       generic_copy = true
       hide_brand_mark = true
       serve_manifest = false
       serve_root_icons = false
-      
+
       [logging]
       level = "warn"
       format = "text"
       stats = true
       stats_interval = "60s"
-      
+
       [sandbox]
       mode = "best_effort"
-      
+
       [sandbox.landlock]
       restrict_net = true
       restrict_scoped = true
       ignore_missing = true
       ro_dirs = ["/config", "/blocklists", "/etc/ssl/certs"]
       rw_dirs = ["/tmp"]
-      
+
       [sandbox.seccomp]
       deny_action = "errno"
-      
+
       [admin]
       enabled = false
   rg_ips:
