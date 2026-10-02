@@ -188,8 +188,13 @@ jobs:
         env:
           DOCKER_TAG: "${{ needs.build.outputs.docker_tag }}"
         run: |
+          # podman cannot inspect a manifest list whose children were not
+          # re-imported, so ask the registry what we just pushed
+          if ! command -v skopeo >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq skopeo
+          fi
           image="ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
-          digest=$(podman image inspect --format '{{.Digest}}' "localhost/searxng/searxng:${DOCKER_TAG}")
+          digest=$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${DOCKER_TAG}")
           echo "image=${image}" >> "$GITHUB_OUTPUT"
           echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
