@@ -2,10 +2,8 @@
 # the build context must be the repo root so crawler/ files resolve
 FROM docker.io/library/rust:1-bookworm AS builder
 WORKDIR /src
-# deps layer caching: copy manifests first, build a stub, then the real code
+# deps layer caching via mtimes is unreliable with oci copies - just build
 COPY crawler/Cargo.toml crawler/Cargo.lock ./
-RUN mkdir src && echo 'fn main() {}' > src/main.rs && echo '' > src/lib.rs \
-    && cargo build --release && rm -rf src
 COPY crawler/src src
 COPY crawler/tests tests
 RUN cargo build --release && strip target/release/void-crawler
