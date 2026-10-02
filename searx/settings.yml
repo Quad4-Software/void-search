@@ -56,6 +56,12 @@ search:
     enabled: true
     soft_timeout: 2.5
     min_responsive: 0.6
+  # streaming: results page renders instantly and streams engine results
+  # over server-sent events as they arrive. browsers without JS or that
+  # block EventSource fall back to the classic blocking page. set
+  # enabled: false to always render server-side.
+  streaming:
+    enabled: true
   # Available languages
   # languages:
   #   - all
@@ -630,7 +636,6 @@ engines:
     engine: openverse
     categories: images
     shortcut: opv
-    disabled: true
 
   - name: media.ccc.de
     engine: ccc_media
@@ -718,7 +723,6 @@ engines:
     engine: crossref
     shortcut: cr
     timeout: 30
-    disabled: true
 
   - name: crowdview
     engine: json_engine
@@ -1226,7 +1230,6 @@ engines:
     engine: gitea
     base_url: https://codeberg.org
     shortcut: cb
-    disabled: true
 
   - name: gitea.com
     engine: gitea
@@ -1327,7 +1330,6 @@ engines:
   - name: hackernews
     engine: hackernews
     shortcut: hn
-    disabled: true
 
   - name: hex
     engine: hex
@@ -1381,7 +1383,6 @@ engines:
   - name: huggingface
     engine: huggingface
     shortcut: hf
-    disabled: true
 
   - name: huggingface datasets
     huggingface_endpoint: datasets
@@ -1793,8 +1794,6 @@ engines:
   - name: neocities
     engine: neocities
     shortcut: nc
-    disabled: true
-    inactive: true
 
   - name: niconico
     engine: niconico
@@ -1805,7 +1804,6 @@ engines:
     engine: npm
     shortcut: npm
     timeout: 5.0
-    disabled: true
 
   - name: nyaa
     engine: nyaa
@@ -2710,7 +2708,7 @@ engines:
   - name: wikinews
     engine: mediawiki
     shortcut: wn
-    categories: [news, wikimedia]
+    categories: [general, news, wikimedia]
     base_url: "https://{language}.wikinews.org/"
     search_type: text
     srsort: create_timestamp_desc
@@ -2753,7 +2751,7 @@ engines:
   - name: wiktionary
     engine: mediawiki
     shortcut: wt
-    categories: [dictionaries, wikimedia]
+    categories: [general, dictionaries, wikimedia]
     base_url: "https://{language}.wiktionary.org/"
     search_type: text
     about:
@@ -2976,7 +2974,6 @@ engines:
     # alternatives see: https://instances.joinpeertube.org/instances
     # base_url: https://tube.4aem.com
     categories: videos
-    disabled: true
     timeout: 6.0
 
   - name: mediathekviewweb
@@ -3125,8 +3122,6 @@ engines:
     swisscows_category: web
     results_per_page: 20
     shortcut: sw
-    disabled: true
-    inactive: true
 
   - name: swisscows images
     engine: swisscows

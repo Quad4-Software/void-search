@@ -7,7 +7,9 @@
 import base64
 import contextlib
 import json
+import queue
 import sys
+import threading
 import typing
 import urllib
 import urllib.parse
@@ -32,10 +34,12 @@ WSGIRequestHandler.sys_version = ""
 import flask
 from flask import (
     Flask,
+    copy_current_request_context,
     make_response,
     redirect,
     render_template,
     send_from_directory,
+    stream_with_context,
     url_for,
 )
 from flask.json import jsonify
@@ -645,6 +649,10 @@ def search():
             sxng_request.preferences, sxng_request.form
         )
         search_obj = searx.search.SearchWithPlugins(search_query, sxng_request, sxng_request.user_plugins)
+
+        if _wants_streaming(output_format):
+            return _render_stream_shell(search_query, selected_locale)
+
         result_container = search_obj.search()
 
     except SearxParameterException as e:
@@ -680,20 +688,85 @@ def search():
 
     # 4. formats rendered by a template / RSS & HTML
 
-    current_template = None
-    previous_result = None
-
     results = result_container.get_ordered_results()
 
     if search_query.redirect_to_first_result and results:
         return redirect(results[0]['url'], 302)
 
+    _process_results_for_template(results, search_query, output_format == 'html')
+
+    # 4.a RSS
+
+    if output_format == 'rss':
+        response_rss = render(
+            'opensearch_response_rss.xml',
+            results=results,
+            q=sxng_request.form['q'],
+        )
+        return Response(response_rss, mimetype='text/xml')
+
+    # 4.b HTML
+
+    return render(
+        'results.html',
+        **_html_results_context(search_obj, search_query, raw_text_query, result_container, selected_locale),
+    )
+
+
+def _wants_streaming(output_format: str) -> bool:
+    """The results page loads progressively over SSE when enabled. Clients
+    without JS get a noscript redirect to stream=off which takes the classic
+    blocking path."""
+    return (
+        output_format == 'html'
+        and sxng_request.method == 'GET'
+        and sxng_request.form.get('stream') != 'off'
+        and settings['search'].get('streaming', {}).get('enabled', True)
+    )
+
+
+def _render_stream_shell(search_query, selected_locale):
+    stream_params = {k: v for k, v in sxng_request.args.items() if k not in ('stream', 'format')}
+    return render(
+        'results.html',
+        streaming=True,
+        stream_url=custom_url_for('search_stream') + '?' + urlencode(stream_params),
+        stream_off_url=custom_url_for('search') + '?' + urlencode({**stream_params, 'stream': 'off'}),
+        q=sxng_request.form['q'],
+        selected_categories=search_query.categories,
+        pageno=search_query.pageno,
+        current_language=selected_locale,
+        results=[],
+        answers=[],
+        corrections=[],
+        suggestions=[],
+        infoboxes=[],
+        engine_data={},
+        paging=False,
+        unresponsive_engines=[],
+        timings=[],
+        max_response_time=None,
+        time_range=search_query.time_range or '',
+        timeout_limit=sxng_request.form.get('timeout_limit', None),
+    )
+
+
+def _process_results_for_template(results, search_query, html: bool, highlighted: set | None = None):
+    """Highlight + group-boundary marking shared by the classic render and
+    the streamed fragment renders."""
+    if highlighted is None:
+        highlighted = set()
+    previous_result = None
+    current_template = None
     for result in results:
-        if output_format == 'html':
+        if html and id(result) not in highlighted:
+            # streamed snapshots revisit the same result objects - highlight
+            # once or the markup from the previous pass gets re-escaped
             if getattr(result, 'content', None):
                 result['content'] = highlight_content(escape(result['content'][:1024]), search_query.query)
             if getattr(result, 'title', None):
                 result['title'] = highlight_content(escape(result['title'] or ''), search_query.query)
+            highlighted.add(id(result))
 
         # set result['open_group'] = True when the template changes from the previous result
         # set result['close_group'] = True when the template changes on the next result
@@ -707,17 +780,11 @@ def search():
     if previous_result:
         previous_result.close_group = True
 
-    # 4.a RSS
 
-    if output_format == 'rss':
-        response_rss = render(
-            'opensearch_response_rss.xml',
-            results=results,
-            q=sxng_request.form['q'],
-        )
-        return Response(response_rss, mimetype='text/xml')
-
-    # 4.b HTML
+def _html_results_context(search_obj, search_query, raw_text_query, result_container, selected_locale):
+    """Build the results.html / results_inner.html context once - used by the
+    classic render and by the /stream done event."""
+    results = result_container.get_ordered_results() if result_container.closed else None
 
     # suggestions: use RawTextQuery to get the suggestion URLs with the same bang
     suggestion_urls = [
@@ -735,33 +802,131 @@ def search():
     max_response_time = engine_timings[0].total if engine_timings else None
     engine_timings_pairs = [(timing.engine, timing.total) for timing in engine_timings]
 
-    # search_query.lang contains the user choice (all, auto, en, ...)
-    # when the user choice is "auto", search.search_query.lang contains the detected language
-    # otherwise it is equals to search_query.lang
-    return render(
-        'results.html',
-        results=results,
-        q=sxng_request.form['q'],
-        selected_categories=search_query.categories,
-        pageno=search_query.pageno,
-        time_range=search_query.time_range or '',
-        suggestions=suggestion_urls,
-        answers=result_container.answers,
-        corrections=correction_urls,
-        infoboxes=result_container.infoboxes,
-        engine_data=result_container.engine_data,
-        paging=result_container.paging,
-        unresponsive_engines=webutils.get_translated_errors(result_container.unresponsive_engines),
-        current_locale=sxng_request.preferences.get_value("locale"),
-        current_language=selected_locale,
-        search_language=match_locale(
+    return {
+        'results': results,
+        'q': sxng_request.form['q'],
+        'selected_categories': search_query.categories,
+        'pageno': search_query.pageno,
+        'time_range': search_query.time_range or '',
+        'suggestions': suggestion_urls,
+        'answers': result_container.answers,
+        'corrections': correction_urls,
+        'infoboxes': result_container.infoboxes,
+        'engine_data': result_container.engine_data,
+        'paging': result_container.paging,
+        'unresponsive_engines': webutils.get_translated_errors(result_container.unresponsive_engines),
+        'current_locale': sxng_request.preferences.get_value("locale"),
+        'current_language': selected_locale,
+        'search_language': match_locale(
             search_obj.search_query.lang,
             settings['search']['languages'],
             fallback=sxng_request.preferences.get_value("language"),
         ),
-        timeout_limit=sxng_request.form.get('timeout_limit', None),
-        timings=engine_timings_pairs,
-        max_response_time=max_response_time,
+        'timeout_limit': sxng_request.form.get('timeout_limit', None),
+        'timings': engine_timings_pairs,
+        'max_response_time': max_response_time,
+    }
+
+
+@app.route('/stream', methods=['GET'])
+def search_stream():
+    """Server-sent events search stream.
+
+    The /search page renders a shell immediately (see _wants_streaming);
+    the client connects here and receives 'partial' events with the ordered
+    results list as engines answer, then a 'done' event with the full
+    results block - answers, infoboxes, corrections, pagination, timings -
+    plus a redirect field when the query resolved to an external bang.
+    """
+
+    if not settings['search'].get('streaming', {}).get('enabled', True):
+        flask.abort(404)
+
+    if not sxng_request.form.get('q'):
+        return index_error('html', 'No query'), 400
+
+    try:
+        search_query, raw_text_query, _, _, selected_locale = get_search_query_from_webapp(
+            sxng_request.preferences, sxng_request.form
+        )
+    except SearxParameterException as e:
+        logger.exception('stream search error: SearxParameterException')
+        return index_error('html', e.message), 400
+    except Exception as e:  # pylint: disable=broad-except
+        logger.exception(e, exc_info=True)
+        return index_error('html', gettext('search error')), 500
+
+    search_obj = searx.search.SearchWithPlugins(search_query, sxng_request, sxng_request.user_plugins)
+    container = search_obj.result_container
+
+    notify: queue.Queue = queue.Queue()
+    # engine threads call this after each merged batch; the generator turns
+    # it into debounced partial renders
+    container.on_extend = lambda: notify.put_nowait(True)
+
+    @copy_current_request_context
+    def run_search():
+        try:
+            search_obj.search()
+        except Exception:  # pylint: disable=broad-except
+            logger.exception('stream search error')
+        finally:
+            notify.put_nowait(None)
+
+    threading.Thread(target=run_search, daemon=True).start()
+
+    def sse(event: str, data: dict) -> bytes:
+        return f"event: {event}\ndata: {json.dumps(data)}\n\n".encode()
+
+    def event_stream():
+        last_emit = 0.0
+        highlighted: set = set()
+        while True:
+            try:
+                token = notify.get(timeout=15.0)
+            except queue.Empty:
+                # keep-alive so proxies do not reap an idle stream
+                yield b": ping\n\n"
+                continue
+            if token is None:
+                break
+            now = default_timer()
+            if now - last_emit < 0.12:
+                continue
+            last_emit = now
+            try:
+                partial = container.get_partial_results()
+                _process_results_for_template(partial, search_query, True, highlighted)
+                yield sse(
+                    'partial',
+                    {
+                        'html': render(
+                            'elements/results_list.html',
+                            results=partial,
+                            only_template='',
+                            answers=container.answers,
+                        )
+                    },
+                )
+            except Exception:  # pylint: disable=broad-except
+                logger.exception('stream partial render failed')
+        payload = {
+            'html': render(
+                'elements/results_inner.html',
+                **_html_results_context(search_obj, search_query, raw_text_query, container, selected_locale),
+            )
+        }
+        if container.redirect_url:
+            payload['redirect'] = container.redirect_url
+        yield sse('done', payload)
+
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no',
+        },
     )
 
 
@@ -1040,9 +1205,24 @@ def image_proxy():
         except RequestException as e:
             logger.debug('Exception while closing response', e)
 
+    def capped_stream():
+        # remote may skip Content-Length - never proxy an unbounded body
+        sent = 0
+        for chunk in stream:
+            sent += len(chunk)
+            if sent > maximum_size:
+                logger.debug('image-proxy: body exceeded %d bytes, truncating', maximum_size)
+                return
+            yield chunk
+
     try:
         headers = dict_subset(resp.headers, {'Content-Type', 'Content-Encoding', 'Content-Length', 'Length'})
-        response = Response(stream, mimetype=resp.headers['Content-Type'], headers=headers, direct_passthrough=True)
+        response = Response(
+            capped_stream(),
+            mimetype=resp.headers['Content-Type'],
+            headers=headers,
+            direct_passthrough=True,
+        )
         response.call_on_close(close_stream)
         return response
     except RequestException:

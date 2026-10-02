@@ -49,6 +49,9 @@ class ResultContainer:
     corrections: set[str]
 
     def __init__(self):
+        # optional subscriber for streaming result delivery - set by the
+        # stream endpoint, called once per engine batch (after merge)
+        self.on_extend: t.Callable[[], None] | None = None
         self.main_results_map = {}
         self.infoboxes = []
         self.suggestions = set()
@@ -136,6 +139,12 @@ class ResultContainer:
             if not self.paging and eng.paging:
                 self.paging = True
 
+        if self.on_extend is not None:
+            try:
+                self.on_extend()
+            except Exception:  # pylint: disable=broad-except
+                log.debug("on_extend subscriber failed", exc_info=True)
+
     def _merge_infobox(self, new_infobox: LegacyResult):
         add_infobox = True
 
@@ -164,6 +173,10 @@ class ResultContainer:
             # add the new position
             merged.positions.append(position)
 
+    @property
+    def closed(self) -> bool:
+        return self._closed
+
     def close(self):
         self._closed = True
 
@@ -171,6 +184,23 @@ class ResultContainer:
             result.score = calculate_score(result, result.priority, query=self.query, lang=self.lang)
             for eng_name in result.engines:
                 counter_add(result.score, 'engine', eng_name, 'score')
+
+    def get_partial_results(self) -> list[MainResult | LegacyResult]:
+        """Sorted snapshot of what has arrived so far - for streaming renders.
+
+        Does NOT close the container: scores are computed on the fly with the
+        same formula close() applies.
+        """
+        with self._lock:
+            return sorted(
+                (
+                    item
+                    for item in self.main_results_map.values()
+                    if calculate_score(item, item.priority, query=self.query, lang=self.lang) > 0
+                ),
+                key=lambda x: calculate_score(x, x.priority, query=self.query, lang=self.lang),
+                reverse=True,
+            )
 
     def get_ordered_results(self) -> list[MainResult | LegacyResult]:
         """Returns a sorted list of results to be displayed in the main result

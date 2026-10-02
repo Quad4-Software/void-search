@@ -217,6 +217,11 @@ SCHEMA: dict[str, t.Any] = {
             'soft_timeout': SettingsValue(numbers.Real, 2.5),
             'min_responsive': SettingsValue(numbers.Real, 0.6),
         },
+        'streaming': {
+            # progressive results over server-sent events: the page shell
+            # renders instantly and results stream in as engines answer
+            'enabled': SettingsValue(bool, True),
+        },
     },
     'server': {
         'port': SettingsValue((int, str), 8888, 'SEARXNG_PORT'),

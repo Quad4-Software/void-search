@@ -103,6 +103,14 @@ export default class InfiniteScroll extends Plugin {
     if (initialObservedElement) {
       observer.observe(initialObservedElement);
     }
+
+    // streamed results swap #results innerHTML once finished - re-observe
+    // the (new) last article so the sentinel keeps working
+    document.addEventListener("searx:results-ready", () => {
+      observer.disconnect();
+      const el = document.querySelector<HTMLElement>(observedSelector);
+      if (el) observer.observe(el);
+    });
   }
 
   protected async post(): Promise<void> {

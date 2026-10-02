@@ -53,6 +53,7 @@ ready(
     void import("./main/keyboard.ts");
     void import("./main/results.ts");
     void import("./main/search.ts");
+    void import("./main/streaming.ts");
 
     if (settings.autocomplete) {
       void import("./main/autocomplete.ts");

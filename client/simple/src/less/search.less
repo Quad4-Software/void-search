@@ -374,3 +374,38 @@ button.category_button {
   border: 1px solid var(--color-favicon-border-color);
   display: flex;
 }
+
+// streamed results shell
+.stream-loading {
+  padding: 2rem 0;
+}
+
+.stream-progress {
+  height: 3px;
+  background: var(--color-header-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stream-progress-bar {
+  height: 100%;
+  width: 12%;
+  background: var(--color-btn-background);
+  transition: width 0.25s ease;
+  animation: stream-indeterminate 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes stream-indeterminate {
+  from { margin-left: 0; }
+  to { margin-left: 40%; }
+}
+
+.stream-status {
+  margin-top: 0.6rem;
+  color: var(--color-result-content-font);
+  font-size: 0.9em;
+}
+
+.stream-dots {
+  letter-spacing: 0.2em;
+}
