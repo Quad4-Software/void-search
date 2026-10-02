@@ -149,7 +149,7 @@ jobs:
 
     steps:
       - name: Login to GHCR
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -173,9 +173,10 @@ jobs:
           DOCKER_TAG: ${{ github.run_number }}
         run: |
           set -e
-          repo="ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
+          repo="ghcr.io/$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/void-crawler"
           tag="$(git show -s --date=format:%Y.%m.%d --format=%cd-%h)"
           echo "TAG=${tag}" >> "$GITHUB_ENV"
+          echo "IMAGE=${repo}" >> "$GITHUB_ENV"
 
           podman manifest rm --ignore "localhost/void-crawler:${tag}" "localhost/void-crawler:latest"
           for t in "${tag}" latest; do
@@ -184,7 +185,7 @@ jobs:
               podman manifest add "localhost/void-crawler:${t}" "oci-archive:${f}"
             done
             podman manifest push --all --compression-format zstd \
-              "localhost/void-crawler:${t}" "docker://${repo%-search}/void-crawler:${t}"
+              "localhost/void-crawler:${t}" "docker://${repo}:${t}"
           done
 
       - name: Smoke test image
