@@ -70,6 +70,8 @@ services:
       SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-}
       SEARXNG_IMAGE_PROXY: ${SEARXNG_IMAGE_PROXY:-true}
       SEARXNG_ENGINE_POLICY: ${SEARXNG_ENGINE_POLICY:-true}
+      # the void index api, served by the crawler service below
+      THEVOID_API_URL: ${THEVOID_API_URL:-http://crawler:8088}
     volumes:
       - void-config:/etc/searxng
       - void-data:/var/cache/searxng
@@ -86,6 +88,22 @@ services:
       timeout: 5s
       start_period: 20s
       retries: 3
+
+  # independent index crawler: crawls the frontier and serves the search api
+  # that the "thevoid" engine queries. internal only, never exposed.
+  crawler:
+    build:
+      context: .
+      dockerfile: crawler/Dockerfile
+    restart: unless-stopped
+    command: ["run"]
+    environment:
+      VC_LISTEN: "0.0.0.0:8088"
+      VC_DATA_DIR: "/data"
+      VC_FLARESOLVERR: ${VC_FLARESOLVERR:-}
+      RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - crawler-data:/data
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine

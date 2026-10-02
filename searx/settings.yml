@@ -3513,6 +3513,14 @@ engines:
 #        chars: ' '
 #        keys: ['line']
 
+  # thevoid: Void Search's own index built by the bundled crawler (crawler/)
+  - name: thevoid
+    engine: thevoid
+    shortcut: tv
+    categories: general
+    base_url: http://127.0.0.1:8088
+    timeout: 10.0
+
 doi_resolvers:
   oadoi.org: 'https://oadoi.org/'
   doi.org: 'https://doi.org/'

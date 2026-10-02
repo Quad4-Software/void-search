@@ -1,0 +1,40 @@
+# void-crawler configuration
+
+[identity]
+# be honest - site owners should know who we are and how to reach us
+user_agent = "VoidCrawler/0.1 (+https://void.quad4.io/bot)"
+contact = "https://void.quad4.io/info/en/about"
+
+[crawl]
+workers = 8
+min_delay_ms = 2000        # floor for per-host politeness
+max_retries = 2
+fetch_timeout_secs = 20
+connect_timeout_secs = 8
+max_body_bytes = 2097152   # 2 MiB cap per document
+max_redirects = 5
+max_depth = 3
+slow_drip_min_bytes = 65536     # bytes before drip check engages
+slow_drip_floor_kbps = 8        # abort below this throughput after min bytes
+
+[frontier]
+max_pending = 100000
+refill_batch = 256
+
+[challenge]
+# anubis pow is solved natively, flaresolverr handles real js challenges
+flaresolverr_url = ""           # e.g. http://flaresolverr:8191/v1
+flaresolverr_timeout_ms = 60000
+
+[store]
+path = "data"
+
+[index]
+writer_heap_mb = 256
+commit_every_docs = 500
+
+[api]
+listen = "127.0.0.1:8088"
+
+[blocklists]
+extra_files = []

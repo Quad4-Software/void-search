@@ -106,6 +106,29 @@ If you have your own YaCy, point at that. Public peers rate-limit quickly.
 Edit `searx/void_blocklist.txt` or set `void.block_hosts` in settings.
 Matching hosts are removed from results.
 
+## The crawler
+
+`crawler/` is a Rust crawler that builds our own index. The `thevoid` engine
+reads it. It respects robots.txt including crawl-delay, keeps one request in
+flight per host, backs off on 429 and 5xx, refuses private IPs, skips
+blocklisted hosts, detects tarpits (slow-drip responses get aborted), and
+solves Anubis proof-of-work natively. Cloudflare-type JS challenges go through
+FlareSolverr when `VC_FLARESOLVERR` is set.
+
+Documents are zstd-compressed in redb and indexed by tantivy. Ranking is BM25
+on title and body with an authority boost from inlinks and a freshness decay.
+
+```sh
+cd crawler
+cargo build --release
+./target/release/void-crawler crawl --seed https://en.wikipedia.org/wiki/Void_Linux
+./target/release/void-crawler serve   # search api on 127.0.0.1:8088
+```
+
+Or `run` does both in one process. In compose, the `crawler` service is
+profile-gated: `docker compose --profile crawler up`. In Coolify it builds
+with `docker-compose.coolify.yml` automatically.
+
 ## Settings
 
 | Setting | Void default |

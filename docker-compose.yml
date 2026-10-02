@@ -51,6 +51,7 @@ services:
       GRANIAN_ACCESS_LOG: "false"
       GRANIAN_LOG_LEVEL: "error"
       MALLOC_ARENA_MAX: "2"
+      THEVOID_API_URL: "${THEVOID_API_URL:-http://crawler:8088}"
     read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777
@@ -64,6 +65,33 @@ services:
     volumes:
       - ./config:/etc/searxng:Z
       - void-data:/var/cache/searxng
+
+  crawler:
+    build:
+      context: .
+      dockerfile: crawler/Dockerfile
+    image: void-crawler:local
+    container_name: void-crawler
+    restart: unless-stopped
+    profiles:
+      - crawler
+    command: ["run"]
+    environment:
+      VC_LISTEN: "0.0.0.0:8088"
+      VC_DATA_DIR: "/data"
+      VC_FLARESOLVERR: "${VC_FLARESOLVERR:-}"
+      RUST_LOG: info
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 1536m
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    volumes:
+      - crawler-data:/data
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine
@@ -86,3 +114,4 @@ services:
 volumes:
   void-data:
   valkey-data:
+  crawler-data:
