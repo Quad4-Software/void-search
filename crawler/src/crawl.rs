@@ -13,6 +13,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::Semaphore;
 use tracing::{debug, info, warn};
+use url::Url;
 
 pub struct Crawler {
     cfg: Config,
@@ -24,6 +25,12 @@ pub struct Crawler {
     blocklist: Arc<Blocklist>,
     solver: ChallengeSolver,
     authority: Arc<dashmap::DashMap<String, u64>>,
+    /// pages stored per site - enforces the per-site crawl budget
+    site_pages: Arc<dashmap::DashMap<String, u32>>,
+    /// normalized-content hashes for near-dup skipping
+    content_hashes: Arc<dashmap::DashSet<u64>>,
+    /// hosts whose robots sitemaps were already enqueued
+    sitemaps_seen: Arc<dashmap::DashSet<String>>,
     docs_done: Arc<AtomicU64>,
 }
 
@@ -56,6 +63,9 @@ impl Crawler {
             blocklist,
             solver,
             authority: Arc::new(dashmap::DashMap::new()),
+            site_pages: Arc::new(dashmap::DashMap::new()),
+            content_hashes: Arc::new(dashmap::DashSet::new()),
+            sitemaps_seen: Arc::new(dashmap::DashSet::new()),
             docs_done: Arc::new(AtomicU64::new(0)),
         })
     }
@@ -200,6 +210,27 @@ impl Crawler {
                 continue;
             }
 
+            // first visit to a host: grab its advertised sitemaps so we
+            // learn the url inventory instead of only link-following
+            if self.sitemaps_seen.insert(site.clone()) {
+                for sm in self.robots.sitemaps_for(&url).await {
+                    if let Ok(su) = Url::parse(&sm) {
+                        self.frontier.push(FrontierItem {
+                            url: su.to_string(),
+                            depth: item.depth.saturating_add(1),
+                            score: item.score,
+                        });
+                    }
+                }
+            }
+
+            // per-site crawl budget
+            let site_pages = self.site_pages.get(&site).map(|v| *v.value()).unwrap_or(0);
+            if site_pages >= self.cfg.crawl.max_pages_per_site {
+                self.frontier.done(&site, true, delay_ms);
+                continue;
+            }
+
             match self.fetcher.get(url.as_str()).await {
                 Ok(resp) => {
                     let body = resp.body;
@@ -225,6 +256,23 @@ impl Crawler {
                         }
                         ChallengeKind::None => body,
                     };
+
+                    // sitemaps are mined for <loc> urls, not indexed
+                    if crate::extract::is_sitemap(&body) {
+                        for l in crate::extract::sitemap_urls(&body) {
+                            if let Some(nu) = urlnorm::normalize(&l)
+                                && !self.blocklist.blocked(&urlnorm::host_of(&nu))
+                            {
+                                self.frontier.push(FrontierItem {
+                                    url: nu.to_string(),
+                                    depth: item.depth + 1,
+                                    score: item.score,
+                                });
+                            }
+                        }
+                        self.frontier.done(&site, true, delay_ms);
+                        continue;
+                    }
 
                     // feeds are mined for links, not indexed
                     let feed_links = crate::extract::feed_links(&body);
@@ -257,9 +305,26 @@ impl Crawler {
                         }
                     }
 
+                    // near-dup content check - same normalized text seen
+                    // before means mirror/parked content, skip indexing
+                    let norm: String = parsed
+                        .text
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                        .to_lowercase();
+                    let chash =
+                        xxhash_rust::xxh3::xxh3_64(norm.get(..4096).unwrap_or(&norm).as_bytes());
+                    if !self.content_hashes.insert(chash) {
+                        debug!(%url, "duplicate content skipped");
+                        self.frontier.done(&site, true, delay_ms);
+                        continue;
+                    }
+
                     let host_auth =
                         self.authority.get(&host).map(|v| *v.value()).unwrap_or(0) as f64;
                     let authority = (1.0f64 + host_auth).ln();
+                    *self.site_pages.entry(site.clone()).or_insert(0) += 1;
 
                     let doc = DocRecord {
                         url: resp.final_url.to_string(),

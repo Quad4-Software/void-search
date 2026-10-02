@@ -161,11 +161,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// compiled-in seed list so a bare binary or image crawl does something
+/// useful out of the box - same list as seeds.txt at the crate root
 fn crawler_seed_defaults() -> Vec<String> {
-    vec![
-        "https://en.wikipedia.org/wiki/Main_Page".into(),
-        "https://news.ycombinator.com/".into(),
-        "https://lobste.rs/".into(),
-        "https://codeberg.org/".into(),
-    ]
+    include_str!("../seeds.txt")
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .collect()
 }

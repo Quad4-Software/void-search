@@ -41,6 +41,8 @@ pub struct Crawl {
     /// outbound proxy for fetches, e.g. socks5h://10.64.0.1:1080 for the
     /// mullvad in-tunnel socks5 proxy. empty means direct egress.
     pub proxy: String,
+    /// crawl budget per site - keeps a giant site from eating the frontier
+    pub max_pages_per_site: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -110,6 +112,7 @@ impl Default for Crawl {
             slow_drip_floor_kbps: 8,
             allow_private_ips: false,
             proxy: String::new(),
+            max_pages_per_site: 500,
         }
     }
 }
@@ -178,6 +181,14 @@ impl Config {
         }
         if let Ok(v) = std::env::var("VC_FLARESOLVERR") {
             self.challenge.flaresolverr_url = v;
+        }
+        if let Ok(v) = std::env::var("VC_PROXY") {
+            self.crawl.proxy = v;
+        }
+        if let Ok(v) = std::env::var("VC_MAX_PAGES_PER_SITE")
+            && let Ok(n) = v.parse()
+        {
+            self.crawl.max_pages_per_site = n;
         }
         if let Ok(v) = std::env::var("VC_WORKERS")
             && let Ok(n) = v.parse()

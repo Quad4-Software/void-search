@@ -92,9 +92,7 @@ services:
   # independent index crawler: crawls the frontier and serves the search api
   # that the "thevoid" engine queries. internal only, never exposed.
   crawler:
-    build:
-      context: .
-      dockerfile: crawler/Dockerfile
+    image: ${CRAWLER_IMAGE:-ghcr.io/quad4-software/void-crawler:latest}
     restart: unless-stopped
     command: ["run"]
     environment:
@@ -104,6 +102,12 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
     volumes:
       - crawler-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8088/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine

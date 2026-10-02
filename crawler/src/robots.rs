@@ -95,8 +95,16 @@ impl RobotsCache {
         }
         let e = self.fetch(&origin).await;
         let e = Arc::new(e);
-        self.cache.insert(origin, e.clone());
+        self.cache.insert(origin.clone(), e.clone());
+        let _ = origin;
         e
+    }
+
+    /// sitemap urls advertised by a host's robots.txt - fetched lazily by
+    /// callers since entry() may hit the cache
+    pub async fn sitemaps_for(&self, url: &Url) -> Vec<String> {
+        let e = self.entry(url).await;
+        self.sitemaps(&e.text)
     }
 
     async fn fetch(&self, origin: &str) -> RobotsEntry {

@@ -151,6 +151,32 @@ pub fn feed_links(body: &str) -> Vec<String> {
     links
 }
 
+/// pull <loc> urls out of a sitemap xml body (urlset and sitemapindex).
+pub fn sitemap_urls(body: &str) -> Vec<String> {
+    let head = &body[..body.len().min(4096)];
+    if !head.contains("<urlset") && !head.contains("<sitemapindex") && !head.contains("<loc>") {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    let mut rest = body;
+    while let Some(i) = rest.find("<loc>") {
+        let after = &rest[i + 5..];
+        let Some(j) = after.find("</loc>") else { break };
+        let l = after[..j].trim();
+        if l.starts_with("http") {
+            out.push(l.to_string());
+        }
+        rest = &after[j + 6..];
+    }
+    out
+}
+
+/// detect a sitemap body without paying for full extraction
+pub fn is_sitemap(body: &str) -> bool {
+    let head = &body[..body.len().min(4096)];
+    head.contains("<urlset") || head.contains("<sitemapindex")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

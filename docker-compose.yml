@@ -67,10 +67,11 @@ services:
       - void-data:/var/cache/searxng
 
   crawler:
-    build:
-      context: .
-      dockerfile: crawler/Dockerfile
-    image: void-crawler:local
+    image: ghcr.io/quad4-software/void-crawler:latest
+    # uncomment to build from source instead of pulling
+    # build:
+    #   context: .
+    #   dockerfile: crawler/Dockerfile
     container_name: void-crawler
     restart: unless-stopped
     profiles:
@@ -92,6 +93,12 @@ services:
       - /tmp:size=64m,mode=1777
     volumes:
       - crawler-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8088/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine
