@@ -42,14 +42,17 @@ enum Cmd {
     Stats,
     /// one-off fetch of a single url, prints extracted fields
     Fetch { url: String },
-    /// dump stored documents as jsonl - one doc per line, fields url, title,
-    /// host, fetched_at, text. compatible with hister-style document pipes
-    /// and easy to inspect.
+    /// dump stored documents - --format jsonl is our pipe format, --format
+    /// hister writes the exact bracketed layout hister import file expects
+    /// (one {..} per line, commas on their own lines)
     Export {
         #[arg(short, long, default_value = "docs.jsonl")]
         out: PathBuf,
+        #[arg(short, long, default_value = "jsonl", value_parser = ["jsonl", "hister"])]
+        format: String,
     },
-    /// import jsonl documents into the index (same schema as export)
+    /// import documents into the index - accepts our jsonl and hister export
+    /// files (hister field names url/domain/text/added map onto ours)
     Import {
         #[arg(short, long)]
         input: PathBuf,
@@ -136,9 +139,12 @@ async fn main() -> anyhow::Result<()> {
             );
             println!("index docs: {}", crawler.index().num_docs());
         }
-        Cmd::Export { out } => {
+        Cmd::Export { out, format } => {
             let crawler = crawl::Crawler::new(cfg)?;
-            let n = crawler.export_jsonl(&out)?;
+            let n = match format.as_str() {
+                "hister" => crawler.export_hister(&out)?,
+                _ => crawler.export_jsonl(&out)?,
+            };
             println!("exported {n} docs to {}", out.display());
         }
         Cmd::Import { input } => {

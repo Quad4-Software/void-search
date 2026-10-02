@@ -145,3 +145,42 @@ async fn api_serves_search() {
     assert!(!results.is_empty());
     assert_eq!(results[0]["url"], "https://x.test/a");
 }
+
+#[test]
+fn hister_export_layout_is_parseable() {
+    // hister import file expects: "[" alone, one doc per line starting with
+    // '{' at column 0, "," alone between docs, "]" at the end
+    let dir = tempfile::tempdir().unwrap();
+    let cfg = support::test_config(dir.path());
+    let crawler = support::make_crawler(cfg).unwrap();
+
+    crawler
+        .store()
+        .put_doc(&void_crawler::store::DocRecord {
+            url: "https://a.test/one".into(),
+            title: "one".into(),
+            host: "a.test".into(),
+            fetched_at: 123,
+            text_z: zstd::encode_all(b"hello world".as_slice(), 3).unwrap(),
+            links: vec![],
+        })
+        .unwrap();
+
+    let out = dir.path().join("export.json");
+    let n = crawler.export_hister(&out).unwrap();
+    assert_eq!(n, 1);
+
+    let text = std::fs::read_to_string(&out).unwrap();
+    let lines: Vec<&str> = text.lines().collect();
+    assert_eq!(lines[0], "[");
+    assert!(lines[1].starts_with('{'));
+    assert_eq!(lines[2], "]");
+
+    // round trip back through our importer
+    let dir2 = tempfile::tempdir().unwrap();
+    let crawler2 = support::make_crawler(support::test_config(dir2.path())).unwrap();
+    let n = crawler2.import_jsonl(&out).unwrap();
+    crawler2.index().commit().unwrap();
+    assert_eq!(n, 1);
+    assert_eq!(crawler2.index().num_docs(), 1);
+}

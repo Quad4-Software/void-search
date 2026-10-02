@@ -136,8 +136,10 @@ Or `run` does both in one process. In compose, the `crawler` service is
 profile-gated: `docker compose --profile crawler up`. In Coolify it builds
 with `docker-compose.coolify.yml` automatically.
 
-`export` dumps the document store as JSONL and `import` ingests the same
-format - that is the bridge to hister and other tools.
+`export` dumps the document store - `--format jsonl` for our pipe format or
+`--format hister` for the exact bracketed layout `hister import file` reads.
+`import` accepts both shapes, so a hister export can seed or merge into our
+index and vice versa.
 
 ## Settings
 

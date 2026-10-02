@@ -74,6 +74,10 @@ impl Crawler {
         self.index.clone()
     }
 
+    pub fn store(&self) -> Arc<Store> {
+        self.store.clone()
+    }
+
     pub fn store_doc_count(&self) -> u64 {
         self.store.doc_count()
     }
@@ -429,21 +433,58 @@ impl Crawler {
         Ok(n)
     }
 
-    /// import jsonl docs (url/title/host/fetched_at/text) into store+index
+    /// hister export layout: a json array where every document sits on one
+    /// line starting with { and commas live on their own lines, matching what
+    /// `hister import file` parses
+    pub fn export_hister(&self, out: &std::path::Path) -> anyhow::Result<usize> {
+        use std::io::Write;
+        let mut n = 0usize;
+        let mut w = std::io::BufWriter::new(std::fs::File::create(out)?);
+        writeln!(w, "[")?;
+        for doc in self.store.iter_docs()? {
+            let text = zstd::decode_all(doc.text_z.as_slice()).unwrap_or_default();
+            let line = serde_json::json!({
+                "url": doc.url,
+                "domain": doc.host,
+                "title": doc.title,
+                "text": String::from_utf8_lossy(&text),
+                "added": doc.fetched_at,
+                "updated": doc.fetched_at,
+                "type": 0,
+                "label": "void-crawler",
+            });
+            if n > 0 {
+                writeln!(w, ",")?;
+            }
+            serde_json::to_writer(&mut w, &line)?;
+            writeln!(w)?;
+            n += 1;
+        }
+        writeln!(w, "]")?;
+        w.flush()?;
+        Ok(n)
+    }
+
+    /// import jsonl docs (url/title/host/fetched_at/text) into store+index.
+    /// also accepts hister export files - non-{ lines are skipped and the
+    /// hister field names domain/text/added map to ours
     pub fn import_jsonl(&self, input: &std::path::Path) -> anyhow::Result<usize> {
         use std::io::BufRead;
         let mut n = 0usize;
         for line in std::io::BufReader::new(std::fs::File::open(input)?).lines() {
             let line = line?;
-            if line.trim().is_empty() {
+            let t = line.trim();
+            if !t.starts_with('{') {
                 continue;
             }
-            let v: serde_json::Value = serde_json::from_str(&line)?;
+            let v: serde_json::Value = serde_json::from_str(t)?;
             let url = v["url"].as_str().unwrap_or("");
             let title = v["title"].as_str().unwrap_or("");
-            let host = v["host"].as_str().unwrap_or("");
+            let host = v["host"].as_str().or(v["domain"].as_str()).unwrap_or("");
             let fetched = v["fetched_at"]
                 .as_u64()
+                .or(v["added"].as_u64())
+                .or(v["updated"].as_u64())
                 .unwrap_or_else(crate::index::now_epoch);
             let text = v["text"].as_str().unwrap_or("");
             if url.is_empty() || !url.starts_with("http") {
