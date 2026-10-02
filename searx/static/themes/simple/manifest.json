@@ -91,15 +91,13 @@
     ]
   },
   "src/js/plugin/InfiniteScroll.ts": {
-    "file": "chunk/D3mcqWOe.min.js",
+    "file": "chunk/CQb6NFww.min.js",
     "name": "infinitescroll",
     "src": "src/js/plugin/InfiniteScroll.ts",
     "isDynamicEntry": true,
     "imports": [
       "_BuurKv-k.min.js",
-      "src/js/index.ts",
-      "_DK4yUVpy.min.js",
-      "_DcK-mo-Y.min.js"
+      "src/js/index.ts"
     ]
   },
   "src/js/plugin/MapView.ts": {

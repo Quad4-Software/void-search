@@ -2,8 +2,7 @@
 
 import { Plugin } from "../Plugin.ts";
 import { http, settings } from "../toolkit.ts";
-import { assertElement } from "../util/assertElement.ts";
-import { getElement } from "../util/getElement.ts";
+
 
 /**
  * Automatically loads the next page when scrolling to bottom of the current page.
@@ -14,7 +13,8 @@ export default class InfiniteScroll extends Plugin {
   }
 
   protected async run(): Promise<void> {
-    const resultsElement = getElement<HTMLElement>("results");
+    const resultsElement = document.querySelector<HTMLElement>("#results");
+    if (!resultsElement) return;
 
     const onlyImages: boolean = resultsElement.classList.contains("only_template_images");
     const observedSelector = "article.result:last-child";
@@ -24,10 +24,11 @@ export default class InfiniteScroll extends Plugin {
 
     const loadNextPage = async (callback: () => void): Promise<void> => {
       const searchForm = document.querySelector<HTMLFormElement>("#search");
-      assertElement(searchForm);
+      if (!searchForm) return;
 
+      // no next_page form means we are on the last page - nothing to load
       const form = document.querySelector<HTMLFormElement>("#pagination form.next_page");
-      assertElement(form);
+      if (!form) return;
 
       const action = searchForm.getAttribute("action");
       if (!action) {
@@ -35,7 +36,7 @@ export default class InfiniteScroll extends Plugin {
       }
 
       const paginationElement = document.querySelector<HTMLElement>("#pagination");
-      assertElement(paginationElement);
+      if (!paginationElement) return;
 
       paginationElement.replaceChildren(spinnerElement);
 
