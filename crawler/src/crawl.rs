@@ -4,6 +4,7 @@ use crate::config::Config;
 use crate::extract::extract;
 use crate::fetcher::{FetchError, Fetcher};
 use crate::frontier::Frontier;
+use crate::hister;
 use crate::index::{SearchIndex, now_epoch};
 use crate::robots::RobotsCache;
 use crate::store::{DocRecord, FrontierItem, Store};
@@ -24,6 +25,7 @@ pub struct Crawler {
     robots: Arc<RobotsCache>,
     blocklist: Arc<Blocklist>,
     solver: ChallengeSolver,
+    hister: hister::HisterClient,
     authority: Arc<dashmap::DashMap<String, u64>>,
     /// pages stored per site - enforces the per-site crawl budget
     site_pages: Arc<dashmap::DashMap<String, u32>>,
@@ -52,6 +54,12 @@ impl Crawler {
         ));
         let frontier = Arc::new(Frontier::new(store.clone(), cfg.crawl.min_delay_ms));
         let solver = ChallengeSolver::new(cfg.challenge.clone(), fetcher.client().clone());
+        let hister = hister::HisterClient::new(
+            &cfg.hister.url,
+            &cfg.hister.token,
+            fetcher.client().clone(),
+            cfg.hister.batch_size,
+        );
 
         Ok(Self {
             cfg,
@@ -62,6 +70,7 @@ impl Crawler {
             robots,
             blocklist,
             solver,
+            hister,
             authority: Arc::new(dashmap::DashMap::new()),
             site_pages: Arc::new(dashmap::DashMap::new()),
             content_hashes: Arc::new(dashmap::DashSet::new()),
@@ -118,11 +127,13 @@ impl Crawler {
         // plus a frontier flush so queued urls survive a restart
         let idx = self.index.clone();
         let fr = self.frontier.clone();
+        let hst = self.hister.clone();
         let maint = tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(30)).await;
                 let _ = idx.commit();
                 fr.persist_snapshot();
+                let _ = hst.flush().await;
             }
         });
 
@@ -140,6 +151,9 @@ impl Crawler {
         maint.abort();
         self.frontier.flush();
         let _ = self.index.commit();
+        if self.hister.enabled() {
+            let _ = self.hister.flush().await;
+        }
         info!("crawler stopped");
     }
 
@@ -339,6 +353,10 @@ impl Crawler {
                         links: parsed.links.clone(),
                     };
                     let _ = self.store.put_doc(&doc);
+                    if self.hister.enabled() {
+                        self.hister
+                            .queue(&doc.url, &host, &doc.title, &parsed.text, doc.fetched_at);
+                    }
                     let _ = self.index.add_doc(
                         &doc.url,
                         &host,

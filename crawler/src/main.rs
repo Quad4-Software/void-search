@@ -57,6 +57,9 @@ enum Cmd {
         #[arg(short, long)]
         input: PathBuf,
     },
+    /// push every stored doc to a running hister server - a backfill for
+    /// when live push was off or the server was down
+    PushHister,
 }
 
 #[tokio::main]
@@ -146,6 +149,32 @@ async fn main() -> anyhow::Result<()> {
                 _ => crawler.export_jsonl(&out)?,
             };
             println!("exported {n} docs to {}", out.display());
+        }
+        Cmd::PushHister => {
+            let crawler = crawl::Crawler::new(cfg.clone())?;
+            let hister = void_crawler::hister::HisterClient::new(
+                &cfg.hister.url,
+                &cfg.hister.token,
+                reqwest::Client::new(),
+                cfg.hister.batch_size,
+            );
+            if !hister.enabled() {
+                anyhow::bail!("set [hister] url or VC_HISTER_URL first");
+            }
+            let mut n = 0usize;
+            for doc in crawler.store().iter_docs()? {
+                let text = zstd::decode_all(doc.text_z.as_slice()).unwrap_or_default();
+                hister.queue(
+                    &doc.url,
+                    &doc.host,
+                    &doc.title,
+                    &String::from_utf8_lossy(&text),
+                    doc.fetched_at,
+                );
+                n += 1;
+            }
+            let sent = hister.flush().await?;
+            println!("pushed {sent}/{n} docs to {}", cfg.hister.url);
         }
         Cmd::Import { input } => {
             let crawler = crawl::Crawler::new(cfg)?;

@@ -13,7 +13,30 @@ pub struct Config {
     pub index: IndexCfg,
     pub api: Api,
     pub blocklists: Blocklists,
+    /// live document push into a hister server while crawling
+    pub hister: Hister,
     pub seeds: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
+pub struct Hister {
+    /// base url of the hister server, empty disables live push
+    pub url: String,
+    /// access token - matches hister's app.access_token
+    pub token: String,
+    /// docs per /api/batch call, server caps at 100
+    pub batch_size: usize,
+}
+
+impl Default for Hister {
+    fn default() -> Self {
+        Self {
+            url: String::new(),
+            token: String::new(),
+            batch_size: 50,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -184,6 +207,12 @@ impl Config {
         }
         if let Ok(v) = std::env::var("VC_PROXY") {
             self.crawl.proxy = v;
+        }
+        if let Ok(v) = std::env::var("VC_HISTER_URL") {
+            self.hister.url = v;
+        }
+        if let Ok(v) = std::env::var("VC_HISTER_TOKEN") {
+            self.hister.token = v;
         }
         if let Ok(v) = std::env::var("VC_MAX_PAGES_PER_SITE")
             && let Ok(n) = v.parse()

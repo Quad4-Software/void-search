@@ -5,6 +5,7 @@ pub mod crawl;
 pub mod extract;
 pub mod fetcher;
 pub mod frontier;
+pub mod hister;
 pub mod index;
 pub mod robots;
 pub mod sandbox;

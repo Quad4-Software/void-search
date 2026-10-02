@@ -141,6 +141,13 @@ with `docker-compose.coolify.yml` automatically.
 `import` accepts both shapes, so a hister export can seed or merge into our
 index and vice versa.
 
+Live hister integration: set `VC_HISTER_URL` (+ `VC_HISTER_TOKEN`) and every
+indexed page is pushed to `hister` through `/api/batch` as it is crawled.
+`void-crawler push-hister` backfills an existing store when the server was
+down or push was off. And searxng can search a hister index directly - the
+`hister` engine (`HISTER_API_URL`, `HISTER_TOKEN`, off by default) merges
+your personal index into results.
+
 ## Settings
 
 | Setting | Void default |

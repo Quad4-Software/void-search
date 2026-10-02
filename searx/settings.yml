@@ -3514,12 +3514,21 @@ engines:
   #        keys: ['line']
 
   # thevoid: Void Search's own index built by the bundled crawler (crawler/)
+  # base_url comes from THEVOID_API_URL (default http://127.0.0.1:8088)
   - name: thevoid
     engine: thevoid
     shortcut: tv
     categories: general
-    base_url: http://127.0.0.1:8088
     timeout: 10.0
+
+  # hister: personal index from a hister server - set HISTER_API_URL (and
+  # HISTER_TOKEN when auth is on). disabled until the url is configured
+  - name: hister
+    engine: hister
+    shortcut: his
+    categories: general
+    timeout: 10.0
+    disabled: true
 
 doi_resolvers:
   oadoi.org: 'https://oadoi.org/'

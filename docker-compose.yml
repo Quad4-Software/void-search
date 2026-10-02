@@ -52,6 +52,8 @@ services:
       GRANIAN_LOG_LEVEL: "error"
       MALLOC_ARENA_MAX: "2"
       THEVOID_API_URL: "${THEVOID_API_URL:-http://crawler:8088}"
+      HISTER_API_URL: "${HISTER_API_URL:-}"
+      HISTER_TOKEN: "${HISTER_TOKEN:-}"
     read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777
@@ -81,6 +83,8 @@ services:
       VC_LISTEN: "0.0.0.0:8088"
       VC_DATA_DIR: "/data"
       VC_FLARESOLVERR: "${VC_FLARESOLVERR:-}"
+      VC_HISTER_URL: "${VC_HISTER_URL:-}"
+      VC_HISTER_TOKEN: "${VC_HISTER_TOKEN:-}"
       RUST_LOG: info
     read_only: true
     cap_drop:
