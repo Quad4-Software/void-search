@@ -354,8 +354,13 @@ impl Crawler {
                     };
                     let _ = self.store.put_doc(&doc);
                     if self.hister.enabled() {
-                        self.hister
-                            .queue(&doc.url, &host, &doc.title, &parsed.text, doc.fetched_at);
+                        self.hister.queue(
+                            &doc.url,
+                            &host,
+                            &doc.title,
+                            &parsed.text,
+                            doc.fetched_at,
+                        );
                     }
                     let _ = self.index.add_doc(
                         &doc.url,
