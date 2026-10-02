@@ -72,6 +72,9 @@
   <footer>
     <p>
     <a href="{{ url_for('info', pagename='about') }}">Void Search</a>
+        {% if searxng_commit %}
+        · <a href="{{ searxng_commit_url or '#' }}" title="commit {{ searxng_commit }}">{{ searxng_commit }}</a>
+        {% endif %}
         {% if get_setting('general.privacypolicy_url') %}
         | <a href="{{ get_setting('general.privacypolicy_url') }}">{{ _('Privacy policy') }}</a>
         {% endif %}
