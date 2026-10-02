@@ -149,7 +149,8 @@ impl ChallengeSolver {
     }
 
     fn is_challenge_page(body: &str) -> bool {
-        body.contains("Making sure you're not a bot") || body.contains("window.__anubis_challenge__")
+        body.contains("Making sure you're not a bot")
+            || body.contains("window.__anubis_challenge__")
     }
 
     /// flaresolverr fallback for cloudflare-style js challenges
@@ -164,7 +165,10 @@ impl ChallengeSolver {
         };
         let resp = self
             .client
-            .post(format!("{}/v1", self.cfg.flaresolverr_url.trim_end_matches('/')))
+            .post(format!(
+                "{}/v1",
+                self.cfg.flaresolverr_url.trim_end_matches('/')
+            ))
             .json(&req)
             .send()
             .await
@@ -180,13 +184,18 @@ impl ChallengeSolver {
 
     /// classify a fetched response: looks like a challenge page?
     pub fn looks_challenged(body: &str, status: u16) -> ChallengeKind {
-        if body.contains("window.__anubis_challenge__") || body.contains("Making sure you're not a bot") {
+        if body.contains("window.__anubis_challenge__")
+            || body.contains("Making sure you're not a bot")
+        {
             return ChallengeKind::Anubis;
         }
         if (status == 403 || status == 503)
-            && (body.contains("cf-chl") || body.contains("challenge-platform") || body.contains("Just a moment")) {
-                return ChallengeKind::Cloudflare;
-            }
+            && (body.contains("cf-chl")
+                || body.contains("challenge-platform")
+                || body.contains("Just a moment"))
+        {
+            return ChallengeKind::Cloudflare;
+        }
         ChallengeKind::None
     }
 }

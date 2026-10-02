@@ -6,7 +6,10 @@ use void_crawler::config::Config;
 use void_crawler::{crawl, extract, fetcher, server};
 
 #[derive(Parser)]
-#[command(name = "void-crawler", about = "Independent crawler and index for Void Search")]
+#[command(
+    name = "void-crawler",
+    about = "Independent crawler and index for Void Search"
+)]
 struct Cli {
     #[arg(short, long, default_value = "crawler.toml")]
     config: PathBuf,
@@ -37,15 +40,27 @@ enum Cmd {
     /// print index/frontier counters
     Stats,
     /// one-off fetch of a single url, prints extracted fields
-    Fetch {
-        url: String,
+    Fetch { url: String },
+    /// dump stored documents as jsonl - one doc per line, fields url, title,
+    /// host, fetched_at, text. compatible with hister-style document pipes
+    /// and easy to inspect.
+    Export {
+        #[arg(short, long, default_value = "docs.jsonl")]
+        out: PathBuf,
+    },
+    /// import jsonl documents into the index (same schema as export)
+    Import {
+        #[arg(short, long)]
+        input: PathBuf,
     },
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
         .init();
 
     let cli = Cli::parse();
@@ -70,9 +85,10 @@ async fn main() -> anyhow::Result<()> {
                         .filter(|l| !l.is_empty() && !l.starts_with('#')),
                 );
             }
-            let crawler = Arc::new(crawl::Crawler::new(cfg)?);
+            let crawler = Arc::new(crawl::Crawler::new(cfg.clone())?);
             let n = crawler.seed(&seeds);
             tracing::info!(n, "seeded frontier");
+            void_crawler::sandbox::apply(&cfg.store.path);
             crawler.run().await;
         }
         Cmd::Serve => {
@@ -111,8 +127,24 @@ async fn main() -> anyhow::Result<()> {
         Cmd::Stats => {
             let crawler = crawl::Crawler::new(cfg)?;
             println!("docs stored: {}", crawler.store_doc_count());
-            println!("docs fetched this session: {}", crawler.docs_done().load(std::sync::atomic::Ordering::Relaxed));
+            println!(
+                "docs fetched this session: {}",
+                crawler
+                    .docs_done()
+                    .load(std::sync::atomic::Ordering::Relaxed)
+            );
             println!("index docs: {}", crawler.index().num_docs());
+        }
+        Cmd::Export { out } => {
+            let crawler = crawl::Crawler::new(cfg)?;
+            let n = crawler.export_jsonl(&out)?;
+            println!("exported {n} docs to {}", out.display());
+        }
+        Cmd::Import { input } => {
+            let crawler = crawl::Crawler::new(cfg)?;
+            let n = crawler.import_jsonl(&input)?;
+            crawler.index().commit()?;
+            println!("imported {n} docs from {}", input.display());
         }
         Cmd::Fetch { url } => {
             let fetcher = fetcher::Fetcher::new(&cfg.crawl, &cfg.identity.user_agent)?;

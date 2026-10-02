@@ -23,10 +23,15 @@ pub struct Extracted {
 pub fn extract(body: &str, base: &Url) -> Extracted {
     let sel_a = SEL_A.get_or_init(|| Selector::parse("a[href]").unwrap());
     let sel_title = SEL_TITLE.get_or_init(|| Selector::parse("title").unwrap());
-    let sel_meta_robots = SEL_META_ROBOTS.get_or_init(|| Selector::parse("meta[name=robots]").unwrap());
-    let sel_meta_desc = SEL_META_DESC.get_or_init(|| Selector::parse("meta[name=description]").unwrap());
+    let sel_meta_robots =
+        SEL_META_ROBOTS.get_or_init(|| Selector::parse("meta[name=robots]").unwrap());
+    let sel_meta_desc =
+        SEL_META_DESC.get_or_init(|| Selector::parse("meta[name=description]").unwrap());
     let sel_drop = SEL_DROP.get_or_init(|| {
-        Selector::parse("script, style, noscript, template, iframe, svg, nav, footer, header, form, aside").unwrap()
+        Selector::parse(
+            "script, style, noscript, template, iframe, svg, nav, footer, header, form, aside",
+        )
+        .unwrap()
     });
 
     let doc = Html::parse_document(body);
@@ -46,11 +51,12 @@ pub fn extract(body: &str, base: &Url) -> Extracted {
     let mut noindex = false;
     let mut nofollow = false;
     if let Some(m) = doc.select(sel_meta_robots).next()
-        && let Some(content) = m.value().attr("content") {
-            let c = content.to_lowercase();
-            noindex = c.contains("noindex") || c.contains("none");
-            nofollow = c.contains("nofollow");
-        }
+        && let Some(content) = m.value().attr("content")
+    {
+        let c = content.to_lowercase();
+        noindex = c.contains("noindex") || c.contains("none");
+        nofollow = c.contains("nofollow");
+    }
 
     let links: Vec<String> = if nofollow {
         Vec::new()
@@ -100,6 +106,49 @@ pub fn extract(body: &str, base: &Url) -> Extracted {
         noindex,
         nofollow,
     }
+}
+
+/// pull item/entry links out of an rss or atom feed body. returns empty for
+/// non-feeds. feeds themselves are not indexed, just mined for urls.
+pub fn feed_links(body: &str) -> Vec<String> {
+    let head = &body[..body.len().min(8192)];
+    let is_feed = head.contains("<rss") || head.contains("<feed") || head.contains("<rdf:RDF");
+    if !is_feed {
+        return Vec::new();
+    }
+    let mut links = Vec::new();
+    // rss: <link>https://x</link> inside <item>; atom: <link href="..."/>
+    let mut rest = body;
+    while let Some(i) = rest.find("<link>") {
+        let after = &rest[i + 6..];
+        if let Some(j) = after.find("</link>") {
+            let l = after[..j].trim();
+            if l.starts_with("http") {
+                links.push(l.to_string());
+            }
+            rest = &after[j + 7..];
+        } else {
+            break;
+        }
+    }
+    for cap in rest.split("<link").skip(1) {
+        if let Some(a) = cap.find("href=") {
+            let q = &cap[a + 5..];
+            let end = q.find('"').or_else(|| q.find('\''));
+            let start = if q.starts_with('"') || q.starts_with('\'') {
+                1
+            } else {
+                0
+            };
+            if let Some(e) = end {
+                let l = q[start..e].trim();
+                if l.starts_with("http") {
+                    links.push(l.to_string());
+                }
+            }
+        }
+    }
+    links
 }
 
 #[cfg(test)]

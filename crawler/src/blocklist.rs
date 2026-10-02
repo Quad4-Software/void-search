@@ -11,14 +11,28 @@ pub struct Blocklist {
 
 static BUILTIN: &[&str] = &[
     // search-engine detritus and AI-scraper honeypots
-    "pinterest.com", "pinterest.co.uk", "pin.it",
-    "facebook.com", "fb.com", "instagram.com", "threads.net",
-    "twitter.com", "x.com", "t.co",
-    "linkedin.com", "tiktok.com", "snapchat.com",
-    "quora.com", "slideshare.net", "scribd.com",
-    "fandom.com", "wattpad.com",
+    "pinterest.com",
+    "pinterest.co.uk",
+    "pin.it",
+    "facebook.com",
+    "fb.com",
+    "instagram.com",
+    "threads.net",
+    "twitter.com",
+    "x.com",
+    "t.co",
+    "linkedin.com",
+    "tiktok.com",
+    "snapchat.com",
+    "quora.com",
+    "slideshare.net",
+    "scribd.com",
+    "fandom.com",
+    "wattpad.com",
     // parked / spammy / malware-ish
-    "000webhostapp.com", "weebly.com", "tripod.com",
+    "000webhostapp.com",
+    "weebly.com",
+    "tripod.com",
 ];
 
 impl Blocklist {
@@ -109,11 +123,29 @@ mod tests {
 
     #[test]
     fn private_ips_refused() {
-        assert!(!Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)), false));
-        assert!(!Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), false));
-        assert!(!Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(169, 254, 1, 1)), false));
-        assert!(!Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(100, 64, 0, 1)), false));
-        assert!(Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(93, 184, 216, 34)), false));
-        assert!(Blocklist::ip_allowed(IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)), true));
+        assert!(!Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
+            false
+        ));
+        assert!(!Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            false
+        ));
+        assert!(!Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(169, 254, 1, 1)),
+            false
+        ));
+        assert!(!Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(100, 64, 0, 1)),
+            false
+        ));
+        assert!(Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(93, 184, 216, 34)),
+            false
+        ));
+        assert!(Blocklist::ip_allowed(
+            IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1)),
+            true
+        ));
     }
 }

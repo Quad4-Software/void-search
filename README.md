@@ -112,8 +112,11 @@ Matching hosts are removed from results.
 reads it. It respects robots.txt including crawl-delay, keeps one request in
 flight per host, backs off on 429 and 5xx, refuses private IPs, skips
 blocklisted hosts, detects tarpits (slow-drip responses get aborted), and
-solves Anubis proof-of-work natively. Cloudflare-type JS challenges go through
-FlareSolverr when `VC_FLARESOLVERR` is set.
+solves Anubis proof-of-work natively (codeberg, freedesktop and friends).
+Cloudflare-type JS challenges go through FlareSolverr when
+`VC_FLARESOLVERR` is set, and outbound traffic can ride a socks5 proxy
+(Mullvad's in-tunnel proxy at `socks5h://10.64.0.1:1080` via `VC_PROXY`).
+The process sandboxes itself with Landlock when the kernel supports it.
 
 Documents are zstd-compressed in redb and indexed by tantivy. Ranking is BM25
 on title and body with an authority boost from inlinks and a freshness decay.
@@ -121,13 +124,20 @@ on title and body with an authority boost from inlinks and a freshness decay.
 ```sh
 cd crawler
 cargo build --release
-./target/release/void-crawler crawl --seed https://en.wikipedia.org/wiki/Void_Linux
+./target/release/void-crawler crawl --seeds-file seeds.txt
 ./target/release/void-crawler serve   # search api on 127.0.0.1:8088
 ```
+
+`seeds.txt` ships ~1400 quality seeds: wikipedia topic pages, the curated
+kagi small web domains and feeds, and community/reference sites. RSS and
+Atom feeds in the seed list are mined for links rather than indexed.
 
 Or `run` does both in one process. In compose, the `crawler` service is
 profile-gated: `docker compose --profile crawler up`. In Coolify it builds
 with `docker-compose.coolify.yml` automatically.
+
+`export` dumps the document store as JSONL and `import` ingests the same
+format - that is the bridge to hister and other tools.
 
 ## Settings
 

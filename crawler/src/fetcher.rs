@@ -1,6 +1,6 @@
 use crate::config::Crawl;
 use futures::StreamExt;
-use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, ACCEPT_LANGUAGE, USER_AGENT};
+use reqwest::header::{ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, USER_AGENT};
 use reqwest::{Client, StatusCode};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -49,12 +49,18 @@ impl Fetcher {
         headers.insert(USER_AGENT, HeaderValue::from_str(ua)?);
         headers.insert(
             ACCEPT,
-            HeaderValue::from_static("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+            HeaderValue::from_static(
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            ),
         );
         headers.insert(ACCEPT_LANGUAGE, HeaderValue::from_static("en-US,en;q=0.9"));
 
         let max_redirects = cfg.max_redirects;
-        let client = Client::builder()
+        let mut builder = Client::builder();
+        if !cfg.proxy.is_empty() {
+            builder = builder.proxy(reqwest::Proxy::all(&cfg.proxy)?);
+        }
+        let client = builder
             .default_headers(headers)
             .connect_timeout(Duration::from_secs(cfg.connect_timeout_secs))
             .redirect(reqwest::redirect::Policy::custom(move |attempt| {
@@ -105,14 +111,19 @@ impl Fetcher {
             .and_then(|v| v.to_str().ok())
             .unwrap_or("")
             .to_lowercase();
-        if !ctype.is_empty() && !ctype.contains("html") && !ctype.contains("text/plain") && !ctype.contains("xml") {
+        if !ctype.is_empty()
+            && !ctype.contains("html")
+            && !ctype.contains("text/plain")
+            && !ctype.contains("xml")
+        {
             return Err(FetchError::NotHtml);
         }
 
         if let Some(len) = resp.content_length()
-            && len as usize > self.cfg.max_body_bytes {
-                return Err(FetchError::TooLarge(len as usize));
-            }
+            && len as usize > self.cfg.max_body_bytes
+        {
+            return Err(FetchError::TooLarge(len as usize));
+        }
 
         // stream body with size + drip guard
         let mut body: Vec<u8> = Vec::new();
@@ -124,7 +135,8 @@ impl Fetcher {
             }
             let chunk = chunk.map_err(FetchError::Net)?;
             body.extend_from_slice(&chunk);
-            self.inflight_bytes.fetch_add(chunk.len(), Ordering::Relaxed);
+            self.inflight_bytes
+                .fetch_add(chunk.len(), Ordering::Relaxed);
             if body.len() > self.cfg.max_body_bytes {
                 return Err(FetchError::TooLarge(body.len()));
             }

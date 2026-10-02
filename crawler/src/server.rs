@@ -53,7 +53,10 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn search(State(s): State<AppState>, Query(p): Query<SearchParams>) -> Result<Json<SearchResponse>, StatusCode> {
+async fn search(
+    State(s): State<AppState>,
+    Query(p): Query<SearchParams>,
+) -> Result<Json<SearchResponse>, StatusCode> {
     if p.q.trim().is_empty() || p.q.len() > 512 {
         return Err(StatusCode::BAD_REQUEST);
     }

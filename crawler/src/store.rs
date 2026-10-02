@@ -51,7 +51,9 @@ impl Store {
     }
 
     pub fn seen(&self, key: u64) -> bool {
-        let Ok(r) = self.db.begin_read() else { return false };
+        let Ok(r) = self.db.begin_read() else {
+            return false;
+        };
         match r.open_table(SEEN) {
             Ok(t) => t.get(key).ok().flatten().is_some(),
             Err(_) => false,
@@ -94,9 +96,10 @@ impl Store {
                 .collect();
             for k in keys {
                 if let Some(v) = t.remove(k)?
-                    && let Ok(item) = serde_json::from_slice::<FrontierItem>(v.value()) {
-                        out.push((k, item));
-                    }
+                    && let Ok(item) = serde_json::from_slice::<FrontierItem>(v.value())
+                {
+                    out.push((k, item));
+                }
             }
         }
         w.commit()?;
@@ -104,8 +107,12 @@ impl Store {
     }
 
     pub fn frontier_len(&self) -> u64 {
-        let Ok(r) = self.db.begin_read() else { return 0 };
-        r.open_table(FRONTIER).map(|t| t.len().unwrap_or(0)).unwrap_or(0)
+        let Ok(r) = self.db.begin_read() else {
+            return 0;
+        };
+        r.open_table(FRONTIER)
+            .map(|t| t.len().unwrap_or(0))
+            .unwrap_or(0)
     }
 
     pub fn put_doc(&self, doc: &DocRecord) -> anyhow::Result<()> {
@@ -126,7 +133,9 @@ impl Store {
             Ok(t) => t,
             Err(_) => return Ok(None),
         };
-        let Some(v) = t.get(url)? else { return Ok(None) };
+        let Some(v) = t.get(url)? else {
+            return Ok(None);
+        };
         Ok(Some(serde_json::from_slice(v.value())?))
     }
 
@@ -149,8 +158,24 @@ impl Store {
     }
 
     #[allow(dead_code)]
+    pub fn iter_docs(&self) -> anyhow::Result<Vec<DocRecord>> {
+        let r = self.db.begin_read()?;
+        let t = r.open_table(DOCS)?;
+        let mut out = Vec::with_capacity(t.len()? as usize);
+        for kv in t.iter()? {
+            let (_, v) = kv?;
+            out.push(serde_json::from_slice(v.value())?);
+        }
+        Ok(out)
+    }
+
+    #[allow(dead_code)]
     pub fn doc_count(&self) -> u64 {
-        let Ok(r) = self.db.begin_read() else { return 0 };
-        r.open_table(DOCS).map(|t| t.len().unwrap_or(0)).unwrap_or(0)
+        let Ok(r) = self.db.begin_read() else {
+            return 0;
+        };
+        r.open_table(DOCS)
+            .map(|t| t.len().unwrap_or(0))
+            .unwrap_or(0)
     }
 }

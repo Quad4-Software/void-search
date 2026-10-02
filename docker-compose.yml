@@ -95,6 +95,9 @@ services:
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine
+    # silences the bg-save warning: allow memory overcommit for the container
+    sysctls:
+      - vm.overcommit_memory=1
     container_name: void-valkey
     restart: unless-stopped
     command: valkey-server --save "" --appendonly no --protected-mode yes --maxmemory 128mb --maxmemory-policy allkeys-lru

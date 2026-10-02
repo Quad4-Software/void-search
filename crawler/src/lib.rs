@@ -7,10 +7,11 @@ pub mod fetcher;
 pub mod frontier;
 pub mod index;
 pub mod robots;
+pub mod sandbox;
 pub mod server;
 pub mod store;
 pub mod urlnorm;
 
 pub use config::Config;
 pub use crawl::Crawler;
-pub use server::{router, serve, AppState};
+pub use server::{AppState, router, serve};

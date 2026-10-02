@@ -12,10 +12,11 @@ dashmap = "6.2.1"
 ego-tree = "0.11.0"
 futures = "0.3.34"
 hex = "0.4.3"
+landlock = "0.4.7"
 parking_lot = "0.12.5"
 rand = "0.10.3"
 redb = "4.3.0"
-reqwest = { version = "0.13.5", features = ["rustls", "gzip", "brotli", "deflate", "zstd", "cookies", "json", "stream", "charset", "query"] }
+reqwest = { version = "0.13.5", features = ["rustls", "gzip", "brotli", "deflate", "zstd", "cookies", "json", "stream", "charset", "query", "socks"] }
 robotstxt = "0.3.0"
 scraper = "0.27.0"
 serde = "1.0.229"

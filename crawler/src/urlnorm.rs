@@ -2,11 +2,37 @@ use url::Url;
 use xxhash_rust::xxh3::xxh3_64;
 
 static TRACKING_PARAMS: &[&str] = &[
-    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
-    "utm_id", "utm_source_platform", "utm_creative_format", "utm_marketing_tactic",
-    "fbclid", "gclid", "dclid", "gbraid", "wbraid", "msclkid", "twclid",
-    "mc_cid", "mc_eid", "igshid", "_ga", "_gl", "spm", "ref_", "referrer",
-    "si", "feature", "app", "persist_app", "ved", "ei", "sclient",
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "utm_id",
+    "utm_source_platform",
+    "utm_creative_format",
+    "utm_marketing_tactic",
+    "fbclid",
+    "gclid",
+    "dclid",
+    "gbraid",
+    "wbraid",
+    "msclkid",
+    "twclid",
+    "mc_cid",
+    "mc_eid",
+    "igshid",
+    "_ga",
+    "_gl",
+    "spm",
+    "ref_",
+    "referrer",
+    "si",
+    "feature",
+    "app",
+    "persist_app",
+    "ved",
+    "ei",
+    "sclient",
 ];
 
 /// Normalize a URL for dedup and crawling: lowercase host, strip fragment,
@@ -41,7 +67,9 @@ pub fn normalize(u: &str) -> Option<Url> {
     } else {
         let mut p = pairs;
         p.sort();
-        url.query_pairs_mut().clear().extend_pairs(p.iter().map(|(k, v)| (k.as_str(), v.as_str())));
+        url.query_pairs_mut()
+            .clear()
+            .extend_pairs(p.iter().map(|(k, v)| (k.as_str(), v.as_str())));
     }
     // collapse dot segments already handled by Url parser; trim trailing slash
     // on root path only (keep inner slashes, they can be significant)
@@ -68,8 +96,8 @@ pub fn site_key(host: &str) -> String {
     }
     // crude public-suffix handling for common two-level TLDs
     const TWO_LEVEL: &[&str] = &[
-        "co.uk", "org.uk", "ac.uk", "gov.uk", "com.au", "co.jp", "co.nz",
-        "com.br", "com.mx", "co.in", "com.cn", "or.jp",
+        "co.uk", "org.uk", "ac.uk", "gov.uk", "com.au", "co.jp", "co.nz", "com.br", "com.mx",
+        "co.in", "com.cn", "or.jp",
     ];
     let last2 = format!("{}.{}", parts[parts.len() - 2], parts[parts.len() - 1]);
     if TWO_LEVEL.contains(&last2.as_str()) && parts.len() > 2 {

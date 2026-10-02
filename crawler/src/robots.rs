@@ -78,9 +78,10 @@ impl RobotsCache {
             }
             if applies
                 && let Some(rest) = line.to_lowercase().strip_prefix("crawl-delay:")
-                    && let Ok(secs) = rest.trim().parse::<f64>() {
-                        delay_ms = (secs * 1000.0) as u64;
-                    }
+                && let Ok(secs) = rest.trim().parse::<f64>()
+            {
+                delay_ms = (secs * 1000.0) as u64;
+            }
         }
         delay_ms
     }
@@ -88,9 +89,10 @@ impl RobotsCache {
     async fn entry(&self, url: &Url) -> Arc<RobotsEntry> {
         let origin = url.origin().ascii_serialization();
         if let Some(e) = self.cache.get(&origin)
-            && e.fetched_at.elapsed() < ROBOTS_TTL {
-                return e.clone();
-            }
+            && e.fetched_at.elapsed() < ROBOTS_TTL
+        {
+            return e.clone();
+        }
         let e = self.fetch(&origin).await;
         let e = Arc::new(e);
         self.cache.insert(origin, e.clone());
@@ -99,11 +101,8 @@ impl RobotsCache {
 
     async fn fetch(&self, origin: &str) -> RobotsEntry {
         let robots_url = format!("{origin}/robots.txt");
-        let res = tokio::time::timeout(
-            ROBOTS_FETCH_TIMEOUT,
-            self.client.get(&robots_url).send(),
-        )
-        .await;
+        let res =
+            tokio::time::timeout(ROBOTS_FETCH_TIMEOUT, self.client.get(&robots_url).send()).await;
 
         match res {
             Ok(Ok(resp)) => {
@@ -167,7 +166,10 @@ impl RobotsCache {
     /// extract sitemap urls listed in robots.txt for seeding
     pub fn sitemaps(&self, text: &str) -> Vec<String> {
         text.lines()
-            .filter_map(|l| l.strip_prefix("Sitemap:").or_else(|| l.strip_prefix("sitemap:")))
+            .filter_map(|l| {
+                l.strip_prefix("Sitemap:")
+                    .or_else(|| l.strip_prefix("sitemap:"))
+            })
             .map(|s| s.trim().to_string())
             .collect()
     }

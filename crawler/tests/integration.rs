@@ -1,9 +1,8 @@
-use futures::StreamExt;
-use axum::extract::Path;
+use axum::Router;
 use axum::http::StatusCode;
 use axum::response::Html;
 use axum::routing::get;
-use axum::Router;
+use futures::StreamExt;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
@@ -92,7 +91,9 @@ async fn crawler_respects_robots_and_indexes() {
 
     let c = crawler.clone();
     let task = tokio::spawn(async move { c.run().await });
-    let _ = tokio::time::timeout(Duration::from_secs(60), task).await.unwrap();
+    let _ = tokio::time::timeout(Duration::from_secs(60), task)
+        .await
+        .unwrap();
 
     // disallowed path must never have been requested
     let store_docs = crawler.index().num_docs();
@@ -114,17 +115,30 @@ async fn api_serves_search() {
     let cfg = support::test_config(dir.path());
     let crawler = support::make_crawler(cfg.clone()).unwrap();
     let idx = crawler.index();
-    idx.add_doc("https://x.test/a", "x.test", "hello world page", "the world says hello", "", 0, 0.0, 0).unwrap();
+    idx.add_doc(
+        "https://x.test/a",
+        "x.test",
+        "hello world page",
+        "the world says hello",
+        "",
+        0,
+        0.0,
+        0,
+    )
+    .unwrap();
     idx.commit().unwrap();
 
     let state = support::app_state(crawler);
     let app = support::router(state);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-    tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
+    tokio::spawn(async move {
+        axum::serve(listener, app).await.unwrap();
+    });
 
     let resp = reqwest::get(format!("http://{addr}/search?q=hello+world&limit=5"))
-        .await.unwrap();
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
     let body: serde_json::Value = resp.json().await.unwrap();
     let results = body["results"].as_array().unwrap();

@@ -4,12 +4,12 @@ use crate::config::Config;
 use crate::extract::extract;
 use crate::fetcher::{FetchError, Fetcher};
 use crate::frontier::Frontier;
-use crate::index::{now_epoch, SearchIndex};
+use crate::index::{SearchIndex, now_epoch};
 use crate::robots::RobotsCache;
 use crate::store::{DocRecord, FrontierItem, Store};
 use crate::urlnorm;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::Semaphore;
 use tracing::{debug, info, warn};
@@ -35,8 +35,14 @@ impl Crawler {
             cfg.index.writer_heap_mb,
         )?);
         let fetcher = Fetcher::new(&cfg.crawl, &cfg.identity.user_agent)?;
-        let robots = Arc::new(RobotsCache::new(fetcher.client().clone(), cfg.identity.user_agent.clone()));
-        let blocklist = Arc::new(Blocklist::load(&cfg.store.path, &cfg.blocklists.extra_files));
+        let robots = Arc::new(RobotsCache::new(
+            fetcher.client().clone(),
+            cfg.identity.user_agent.clone(),
+        ));
+        let blocklist = Arc::new(Blocklist::load(
+            &cfg.store.path,
+            &cfg.blocklists.extra_files,
+        ));
         let frontier = Arc::new(Frontier::new(store.clone(), cfg.crawl.min_delay_ms));
         let solver = ChallengeSolver::new(cfg.challenge.clone(), fetcher.client().clone());
 
@@ -70,7 +76,9 @@ impl Crawler {
     pub fn seed(&self, urls: &[String]) -> usize {
         let mut n = 0;
         for raw in urls {
-            let Some(u) = urlnorm::normalize(raw) else { continue };
+            let Some(u) = urlnorm::normalize(raw) else {
+                continue;
+            };
             let key = urlnorm::url_key(&u);
             if self.store.seen(key) {
                 continue;
@@ -161,7 +169,11 @@ impl Crawler {
             match tokio::net::lookup_host((host.as_str(), 443)).await {
                 Ok(addrs) => {
                     let addrs: Vec<_> = addrs.collect();
-                    if addrs.is_empty() || !addrs.iter().any(|a| Blocklist::ip_allowed(a.ip(), self.cfg.crawl.allow_private_ips)) {
+                    if addrs.is_empty()
+                        || !addrs.iter().any(|a| {
+                            Blocklist::ip_allowed(a.ip(), self.cfg.crawl.allow_private_ips)
+                        })
+                    {
                         debug!(host, "refusing private/unroutable resolution");
                         self.frontier.done(&site, true, 0);
                         continue;
@@ -173,11 +185,12 @@ impl Crawler {
                 }
             }
             if let Some(until) = self.store.host_banned_until(&site)
-                && until > now_epoch() {
-                    self.frontier.penalize(&site, until - now_epoch());
-                    self.frontier.done(&site, true, 0);
-                    continue;
-                }
+                && until > now_epoch()
+            {
+                self.frontier.penalize(&site, until - now_epoch());
+                self.frontier.done(&site, true, 0);
+                continue;
+            }
 
             // robots.txt
             let (allowed, delay_ms) = self.robots.check(&url).await;
@@ -213,6 +226,24 @@ impl Crawler {
                         ChallengeKind::None => body,
                     };
 
+                    // feeds are mined for links, not indexed
+                    let feed_links = crate::extract::feed_links(&body);
+                    if !feed_links.is_empty() {
+                        for l in feed_links {
+                            if let Some(nu) = urlnorm::normalize(&l)
+                                && !self.blocklist.blocked(&urlnorm::host_of(&nu))
+                            {
+                                self.frontier.push(FrontierItem {
+                                    url: nu.to_string(),
+                                    depth: item.depth + 1,
+                                    score: item.score,
+                                });
+                            }
+                        }
+                        self.frontier.done(&site, true, delay_ms);
+                        continue;
+                    }
+
                     let parsed = extract(&body, &resp.final_url);
                     if parsed.noindex {
                         self.frontier.done(&site, true, delay_ms);
@@ -226,7 +257,8 @@ impl Crawler {
                         }
                     }
 
-                    let host_auth = self.authority.get(&host).map(|v| *v.value()).unwrap_or(0) as f64;
+                    let host_auth =
+                        self.authority.get(&host).map(|v| *v.value()).unwrap_or(0) as f64;
                     let authority = (1.0f64 + host_auth).ln();
 
                     let doc = DocRecord {
@@ -239,8 +271,14 @@ impl Crawler {
                     };
                     let _ = self.store.put_doc(&doc);
                     let _ = self.index.add_doc(
-                        &doc.url, &host, &doc.title, &parsed.text, &parsed.description,
-                        doc.fetched_at, authority, parsed.links.len() as u64,
+                        &doc.url,
+                        &host,
+                        &doc.title,
+                        &parsed.text,
+                        &parsed.description,
+                        doc.fetched_at,
+                        authority,
+                        parsed.links.len() as u64,
                     );
 
                     let n = self.docs_done.fetch_add(1, Ordering::Relaxed) + 1;
@@ -300,5 +338,66 @@ impl Crawler {
                 }
             }
         }
+    }
+}
+
+impl Crawler {
+    /// dump the doc store as jsonl - bridge format for hister and friends
+    pub fn export_jsonl(&self, out: &std::path::Path) -> anyhow::Result<usize> {
+        use std::io::BufWriter;
+        let mut n = 0usize;
+        let mut w = BufWriter::new(std::fs::File::create(out)?);
+        for doc in self.store.iter_docs()? {
+            let text = zstd::decode_all(doc.text_z.as_slice()).unwrap_or_default();
+            let line = serde_json::json!({
+                "url": doc.url,
+                "title": doc.title,
+                "host": doc.host,
+                "fetched_at": doc.fetched_at,
+                "text": String::from_utf8_lossy(&text),
+            });
+            serde_json::to_writer(&mut w, &line)?;
+            std::io::Write::write_all(&mut w, b"\n")?;
+            n += 1;
+        }
+        std::io::Write::flush(&mut w)?;
+        Ok(n)
+    }
+
+    /// import jsonl docs (url/title/host/fetched_at/text) into store+index
+    pub fn import_jsonl(&self, input: &std::path::Path) -> anyhow::Result<usize> {
+        use std::io::BufRead;
+        let mut n = 0usize;
+        for line in std::io::BufReader::new(std::fs::File::open(input)?).lines() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            let v: serde_json::Value = serde_json::from_str(&line)?;
+            let url = v["url"].as_str().unwrap_or("");
+            let title = v["title"].as_str().unwrap_or("");
+            let host = v["host"].as_str().unwrap_or("");
+            let fetched = v["fetched_at"]
+                .as_u64()
+                .unwrap_or_else(crate::index::now_epoch);
+            let text = v["text"].as_str().unwrap_or("");
+            if url.is_empty() || !url.starts_with("http") {
+                continue;
+            }
+            let desc = text.get(..160).unwrap_or(text);
+            let doc = crate::store::DocRecord {
+                url: url.into(),
+                title: title.into(),
+                host: host.into(),
+                fetched_at: fetched,
+                text_z: zstd::encode_all(text.as_bytes(), 3)?,
+                links: vec![],
+            };
+            self.store.put_doc(&doc)?;
+            self.index
+                .add_doc(url, host, title, text, desc, fetched, 0.0, 0)?;
+            n += 1;
+        }
+        Ok(n)
     }
 }

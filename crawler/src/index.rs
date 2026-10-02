@@ -3,8 +3,8 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
-use tantivy::schema::{Field, Schema, Value, STORED, STRING, TEXT, FAST, INDEXED};
-use tantivy::{doc, DocAddress, Index, IndexWriter, TantivyDocument};
+use tantivy::schema::{FAST, Field, INDEXED, STORED, STRING, Schema, TEXT, Value};
+use tantivy::{DocAddress, Index, IndexWriter, TantivyDocument, doc};
 
 /// tantivy index for crawled docs: bm25 on title+body with an authority
 /// boost computed from inlinks, freshness weight on top
@@ -62,7 +62,17 @@ impl SearchIndex {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn add_doc(&self, url: &str, host: &str, title: &str, body: &str, desc: &str, fetched_at: u64, authority: f64, inlinks: u64) -> anyhow::Result<()> {
+    pub fn add_doc(
+        &self,
+        url: &str,
+        host: &str,
+        title: &str,
+        body: &str,
+        desc: &str,
+        fetched_at: u64,
+        authority: f64,
+        inlinks: u64,
+    ) -> anyhow::Result<()> {
         let w = self.writer.write().unwrap();
         // replace by url to keep the index fresh on recrawl
         w.delete_term(tantivy::Term::from_field_text(self.url, url));
@@ -89,7 +99,8 @@ impl SearchIndex {
     pub fn search(&self, q: &str, limit: usize) -> anyhow::Result<Vec<SearchHit>> {
         let reader = self.index.reader()?;
         let searcher = reader.searcher();
-        let mut qp = QueryParser::for_index(&self.index, vec![self.title, self.body, self.description]);
+        let mut qp =
+            QueryParser::for_index(&self.index, vec![self.title, self.body, self.description]);
         qp.set_field_boost(self.title, 4.0);
         qp.set_field_boost(self.description, 2.0);
         let query = qp.parse_query(q).context("parse query")?;
@@ -101,12 +112,34 @@ impl SearchIndex {
         let now = now_epoch();
         for (bm25, addr) in hits {
             let doc: TantivyDocument = searcher.doc(addr)?;
-            let url = doc.get_first(self.url).and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let host = doc.get_first(self.host).and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let title = doc.get_first(self.title).and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let description = doc.get_first(self.description).and_then(|v| v.as_str()).unwrap_or("").to_string();
-            let authority = doc.get_first(self.authority).and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let fetched = doc.get_first(self.fetched_at).and_then(|v| v.as_u64()).unwrap_or(now);
+            let url = doc
+                .get_first(self.url)
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let host = doc
+                .get_first(self.host)
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let title = doc
+                .get_first(self.title)
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let description = doc
+                .get_first(self.description)
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let authority = doc
+                .get_first(self.authority)
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0);
+            let fetched = doc
+                .get_first(self.fetched_at)
+                .and_then(|v| v.as_u64())
+                .unwrap_or(now);
 
             // authority boost: inlink-derived, log-scaled, modest weight
             let authority_boost = 1.0 + authority.min(10.0) * 0.15;
@@ -115,15 +148,29 @@ impl SearchIndex {
             let freshness = 1.0 / (1.0 + (age_days / 365.0).max(0.0) * 0.2);
 
             let score = bm25 * authority_boost as f32 * freshness as f32;
-            out.push(SearchHit { url, host, title, description, score });
+            out.push(SearchHit {
+                url,
+                host,
+                title,
+                description,
+                score,
+            });
         }
-        out.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        out.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         out.truncate(limit);
         Ok(out)
     }
 
     pub fn num_docs(&self) -> u64 {
-        self.index.reader().ok().map(|r| r.searcher().num_docs()).unwrap_or(0)
+        self.index
+            .reader()
+            .ok()
+            .map(|r| r.searcher().num_docs())
+            .unwrap_or(0)
     }
 }
 

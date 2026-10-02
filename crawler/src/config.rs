@@ -38,6 +38,9 @@ pub struct Crawl {
     pub slow_drip_floor_kbps: u64,
     /// allow private/loopback ips - off by default, tests turn it on
     pub allow_private_ips: bool,
+    /// outbound proxy for fetches, e.g. socks5h://10.64.0.1:1080 for the
+    /// mullvad in-tunnel socks5 proxy. empty means direct egress.
+    pub proxy: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -80,11 +83,13 @@ pub struct Blocklists {
     pub extra_files: Vec<PathBuf>,
 }
 
-
 impl Default for Identity {
     fn default() -> Self {
         Self {
-            user_agent: format!("VoidCrawler/{} (+https://void.quad4.io/bot)", env!("CARGO_PKG_VERSION")),
+            user_agent: format!(
+                "VoidCrawler/{} (+https://void.quad4.io/bot)",
+                env!("CARGO_PKG_VERSION")
+            ),
             contact: "https://void.quad4.io/info/en/about".into(),
         }
     }
@@ -104,6 +109,7 @@ impl Default for Crawl {
             slow_drip_min_bytes: 64 * 1024,
             slow_drip_floor_kbps: 8,
             allow_private_ips: false,
+            proxy: String::new(),
         }
     }
 }
@@ -151,7 +157,6 @@ impl Default for Api {
     }
 }
 
-
 impl Config {
     pub fn load(path: &std::path::Path) -> anyhow::Result<Self> {
         let text = std::fs::read_to_string(path)?;
@@ -175,8 +180,9 @@ impl Config {
             self.challenge.flaresolverr_url = v;
         }
         if let Ok(v) = std::env::var("VC_WORKERS")
-            && let Ok(n) = v.parse() {
-                self.crawl.workers = n;
-            }
+            && let Ok(n) = v.parse()
+        {
+            self.crawl.workers = n;
+        }
     }
 }

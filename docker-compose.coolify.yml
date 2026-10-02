@@ -107,6 +107,9 @@ services:
 
   valkey:
     image: docker.io/valkey/valkey:9-alpine
+    # silences the bg-save warning: allow memory overcommit for the container
+    sysctls:
+      - vm.overcommit_memory=1
     command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped
     volumes:
@@ -192,8 +195,8 @@ configs:
       max_url_bytes = 4096
       max_concurrent_global = 4096
       max_concurrent_per_client = 16
-      ban_after_strikes = 4
-      ban_ttl = "15m"
+      ban_after_strikes = 8
+      ban_ttl = "5m"
       ban_escalation = 2
       attack_block = true
       attack_score = 85
@@ -201,8 +204,8 @@ configs:
       
       [detect]
       enabled = true
-      challenge_score = 35
-      block_score = 85
+      challenge_score = 30
+      block_score = 95
       missing_ua_score = 30
       scanner_ua_score = 60
       ai_ua_score = 50
@@ -214,7 +217,7 @@ configs:
       high_404_threshold = 12
       high_404_window = "1m"
       high_404_action = "challenge"
-      penalty_threshold = 60
+      penalty_threshold = 80
       penalty_window = "1m"
       penalty_action = "challenge"
       cache_miss_ttl = "5s"
@@ -223,7 +226,7 @@ configs:
       behavior_burst_score = 40
       behavior_path_fanout = 20
       behavior_path_fanout_score = 35
-      behavior_strike_limit = 3
+      behavior_strike_limit = 6
       behavior_strike_score = 30
       
       [detect.crawler_verify]
@@ -245,8 +248,8 @@ configs:
         "/debug/pprof/",
       ]
       prefixes = ["/.git/", "/wp-admin/", "/phpmyadmin/"]
-      action = "ban"
-      ban_ttl = "1h"
+      action = "block"
+      ban_ttl = "10m"
       
       [challenge]
       enabled = true
@@ -366,3 +369,4 @@ volumes:
   void-config:
   void-data:
   valkey-data:
+  crawler-data:

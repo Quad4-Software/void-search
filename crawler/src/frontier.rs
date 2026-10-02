@@ -2,8 +2,8 @@ use crate::store::{FrontierItem, Store};
 use crate::urlnorm;
 use dashmap::DashMap;
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use tracing::{debug, warn};
 use url::Url;
@@ -39,7 +39,9 @@ impl Frontier {
     /// add a url after normalization, dedup and blocklist check happen in
     /// the caller; returns true when enqueued
     pub fn push(&self, item: FrontierItem) -> bool {
-        let Ok(url) = Url::parse(&item.url) else { return false };
+        let Ok(url) = Url::parse(&item.url) else {
+            return false;
+        };
         let site = urlnorm::site_key(&urlnorm::host_of(&url));
         let key = urlnorm::url_key(&url);
         if self.store.seen(key) {
@@ -97,7 +99,9 @@ impl Frontier {
         match self.store.pop_frontier(256) {
             Ok(items) => {
                 for (key, item) in items {
-                    let Ok(url) = Url::parse(&item.url) else { continue };
+                    let Ok(url) = Url::parse(&item.url) else {
+                        continue;
+                    };
                     let site = urlnorm::site_key(&urlnorm::host_of(&url));
                     self.queues.entry(site).or_default().push_back((key, item));
                     self.pending.fetch_add(1, Ordering::Relaxed);
