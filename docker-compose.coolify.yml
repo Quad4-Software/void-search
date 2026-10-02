@@ -40,8 +40,10 @@ services:
       RG_LOG_LEVEL: ${RG_LOG_LEVEL:-warn}
     tmpfs:
       - /data:size=64m
+    # mount directories, not the file: Coolify turns file bind sources
+    # into empty directories (upstream bug), which breaks -config
     volumes:
-      - ./container/ravenguard/ravenguard.toml:/config/ravenguard.toml:ro
+      - ./container/ravenguard:/config:ro
       - ./container/ravenguard/blocklists:/blocklists:ro
     depends_on:
       void:

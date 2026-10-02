@@ -25,7 +25,7 @@ services:
     pids_limit: 512
     mem_limit: 384m
     volumes:
-      - ./container/ravenguard/ravenguard.toml:/config/ravenguard.toml:ro
+      - ./container/ravenguard:/config:ro
       - ./container/ravenguard/blocklists:/blocklists:ro
     command: ["-config", "/config/ravenguard.toml"]
 
