@@ -150,14 +150,41 @@ class Search:
             th._engine_name = engine_name
             th.start()
 
-        for th in threading.enumerate():  # pylint: disable=invalid-name
-            if th.name == search_id:
-                remaining_time = max(0.0, self.actual_timeout - (default_timer() - self.start_time))
-                th.join(remaining_time)
-                if th.is_alive():
-                    th._timeout = True
-                    self.result_container.add_unresponsive_engine(th._engine_name, 'timeout')
-                    PROCESSORS[th._engine_name].logger.error('engine timeout')
+        early_cfg = settings['search'].get('early_exit', {})
+        early_enabled = bool(early_cfg.get('enabled', True))
+        soft_timeout = float(early_cfg.get('soft_timeout', 2.5))
+        min_responsive = float(early_cfg.get('min_responsive', 0.6))
+        early_deadline = self.start_time + min(soft_timeout, self.actual_timeout)
+
+        pending = [th for th in threading.enumerate() if th.name == search_id]
+        total = len(pending)
+        answered = 0
+
+        while pending:
+            now = default_timer()
+            if now - self.start_time >= self.actual_timeout:
+                break
+            # early exit: soft deadline passed AND enough engines answered -
+            # the rest are marked timed out and the page renders now
+            if early_enabled and now >= early_deadline and answered >= max(1, int(total * min_responsive)):
+                break
+            th = pending.pop(0)
+            # short join slice so a slow head-of-line engine does not block
+            # the early-exit check for the others
+            remaining_time = min(
+                0.05,
+                max(0.001, self.actual_timeout - (default_timer() - self.start_time)),
+            )
+            th.join(remaining_time)
+            if not th.is_alive():
+                answered += 1
+            else:
+                pending.append(th)
+
+        for th in pending:
+            th._timeout = True
+            self.result_container.add_unresponsive_engine(th._engine_name, 'timeout')
+            PROCESSORS[th._engine_name].logger.error('engine timeout')
 
     def search_standard(self):
         """

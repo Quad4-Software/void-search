@@ -210,6 +210,13 @@ SCHEMA: dict[str, t.Any] = {
         },
         'formats': SettingsValue(list, OUTPUT_FORMATS),
         'max_page': SettingsValue(int, 0),
+        'early_exit': {
+            # stop waiting once a share of engines answered and the soft
+            # deadline passed - the page renders without the stragglers
+            'enabled': SettingsValue(bool, True),
+            'soft_timeout': SettingsValue(numbers.Real, 2.5),
+            'min_responsive': SettingsValue(numbers.Real, 0.6),
+        },
     },
     'server': {
         'port': SettingsValue((int, str), 8888, 'SEARXNG_PORT'),

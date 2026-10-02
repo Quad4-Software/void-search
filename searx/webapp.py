@@ -996,7 +996,9 @@ def image_proxy():
             'DNT': '1',
         }
         set_context_network_name('image_proxy')
-        resp, stream = http_stream(method='GET', url=url, headers=request_headers, allow_redirects=True)
+        resp, stream = http_stream(
+            method='GET', url=url, headers=request_headers, allow_redirects=True, timeout=10.0
+        )
         content_length = resp.headers.get('Content-Length')
         if content_length and content_length.isdigit() and int(content_length) > maximum_size:
             return 'Max size', 400
@@ -1014,8 +1016,10 @@ def image_proxy():
             return '', 400
 
         forward_resp = True
-    except RequestException:
-        logger.exception('HTTP error')
+    except RequestException as e:
+        # remote image hosts drop and timeout constantly - that is not a
+        # server fault worth a traceback
+        logger.warning('image-proxy fetch failed: %s: %s', type(e).__name__, e)
         return '', 400
     finally:
         if resp and not forward_resp:
@@ -1024,7 +1028,7 @@ def image_proxy():
             try:
                 resp.close()
             except RequestException:
-                logger.exception('HTTP error on closing')
+                logger.warning('image-proxy error closing upstream response')
 
     def close_stream():
         nonlocal resp, stream

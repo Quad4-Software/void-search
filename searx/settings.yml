@@ -49,6 +49,13 @@ search:
   # use codes from 'languages.py'
   default_lang: "en"
   # max_page: 0  # if engine supports paging, 0 means unlimited numbers of pages
+  # early_exit: stop waiting for stragglers once enough engines answered and
+  # the soft deadline passed - the page renders with what is in. Hard timeout
+  # still applies. Set enabled: false to always wait for every engine.
+  early_exit:
+    enabled: true
+    soft_timeout: 2.5
+    min_responsive: 0.6
   # Available languages
   # languages:
   #   - all
