@@ -412,7 +412,9 @@ def render(template_name: str, **kwargs):
     # short commit hash for the footer - always shown, full version stays gated
     commit = VERSION_STRING.split('+')[0].split('-')[-1]
     kwargs['searxng_commit'] = commit if commit.isalnum() and commit != VERSION_STRING else ''
-    kwargs['searxng_commit_url'] = f'{GIT_URL}/commit/{commit}' if kwargs['searxng_commit'] and 'github.com' in GIT_URL else ''
+    kwargs['searxng_commit_url'] = (
+        f'{GIT_URL}/commit/{commit}' if kwargs['searxng_commit'] and 'github.com' in GIT_URL else ''
+    )
     kwargs['enable_metrics'] = get_setting('general.enable_metrics')
     kwargs['get_setting'] = get_setting
     kwargs['get_pretty_url'] = get_pretty_url
