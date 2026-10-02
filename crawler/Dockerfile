@@ -4,6 +4,7 @@ FROM docker.io/library/rust:1-bookworm AS builder
 WORKDIR /src
 # deps layer caching via mtimes is unreliable with oci copies - just build
 COPY crawler/Cargo.toml crawler/Cargo.lock ./
+COPY crawler/seeds.txt seeds.txt
 COPY crawler/src src
 COPY crawler/tests tests
 RUN cargo build --release && strip target/release/void-crawler
