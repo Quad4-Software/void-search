@@ -57,3 +57,5 @@ if (resultsEl) {
 
   window.addEventListener("beforeunload", stop);
 }
+
+export {};
